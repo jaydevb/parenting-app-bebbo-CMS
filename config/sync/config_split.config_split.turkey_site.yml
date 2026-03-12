@@ -10,40 +10,42 @@ stackable: false
 no_patching: false
 storage: folder
 folder: ../config/turkey
-module: {  }
+module:
+  custom_bebbo: 0
+  views_field_view: 0
 theme: {  }
 complete_list:
-  - core.base_field_override.taxonomy_term.type_of_article.changed
+  - block.block.kosovologo
+  - block.block.logo
+  - core.extension
+  - mobile_app_links.android_packages
+  - mobile_app_links.ios
+  - pb_custom_form.landing_pages
+  - pb_custom_form.language_redirects
+  - pb_custom_form.mobile_app_share_link_form
+  - smtp.settings
   - system.site
+  - tmgmt.translator.deepl_free
+  - tmgmt.translator.deepl_pro
+  - tmgmt.translator.google
+  - tmgmt.translator.memsource
+  - tmgmt.translator.microsoft
+  - core.base_field_override.taxonomy_term.type_of_article.changed
   - core.base_field_override.taxonomy_term.type_of_article.description
   - core.base_field_override.taxonomy_term.type_of_article.metatag
   - core.base_field_override.taxonomy_term.type_of_article.name
   - core.base_field_override.taxonomy_term.type_of_article.path
   - core.base_field_override.taxonomy_term.type_of_article.status
   - core.base_field_override.user.user.path
-  - core.extension
   - entity_share_client.import_config.config_stage
   - entity_share_server.channel.content_article_pregnancy_tr_
   - field.field.taxonomy_term.subcategory.field_child_s_age
   - field.storage.taxonomy_term.field_child_s_age
   - google_analytics.settings
-  - language/tr/system.site
-  - language/tr/user.role.administrator
+  - languagetrsystem.site
+  - languagetruser.role.administrator
   - mobile_app_links.android
-  - mobile_app_links.android_packages
-  - block.block.kosovologo
-  - block.block.logo
-  - mobile_app_links.ios
-  - 'mobile_app_links.ios copy'
-  - pb_custom_form.landing_pages
-  - pb_custom_form.language_redirects
-  - pb_custom_form.mobile_app_share_link_form
-  - smtp.settings
-  - tmgmt.translator.deepl_free
-  - tmgmt.translator.deepl_pro
-  - tmgmt.translator.google
-  - tmgmt.translator.memsource
-  - tmgmt.translator.microsoft
+  - mobile_app_links.ioscopy
 partial_list:
   - block.block.claro_help_search
   - block.block.languagedropdownswitcher
@@ -141,35 +143,6 @@ partial_list:
   - language.entity.tr
   - language.negotiation
   - language.types
-  - language/tr/core.date_format.short
-  - language/tr/field.field.media.image.field_media_image
-  - language/tr/field.field.user.user.user_picture
-  - language/tr/media.type.image
-  - language/tr/pathauto.pattern.group_content
-  - language/tr/system.maintenance
-  - language/tr/system.menu.footer
-  - language/tr/user.mail
-  - language/tr/views.view.archive
-  - language/tr/views.view.block_content
-  - language/tr/views.view.content
-  - language/tr/views.view.content_recent
-  - language/tr/views.view.feeds_feed
-  - language/tr/views.view.files
-  - language/tr/views.view.frontpage
-  - language/tr/views.view.glossary
-  - language/tr/views.view.group_members
-  - language/tr/views.view.media
-  - language/tr/views.view.media_library
-  - language/tr/views.view.moderated_content
-  - language/tr/views.view.taxonomy_term
-  - language/tr/views.view.tmgmt_job_items
-  - language/tr/views.view.tmgmt_job_messages
-  - language/tr/views.view.tmgmt_job_overview
-  - language/tr/views.view.tmgmt_local_manage_translate_task
-  - language/tr/views.view.tmgmt_local_task_items
-  - language/tr/views.view.tmgmt_local_task_overview
-  - language/tr/views.view.tmgmt_translation_all_job_items
-  - language/tr/views.view.user_admin_people
   - metatag.metatag_defaults.global
   - metatag.metatag_defaults.node__article
   - metatag.metatag_defaults.node__page
@@ -216,6 +189,35 @@ partial_list:
   - views.view.tmgmt_local_manage_translate_task
   - views.view.tmgmt_local_task_items
   - views.view.tmgmt_local_task_overview
-  - views.view.user_admin_people
   - views.view.users_list
+  - views.view.user_admin_people
   - workflows.workflow.group_workflow
+  - languagetrcore.date_format.short
+  - languagetrfield.field.media.image.field_media_image
+  - languagetrfield.field.user.user.user_picture
+  - languagetrmedia.type.image
+  - languagetrpathauto.pattern.group_content
+  - languagetrsystem.maintenance
+  - languagetrsystem.menu.footer
+  - languagetruser.mail
+  - languagetrviews.view.archive
+  - languagetrviews.view.block_content
+  - languagetrviews.view.content
+  - languagetrviews.view.content_recent
+  - languagetrviews.view.feeds_feed
+  - languagetrviews.view.files
+  - languagetrviews.view.frontpage
+  - languagetrviews.view.glossary
+  - languagetrviews.view.group_members
+  - languagetrviews.view.media
+  - languagetrviews.view.media_library
+  - languagetrviews.view.moderated_content
+  - languagetrviews.view.taxonomy_term
+  - languagetrviews.view.tmgmt_job_items
+  - languagetrviews.view.tmgmt_job_messages
+  - languagetrviews.view.tmgmt_job_overview
+  - languagetrviews.view.tmgmt_local_manage_translate_task
+  - languagetrviews.view.tmgmt_local_task_items
+  - languagetrviews.view.tmgmt_local_task_overview
+  - languagetrviews.view.tmgmt_translation_all_job_items
+  - languagetrviews.view.user_admin_people

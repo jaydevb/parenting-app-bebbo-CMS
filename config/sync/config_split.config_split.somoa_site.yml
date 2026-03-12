@@ -10,11 +10,21 @@ stackable: false
 no_patching: false
 storage: folder
 folder: ../config/somoa
-module: {  }
+module:
+  custom_bebbo: 0
+  views_field_view: 0
 theme: {  }
 complete_list:
   - core.extension
+  - mobile_app_links.android_packages
+  - mobile_app_links.ios
+  - pb_custom_form.landing_pages
+  - pb_custom_form.language_redirects
   - system.site
+  - tmgmt.translator.deepl_free
+  - tmgmt.translator.deepl_pro
+  - tmgmt.translator.google
+  - tmgmt.translator.microsoft
   - entity_share_client.import_config.config_production
   - entity_share_server.channel.content_article_mandatory_tr
   - entity_share_server.channel.content_article_nonmandatory_tr
@@ -50,14 +60,6 @@ complete_list:
   - language.entity.fj-fj
   - language.entity.ws-en
   - language.entity.ws-sm
-  - mobile_app_links.android_packages
-  - mobile_app_links.ios
-  - pb_custom_form.landing_pages
-  - pb_custom_form.language_redirects
-  - tmgmt.translator.deepl_free
-  - tmgmt.translator.deepl_pro
-  - tmgmt.translator.google
-  - tmgmt.translator.microsoft
 partial_list:
   - block.block.claro_help_search
   - core.base_field_override.taxonomy_term.activity_category.description
@@ -138,7 +140,6 @@ partial_list:
   - user.role.authenticated
   - user.role.global_admin
   - user.role.reviewer
-  - view_custom_table.tables
   - views.view.archive
   - views.view.articles
   - views.view.block_content
@@ -168,6 +169,7 @@ partial_list:
   - views.view.tmgmt_local_manage_translate_task
   - views.view.tmgmt_local_task_items
   - views.view.tmgmt_local_task_overview
-  - views.view.user_admin_people
   - views.view.users_list
+  - views.view.user_admin_people
+  - view_custom_table.tables
   - workflows.workflow.group_workflow
