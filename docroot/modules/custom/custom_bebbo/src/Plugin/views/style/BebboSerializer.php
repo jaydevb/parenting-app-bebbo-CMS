@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
+use Drupal\image\Entity\ImageStyle;
 use Drupal\media\MediaInterface;
 use Drupal\rest\Plugin\views\style\Serializer;
 use Drupal\rest\Plugin\views\display\RestExport;
@@ -132,8 +133,9 @@ class BebboSerializer extends Serializer {
    * {@inheritdoc}
    */
   public function render(): string {
-    // Generate timestamp once — shared by both the results and no-results paths.
-    // Matches CustomSerializer's helper->getCurrentTimestamp('Asia/Kolkata').
+    // Generate timestamp once — used by both the results and
+    // no-results code paths. Matches CustomSerializer's
+    // helper->getCurrentTimestamp('Asia/Kolkata').
     $timestamp = (new DrupalDateTime('now', 'Asia/Kolkata'))->format('Y-m-d H:i');
 
     // Collect rows via the parent row plugin.
@@ -162,7 +164,9 @@ class BebboSerializer extends Serializer {
     }
 
     // Has results path — transform rows then build the full envelope.
-    $rows     = $this->transformRows($this->view->id(), $rows);
+    // Dispatch by display ID so multiple displays under the same view
+    // (bebbo_v2_apis) each get their own transformation.
+    $rows     = $this->transformRows($this->view->current_display, $rows);
     $langcode = $this->resolveLangcode();
     $total    = $this->countPublishedNodes();
 
@@ -251,21 +255,25 @@ class BebboSerializer extends Serializer {
   }
 
   /**
-   * Dispatches row transformation to a view-specific method.
+   * Dispatches row transformation to a display-specific method.
    *
-   * Add a new case here for each new content type view.
+   * Uses display ID (not view ID) so multiple REST export displays under
+   * the same view (bebbo_v2_apis) can each have their own transformation.
+   * Add a new case here for each new REST export display.
    *
-   * @param string $viewId
-   *   The machine name of the current view.
+   * @param string $displayId
+   *   The machine name of the active view display.
    * @param array $rows
    *   Raw rows from the view row plugin.
    *
    * @return array
    *   Transformed rows.
    */
-  private function transformRows(string $viewId, array $rows): array {
-    return match ($viewId) {
-      'pregnancy_weekly_overview' => $this->transformPregnancyWeekly($rows),
+  private function transformRows(string $displayId, array $rows): array {
+    return match ($displayId) {
+      'weekly_overview_export' => $this->transformPregnancyWeekly($rows),
+      'guide_rest_export'      => $this->transformGuide($rows),
+      // Add new display cases here for each new REST export display.
       default => $rows,
     };
   }
@@ -302,6 +310,15 @@ class BebboSerializer extends Serializer {
     ));
 
     // 2. Batch-load all media entities once → build ID → WebP URL map.
+    // Load image style once (same style used by CustomSerializer).
+    // buildUrl() produces the resized derivative URL; the WebP module then
+    // generates the .webp file alongside it on first request.
+    // Falls back to the raw file URL if the image style is missing.
+    $loadedStyle = $this->entityTypeManager
+      ->getStorage('image_style')
+      ->load('content_1200xh_');
+    $imageStyle = $loadedStyle instanceof ImageStyle ? $loadedStyle : NULL;
+
     $urlMap = [];
     if ($mediaIds) {
       foreach ($this->entityTypeManager->getStorage('media')->loadMultiple($mediaIds) as $media) {
@@ -310,9 +327,15 @@ class BebboSerializer extends Serializer {
         }
         $file = $media->get('field_media_image')->entity;
         if ($file) {
-          $raw = $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
-          // Convert jpg/jpeg/png → .webp (mirrors CustomSerializerHelper).
-          $urlMap[$media->id()] = preg_replace('/\.(jpg|jpeg|png)(\?.*)?$/i', '.webp$2', $raw) ?? $raw;
+          $uri = $file->getFileUri();
+          // Build the styled URL (e.g. /styles/content_1200xh_/public/…).
+          // Fallback to raw absolute URL if image style is unavailable.
+          $styledUrl = $imageStyle
+            ? $imageStyle->buildUrl($uri)
+            : $this->fileUrlGenerator->generateAbsoluteString($uri);
+          // Convert jpg/jpeg/png → .webp
+          // (mirrors CustomSerializerHelper::convertToWebp).
+          $urlMap[$media->id()] = preg_replace('/\.(jpg|jpeg|png)(\?.*)?$/i', '.webp$2', $styledUrl) ?? $styledUrl;
         }
       }
     }
@@ -324,19 +347,69 @@ class BebboSerializer extends Serializer {
         $row[$field] = $urlMap[(int) ($row[$field] ?? 0)] ?? NULL;
       }
 
-      $row['id']               = (int) ($row['id'] ?? 0);
-      $row['prental_age']      = (int) ($row['prental_age'] ?? 0);
-      $row['average_height']   = number_format((float) ($row['average_height'] ?? 0), 2, '.', '');
-      $row['average_weight']   = number_format((float) ($row['average_weight'] ?? 0), 2, '.', '');
+      $row['id']             = (int) ($row['id'] ?? 0);
+      $row['prental_age']    = (int) ($row['prental_age'] ?? 0);
+      $row['average_height'] = round((float) ($row['average_height'] ?? 0), 2);
+      $row['average_weight'] = round((float) ($row['average_weight'] ?? 0), 2);
 
-      // Comma-separated string → deduplicated int array.
-      $row['related_articles'] = array_values(array_unique(array_map(
-        'intval',
-        array_filter(
-          array_map('trim', explode(',', $row['related_articles'] ?? '')),
+      // raw_output:true on a multi-value entity reference field delivers an
+      // array of target IDs directly. raw_output:false delivers a rendered
+      // comma-separated string of labels. Handle both so the code is robust.
+      $rawArticles = $row['related_articles'] ?? [];
+      if (is_array($rawArticles)) {
+        $articleIds = $rawArticles;
+      }
+      else {
+        $articleIds = array_filter(
+          array_map('trim', explode(',', (string) $rawArticles)),
           'is_numeric'
-        )
-      )));
+        );
+      }
+      $row['related_articles'] = array_values(array_unique(array_map('intval', $articleIds)));
+    }
+    unset($row);
+
+    return $rows;
+  }
+
+  /**
+   * Transforms rows for the guide_rest_export display.
+   *
+   * - Casts id to int.
+   * - Converts child_age, related_articles, related_games to deduplicated
+   *   int arrays. Handles both raw array (raw_output:true) and
+   *   comma-separated string (raw_output:false) from the view row plugin.
+   *
+   * @param array $rows
+   *   Raw rows from the view.
+   *
+   * @return array
+   *   Transformed rows.
+   */
+  private function transformGuide(array $rows): array {
+    if (empty($rows)) {
+      return $rows;
+    }
+
+    // Fields that must become deduplicated int arrays.
+    $multiIntFields = ['child_age', 'related_articles', 'related_games'];
+
+    foreach ($rows as &$row) {
+      $row['id'] = (int) ($row['id'] ?? 0);
+
+      foreach ($multiIntFields as $field) {
+        $raw = $row[$field] ?? [];
+        if (is_array($raw)) {
+          $ids = $raw;
+        }
+        else {
+          $ids = array_filter(
+            array_map('trim', explode(',', (string) $raw)),
+            'is_numeric'
+          );
+        }
+        $row[$field] = array_values(array_unique(array_map('intval', $ids)));
+      }
     }
     unset($row);
 

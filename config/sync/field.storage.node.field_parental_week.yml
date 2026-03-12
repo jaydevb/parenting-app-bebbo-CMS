@@ -131,6 +131,9 @@ settings:
     -
       value: 40
       label: '40'
+    -
+      value: 41
+      label: '41'
   allowed_values_function: ''
 module: options
 locked: false

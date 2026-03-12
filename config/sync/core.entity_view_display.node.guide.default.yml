@@ -1,0 +1,56 @@
+uuid: 695a07f3-3571-4030-848c-2365101adc10
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.guide.field_childs_age
+    - field.field.node.guide.field_message
+    - field.field.node.guide.field_related_article
+    - field.field.node.guide.field_related_games
+    - node.type.guide
+  module:
+    - text
+    - user
+id: node.guide.default
+targetEntityType: node
+bundle: guide
+mode: default
+content:
+  field_childs_age:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_message:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 109
+    region: content
+  field_related_article:
+    type: entity_reference_label
+    label: hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 107
+    region: content
+  field_related_games:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 108
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true

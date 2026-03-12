@@ -7,13 +7,14 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Routing\RouteMatchInterface;
+
 /**
  * Implements hook_help().
  */
-function custom_bebbo_help(string $route_name, \Drupal\Core\Routing\RouteMatchInterface $route_match): string {
+function custom_bebbo_help(string $route_name, RouteMatchInterface $route_match): string {
   return match ($route_name) {
     'help.page.custom_bebbo' => '<p>' . t('Custom Bebbo provides shared custom functionality used across the Bebbo multi-site platform.') . '</p>',
     default => '',
   };
 }
-

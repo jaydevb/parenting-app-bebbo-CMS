@@ -46,8 +46,8 @@ class BebboEncoder implements EncoderInterface {
     $viewId = $view?->view?->id();
 
     return match ($viewId) {
-      'pregnancy_weekly_overview' => $this->encodePregnancyWeekly($data),
-      // Add a new case here for each new content type view.
+      'bebbo_v2_apis' => $this->encodePregnancyWeekly($data),
+      'guide_rest_export'      => $this->transformGuide($rows),
       default => json_encode($data),
     };
   }
@@ -97,7 +97,8 @@ class BebboEncoder implements EncoderInterface {
           $file = $media->get('field_media_image')->entity;
           if ($file) {
             $raw = $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
-            // Convert jpg/jpeg/png extension to .webp (matches CustomSerializer behaviour).
+            // Convert jpg/jpeg/png extension to .webp
+            // (matches CustomSerializer behaviour).
             $urlMap[$media->id()] = $this->toWebp($raw);
           }
         }
@@ -111,11 +112,11 @@ class BebboEncoder implements EncoderInterface {
         }
 
         // String → int  (field name matches the View field alias exactly).
-        $row['prental_age']      = (int) ($row['prental_age'] ?? 0);
+        $row['prental_age'] = (int) ($row['prental_age'] ?? 0);
 
         // String → 2-decimal float string.
-        $row['average_height']   = number_format((float) ($row['average_height'] ?? 0), 2, '.', '');
-        $row['average_weight']   = number_format((float) ($row['average_weight'] ?? 0), 2, '.', '');
+        $row['average_height'] = number_format((float) ($row['average_height'] ?? 0), 2, '.', '');
+        $row['average_weight'] = number_format((float) ($row['average_weight'] ?? 0), 2, '.', '');
 
         // Comma-separated string → deduplicated int array.
         $row['related_articles'] = array_values(array_unique(array_map(
