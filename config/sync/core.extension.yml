@@ -24,6 +24,7 @@ module:
   contextual: 0
   csv_serialization: 0
   custom_article: 0
+  custom_bebbo: 0
   custom_serialization: 0
   date_popup: 0
   datetime: 0
@@ -136,6 +137,7 @@ module:
   view_custom_table: 0
   views_bulk_operations: 0
   views_data_export: 0
+  views_field_view: 0
   views_ui: 0
   webp: 0
   workflows: 0

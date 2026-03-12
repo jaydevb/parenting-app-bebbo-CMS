@@ -1,0 +1,28 @@
+uuid: e8ae3d72-2de0-420e-8196-3f435bb2c282
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_average_weight
+    - node.type.pregnancy_weekly_overview
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: node.pregnancy_weekly_overview.field_average_weight
+field_name: field_average_weight
+entity_type: node
+bundle: pregnancy_weekly_overview
+label: 'Average Weight'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

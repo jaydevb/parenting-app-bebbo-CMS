@@ -1,0 +1,8 @@
+services:
+  custom_bebbo.bebbo_encoder:
+    class: Drupal\custom_bebbo\Encoder\BebboEncoder
+    arguments:
+      - '@entity_type.manager'
+      - '@file_url_generator'
+    tags:
+      - { name: serializer.encoder }

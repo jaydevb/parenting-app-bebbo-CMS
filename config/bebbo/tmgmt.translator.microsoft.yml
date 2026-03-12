@@ -1,4 +1,4 @@
-uuid: 51a72931-144a-42c8-b775-68f30205d732
+uuid: 648569ee-0896-44e2-8d66-ba5e68ae0c79
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     - tmgmt_microsoft
 name: microsoft
 label: Microsoft
-description: 'Microsoft Translator service.'
+description: ''
 auto_accept: false
 weight: null
 plugin: microsoft
@@ -26,19 +26,19 @@ remote_languages_mappings:
   kg-ky: ky
   kg-ru: ru
   md-ro: ro
-  me-cnr: ba
+  me-cnr: mn-Cyrl
   mk-mk: mk
-  mk-sq: sq
+  mk-sq: mk
   ro: ro
   ro-ro: ro
-  sr: sr-Latn
+  sr: sr-Cyrl
   rs-sr: sr-Cyrl
   rs-en: en
   sk: sk
-  tj-tg: prs
+  tj-tg: ''
   tj-ru: ru
   uk: uk
   uz-uz: uz
-  uz-ru: ru
+  uz-ru: uz
   uz-kaa: uz
   tr: tr

@@ -1,0 +1,11 @@
+uuid: c3bef53b-c985-4489-8b95-bc2a184b8e6b
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.pregnancy_weekly_overview
+id: node.pregnancy_weekly_overview
+target_entity_type_id: node
+target_bundle: pregnancy_weekly_overview
+default_langcode: site_default
+language_alterable: false

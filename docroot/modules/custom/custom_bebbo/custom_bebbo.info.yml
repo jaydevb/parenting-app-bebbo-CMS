@@ -1,0 +1,5 @@
+name: 'Custom Bebbo'
+type: module
+description: 'Houses all common custom code for the Bebbo platform.'
+package: Custom
+core_version_requirement: ^10 || ^11

@@ -1,0 +1,24 @@
+uuid: 8ef2ddff-f409-41e9-91ee-61fc4806026d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_fruit
+    - node.type.pregnancy_weekly_overview
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: node.pregnancy_weekly_overview.field_fruit
+field_name: field_fruit
+entity_type: node
+bundle: pregnancy_weekly_overview
+label: Fruit
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

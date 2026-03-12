@@ -1,0 +1,37 @@
+uuid: 26861a94-9d56-4320-bf2b-901a4e1b7242
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.pregnancy_weekly_overview.field_average_height
+    - field.field.node.pregnancy_weekly_overview.field_average_weight
+    - field.field.node.pregnancy_weekly_overview.field_featured_image_1
+    - field.field.node.pregnancy_weekly_overview.field_featured_image_2
+    - field.field.node.pregnancy_weekly_overview.field_fruit
+    - field.field.node.pregnancy_weekly_overview.field_fun_fact
+    - field.field.node.pregnancy_weekly_overview.field_parental_week
+    - field.field.node.pregnancy_weekly_overview.field_related_article
+    - node.type.pregnancy_weekly_overview
+  module:
+    - user
+id: node.pregnancy_weekly_overview.teaser
+targetEntityType: node
+bundle: pregnancy_weekly_overview
+mode: teaser
+content:
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_average_height: true
+  field_average_weight: true
+  field_featured_image_1: true
+  field_featured_image_2: true
+  field_fruit: true
+  field_fun_fact: true
+  field_parental_week: true
+  field_related_article: true
+  langcode: true

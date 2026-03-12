@@ -1,0 +1,11 @@
+uuid: 113899f2-f265-43b3-b1bb-c1651639cf7c
+langcode: en
+status: true
+dependencies:
+  module:
+    - media
+id: media.media_to_url
+label: 'Media to URL'
+description: ''
+targetEntityType: media
+cache: true
