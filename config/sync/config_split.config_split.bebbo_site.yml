@@ -15,6 +15,15 @@ theme: {  }
 complete_list:
   - entity_share_server.channel.taxonomy_type_of_article_en
   - language.entity.uz-kaa
+  - mobile_app_links.android_packages
+  - mobile_app_links.ios
+  - pb_custom_form.landing_pages
+  - pb_custom_form.language_redirects
+  - system.site
+  - tmgmt.translator.deepl_free
+  - tmgmt.translator.deepl_pro
+  - tmgmt.translator.google
+  - tmgmt.translator.microsoft
   - language/en/language.entity.gr-el
   - language/en/language.entity.sk
   - language/en/language.entity.uk
@@ -100,6 +109,7 @@ complete_list:
   - language/ro/user.role.authenticated
   - language/ro/user.settings
   - language/ru/field.field.media.image.field_media_image
+  - language/ru/filter.format.plain_text
   - language/ru/field.field.media.remote_video.field_media_oembed_video
   - language/ru/language.entity.en
   - language/ru/language.entity.ro
@@ -197,6 +207,7 @@ complete_list:
   - language/tr/system.action.media_save_action
   - language/tr/system.action.media_unpublish_action
   - language/uk/field.field.media.image.field_media_image
+  - language/uk/filter.format.plain_text
   - language/uk/language.entity.en
   - language/uk/language.entity.ro
   - language/uk/language.entity.tr

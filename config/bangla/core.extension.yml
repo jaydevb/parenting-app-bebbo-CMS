@@ -45,6 +45,7 @@ module:
   filelog: 0
   filter: 0
   google_analytics: 0
+  gnode: 0
   group: 0
   group_country_field: 0
   help: 0
@@ -141,7 +142,7 @@ module:
   views_ui: 0
   webp: 0
   workflows: 0
-  pathauto: 1
+  pathauto: 0
   content_translation: 10
   views: 10
   contextual_range_filter: 11
