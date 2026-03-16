@@ -1,21 +1,21 @@
-uuid: 1ecf2e7f-6e72-40c3-a82e-82aad754971c
+uuid: e1222a9d-b3ea-4976-b3d0-5e2e1e6f22f1
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_related_articles
-    - node.type.article
-    - node.type.pregnancy_weekly_overview
+    - field.storage.node.field_related_games
+    - node.type.activities
+    - node.type.guide
   module:
     - tmgmt_content
 third_party_settings:
   tmgmt_content:
     excluded: false
-id: node.pregnancy_weekly_overview.field_related_articles
-field_name: field_related_articles
+id: node.guide.field_related_games
+field_name: field_related_games
 entity_type: node
-bundle: pregnancy_weekly_overview
-label: 'Related Articles'
+bundle: guide
+label: 'Related Games'
 description: ''
 required: false
 translatable: false
@@ -25,7 +25,7 @@ settings:
   handler: 'default:node'
   handler_settings:
     target_bundles:
-      article: article
+      activities: activities
     sort:
       field: _none
       direction: ASC
