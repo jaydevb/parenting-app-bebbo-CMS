@@ -409,7 +409,13 @@ class BebboSerializer extends Serializer {
             'is_numeric'
           );
         }
-        $row[$field] = array_values(array_unique(array_map('intval', $ids)));
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($field === 'related_articles' && empty($ids)) {
+          unset($row[$field]);
+        }
+        else {
+          $row[$field] = $ids;
+        }
       }
     }
     unset($row);

@@ -1,20 +1,20 @@
-uuid: 1ecf2e7f-6e72-40c3-a82e-82aad754971c
+uuid: 66a4f385-62c0-4e9a-b78c-1e4d46721ea4
 langcode: en
 status: true
 dependencies:
   config:
     - field.storage.node.field_related_articles
     - node.type.article
-    - node.type.pregnancy_weekly_overview
+    - node.type.guide
   module:
     - tmgmt_content
 third_party_settings:
   tmgmt_content:
     excluded: false
-id: node.pregnancy_weekly_overview.field_related_articles
+id: node.guide.field_related_articles
 field_name: field_related_articles
 entity_type: node
-bundle: pregnancy_weekly_overview
+bundle: guide
 label: 'Related Articles'
 description: ''
 required: false
