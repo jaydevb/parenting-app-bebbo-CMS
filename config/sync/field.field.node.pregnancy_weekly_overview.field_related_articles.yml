@@ -1,0 +1,31 @@
+uuid: 1ecf2e7f-6e72-40c3-a82e-82aad754971c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_related_articles
+    - node.type.pregnancy_weekly_overview
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: node.pregnancy_weekly_overview.field_related_articles
+field_name: field_related_articles
+entity_type: node
+bundle: pregnancy_weekly_overview
+label: 'Related Articles'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: views
+  handler_settings:
+    view:
+      view_name: filter_by_published_content
+      display_name: entity_reference_1
+      arguments:
+        - milestone
+field_type: entity_reference
