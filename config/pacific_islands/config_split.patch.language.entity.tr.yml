@@ -1,0 +1,8 @@
+adding:
+  langcode: tr
+  label: Türkçe
+  weight: 9
+removing:
+  langcode: en
+  label: Turkish
+  weight: 13
