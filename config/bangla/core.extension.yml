@@ -132,6 +132,7 @@ module:
   toolbar: 0
   toolbar_menu: 0
   toolbar_menu_clean: 0
+  update: 0
   user: 0
   variationcache: 0
   video_embed_field: 0
@@ -142,7 +143,7 @@ module:
   views_ui: 0
   webp: 0
   workflows: 0
-  pathauto: 0
+  pathauto: 1
   content_translation: 10
   views: 10
   contextual_range_filter: 11
