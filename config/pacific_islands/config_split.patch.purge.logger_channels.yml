@@ -2,21 +2,23 @@ adding:
   channels:
     -
       id: purger_acquia_purge_d35096bddb
-      grants:
-        - 0
-        - 2
     -
       id: purger_acquia_platform_cdn_c831dd8d95
     -
-      id: diagnostics
+      id: purgers
+      grants:
+        - 0
+        - 2
+        - 3
+    -
+      id: queue
+      grants:
+        - 0
+        - 2
+        - 3
 removing:
   channels:
     -
-      id: diagnostics
+      id: purgers
     -
-      id: purger_acquia_purge_d35096bddb
-    -
-      id: purger_acquia_platform_cdn_c831dd8d95
-      grants:
-        - 0
-        - 2
+      id: queue

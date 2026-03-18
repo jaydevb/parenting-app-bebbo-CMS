@@ -10,7 +10,3 @@ removing:
   processor_configuration:
     langcode: uz-kaa
     update_existing: 2
-  mappings:
-    -
-      settings:
-        language: uz-kaa

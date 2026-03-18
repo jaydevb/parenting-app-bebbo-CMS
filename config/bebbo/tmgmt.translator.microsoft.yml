@@ -1,4 +1,4 @@
-uuid: 648569ee-0896-44e2-8d66-ba5e68ae0c79
+uuid: 51a72931-144a-42c8-b775-68f30205d732
 langcode: en
 status: true
 dependencies:
@@ -26,19 +26,19 @@ remote_languages_mappings:
   kg-ky: ky
   kg-ru: ru
   md-ro: ro
-  me-cnr: mn-Cyrl
+  me-cnr: ba
   mk-mk: mk
-  mk-sq: mk
+  mk-sq: sq
   ro: ro
   ro-ro: ro
-  sr: sr-Cyrl
+  sr: sr-Latn
   rs-sr: sr-Cyrl
   rs-en: en
   sk: sk
-  tj-tg: ''
+  tj-tg: prs
   tj-ru: ru
   uk: uk
   uz-uz: uz
-  uz-ru: uz
+  uz-ru: ru
   uz-kaa: uz
   tr: tr

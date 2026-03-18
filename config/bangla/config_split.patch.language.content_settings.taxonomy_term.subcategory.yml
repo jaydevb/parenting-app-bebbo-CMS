@@ -1,7 +1,5 @@
-adding:
-  uuid: dfa19ff4-ff0c-41ab-9cc8-ca18ea2696f3
+adding: {}
 removing:
-  uuid: 8653ee79-1da3-4606-9fe0-6fdaa0031d45
   third_party_settings:
     content_translation:
       bundle_settings:

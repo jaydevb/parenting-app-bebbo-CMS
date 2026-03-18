@@ -12,7 +12,3 @@ removing:
     langcode: uz-kaa
     insert_new: 0
     update_existing: 2
-  mappings:
-    -
-      settings:
-        language: uz-kaa

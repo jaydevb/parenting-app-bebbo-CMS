@@ -14,10 +14,16 @@ module: {  }
 theme: {  }
 complete_list:
   - block.block.claro_logo
+  - block.block.kosovologo
+  - block.block.logo
   - core.extension
   - system.site
   - entity_share_client.import_config.config_stage
+  - taxonomy.vocabulary.subcategory
+  - taxonomy.vocabulary.type_of_article
+  - field.field.group.country.field_app_name
   - field.field.taxonomy_term.subcategory.field_child_s_age
+  - field.storage.group.field_app_name
   - field.storage.taxonomy_term.field_child_s_age
   - language.entity.ar
   - language.entity.bn
@@ -92,9 +98,7 @@ complete_list:
   - workflows.workflow.group_workflow
 partial_list:
   - block.block.claro_help_search
-  - block.block.kosovologo
   - block.block.languagedropdownswitcher
-  - block.block.logo
   - block.block.mainnavigation
   - core.base_field_override.block_content.basic.changed
   - core.base_field_override.block_content.basic.info
@@ -126,8 +130,6 @@ partial_list:
   - core.entity_form_display.taxonomy_term.subcategory.default
   - core.entity_form_display.user.user.register
   - core.entity_view_display.group.country.default
-  - core.entity_view_display.media.remote_video.media_library
-  - core.entity_view_display.media.video.media_library
   - core.entity_view_display.node.activities.default
   - core.entity_view_display.node.activities.full
   - core.entity_view_display.node.activities.teaser
@@ -142,8 +144,6 @@ partial_list:
   - core.entity_view_display.node.milestone.default
   - core.entity_view_display.node.milestone.teaser
   - core.entity_view_display.taxonomy_term.subcategory.default
-  - core.entity_view_display.user.user.compact
-  - core.entity_view_display.user.user.default
   - editor.editor.admin_full_html
   - feeds.feed_type.content_vaccination_languages
   - feeds.feed_type.taxonomy_age_period_language
@@ -164,7 +164,6 @@ partial_list:
   - feeds.feed_type.taxonomy_standard_deviation_cate
   - feeds.feed_type.taxonomy_type_of_support_languag
   - field.field.block_content.basic.body
-  - field.field.group.country.field_app_name
   - field.field.group.country.field_language_name_in_local
   - field.field.group.country.field_language_visibility_in_app
   - field.field.node.activities.body
@@ -194,7 +193,6 @@ partial_list:
   - field.field.taxonomy_term.category.field_type_of_article
   - field.field.taxonomy_term.child_age.field_unique_name
   - field.field.taxonomy_term.subcategory.field_category
-  - field.storage.group.field_app_name
   - field.storage.group.field_language_name_in_local
   - field.storage.group.field_language_visibility_in_app
   - field.storage.node.field_do_not_feature
@@ -216,7 +214,6 @@ partial_list:
   - language.content_settings.menu_link_content.menu_link_content
   - language.content_settings.taxonomy_term.relationship_to_parent
   - language.content_settings.taxonomy_term.subcategory
-  - language.content_settings.taxonomy_term.type_of_article
   - language.entity.al-sq
   - language.entity.bg-bg
   - language.entity.by-be
@@ -250,7 +247,6 @@ partial_list:
   - language/ro/views.view.archive
   - language/ro/views.view.block_content
   - language/ro/views.view.content
-  - language/ro/views.view.content_recent
   - language/ro/views.view.feeds_feed
   - language/ro/views.view.files
   - language/ro/views.view.frontpage
@@ -258,7 +254,6 @@ partial_list:
   - language/ro/views.view.group_members
   - language/ro/views.view.media
   - language/ro/views.view.media_library
-  - language/ro/views.view.moderated_content
   - language/ro/views.view.taxonomy_term
   - language/ro/views.view.tmgmt_job_items
   - language/ro/views.view.tmgmt_job_messages
@@ -268,13 +263,10 @@ partial_list:
   - language/ro/views.view.tmgmt_local_task_overview
   - language/ro/views.view.tmgmt_translation_all_job_items
   - language/ro/views.view.user_admin_people
-  - language/ro/views.view.who_s_new
-  - language/ro/views.view.who_s_online
   - language/ru/pathauto.pattern.group_content
   - language/ru/views.view.archive
   - language/ru/views.view.block_content
   - language/ru/views.view.content
-  - language/ru/views.view.content_recent
   - language/ru/views.view.feeds_feed
   - language/ru/views.view.files
   - language/ru/views.view.frontpage
@@ -282,7 +274,6 @@ partial_list:
   - language/ru/views.view.group_members
   - language/ru/views.view.media
   - language/ru/views.view.media_library
-  - language/ru/views.view.moderated_content
   - language/ru/views.view.taxonomy_term
   - language/ru/views.view.tmgmt_job_items
   - language/ru/views.view.tmgmt_job_messages
@@ -292,13 +283,9 @@ partial_list:
   - language/ru/views.view.tmgmt_local_task_overview
   - language/ru/views.view.tmgmt_translation_all_job_items
   - language/ru/views.view.user_admin_people
-  - language/ru/views.view.who_s_new
-  - language/ru/views.view.who_s_online
-  - language/sk/filter.format.plain_text
   - language/sk/views.view.archive
   - language/sk/views.view.block_content
   - language/sk/views.view.content
-  - language/sk/views.view.content_recent
   - language/sk/views.view.feeds_feed
   - language/sk/views.view.files
   - language/sk/views.view.frontpage
@@ -306,7 +293,6 @@ partial_list:
   - language/sk/views.view.group_members
   - language/sk/views.view.media
   - language/sk/views.view.media_library
-  - language/sk/views.view.moderated_content
   - language/sk/views.view.taxonomy_term
   - language/sk/views.view.tmgmt_job_items
   - language/sk/views.view.tmgmt_job_messages
@@ -316,8 +302,6 @@ partial_list:
   - language/sk/views.view.tmgmt_local_task_overview
   - language/sk/views.view.tmgmt_translation_all_job_items
   - language/sk/views.view.user_admin_people
-  - language/sk/views.view.who_s_new
-  - language/sk/views.view.who_s_online
   - language/sq/pathauto.pattern.group_content
   - language/sq/views.view.block_content
   - language/sq/views.view.content
@@ -328,7 +312,6 @@ partial_list:
   - language/sq/views.view.group_members
   - language/sq/views.view.media
   - language/sq/views.view.media_library
-  - language/sq/views.view.moderated_content
   - language/sq/views.view.tmgmt_job_items
   - language/sq/views.view.tmgmt_job_messages
   - language/sq/views.view.tmgmt_job_overview
@@ -337,12 +320,10 @@ partial_list:
   - language/sq/views.view.tmgmt_local_task_overview
   - language/sq/views.view.tmgmt_translation_all_job_items
   - language/sq/views.view.user_admin_people
-  - language/sq/views.view.who_s_new
   - language/sr/pathauto.pattern.group_content
   - language/sr/views.view.archive
   - language/sr/views.view.block_content
   - language/sr/views.view.content
-  - language/sr/views.view.content_recent
   - language/sr/views.view.feeds_feed
   - language/sr/views.view.files
   - language/sr/views.view.frontpage
@@ -350,7 +331,6 @@ partial_list:
   - language/sr/views.view.group_members
   - language/sr/views.view.media
   - language/sr/views.view.media_library
-  - language/sr/views.view.moderated_content
   - language/sr/views.view.taxonomy_term
   - language/sr/views.view.tmgmt_job_items
   - language/sr/views.view.tmgmt_job_messages
@@ -360,14 +340,10 @@ partial_list:
   - language/sr/views.view.tmgmt_local_task_overview
   - language/sr/views.view.tmgmt_translation_all_job_items
   - language/sr/views.view.user_admin_people
-  - language/sr/views.view.who_s_new
-  - language/sr/views.view.who_s_online
-  - language/tr/filter.format.plain_text
   - language/tr/pathauto.pattern.group_content
   - language/tr/views.view.archive
   - language/tr/views.view.block_content
   - language/tr/views.view.content
-  - language/tr/views.view.content_recent
   - language/tr/views.view.feeds_feed
   - language/tr/views.view.files
   - language/tr/views.view.frontpage
@@ -375,7 +351,6 @@ partial_list:
   - language/tr/views.view.group_members
   - language/tr/views.view.media
   - language/tr/views.view.media_library
-  - language/tr/views.view.moderated_content
   - language/tr/views.view.taxonomy_term
   - language/tr/views.view.tmgmt_job_items
   - language/tr/views.view.tmgmt_job_messages
@@ -385,13 +360,9 @@ partial_list:
   - language/tr/views.view.tmgmt_local_task_overview
   - language/tr/views.view.tmgmt_translation_all_job_items
   - language/tr/views.view.user_admin_people
-  - language/tr/views.view.who_s_new
-  - language/tr/views.view.who_s_online
-  - language/uk/shortcut.set.default
   - language/uk/views.view.archive
   - language/uk/views.view.block_content
   - language/uk/views.view.content
-  - language/uk/views.view.content_recent
   - language/uk/views.view.feeds_feed
   - language/uk/views.view.files
   - language/uk/views.view.frontpage
@@ -399,7 +370,6 @@ partial_list:
   - language/uk/views.view.group_members
   - language/uk/views.view.media
   - language/uk/views.view.media_library
-  - language/uk/views.view.moderated_content
   - language/uk/views.view.taxonomy_term
   - language/uk/views.view.tmgmt_job_items
   - language/uk/views.view.tmgmt_job_messages
@@ -409,8 +379,6 @@ partial_list:
   - language/uk/views.view.tmgmt_local_task_overview
   - language/uk/views.view.tmgmt_translation_all_job_items
   - language/uk/views.view.user_admin_people
-  - language/uk/views.view.who_s_new
-  - language/uk/views.view.who_s_online
   - metatag.metatag_defaults.global
   - metatag.metatag_defaults.node__page
   - metatag.settings
@@ -420,7 +388,6 @@ partial_list:
   - system.action.pathauto_update_alias_node
   - system.action.pathauto_update_alias_user
   - system.menu.footer
-  - null
   - taxonomy.vocabulary.activity_category
   - taxonomy.vocabulary.category
   - taxonomy.vocabulary.chatbot_category
@@ -436,8 +403,6 @@ partial_list:
   - taxonomy.vocabulary.relationship_to_parent
   - taxonomy.vocabulary.standard_deviation
   - taxonomy.vocabulary.standard_deviation_category
-  - taxonomy.vocabulary.subcategory
-  - taxonomy.vocabulary.type_of_article
   - taxonomy.vocabulary.type_of_support
   - tmgmt.settings
   - tmgmt.translator.file
@@ -450,36 +415,10 @@ partial_list:
   - user.role.reviewer
   - user.role.se
   - user.role.sme
-  - views.view.archive
   - views.view.articles
   - views.view.block_content
-  - views.view.content
-  - views.view.content_listing
   - views.view.country_content_listing
   - views.view.country_listing
   - views.view.country_reports
-  - views.view.feeds_feed
-  - views.view.files
-  - views.view.filter_by_published_content
-  - views.view.force_update_check
-  - views.view.frontpage
-  - views.view.global_content_listing_country_users
-  - views.view.glossary
-  - views.view.group_members
   - views.view.keyword_term_count
-  - views.view.media
-  - views.view.media_library
-  - views.view.my_language_content
-  - views.view.sponsors_list
-  - views.view.standard_deviation_page
-  - views.view.tax
-  - views.view.taxonomy_term
-  - views.view.tmgmt_job_items
-  - views.view.tmgmt_job_messages
-  - views.view.tmgmt_job_overview
-  - views.view.tmgmt_local_manage_translate_task
-  - views.view.tmgmt_local_task_items
-  - views.view.tmgmt_local_task_overview
   - views.view.tmgmt_translation_all_job_items
-  - views.view.user_admin_people
-  - views.view.users_list
