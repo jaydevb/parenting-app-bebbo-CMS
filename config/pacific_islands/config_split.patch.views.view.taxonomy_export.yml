@@ -135,7 +135,6 @@ removing:
               thousand_separator: ''
               prefix_suffix: true
             group_column: value
-            group_columns: {  }
             group_rows: true
             delta_limit: 0
             delta_offset: 0
@@ -200,7 +199,6 @@ removing:
             settings:
               link_to_entity: true
             group_column: value
-            group_columns: {  }
             group_rows: true
             delta_limit: 0
             delta_offset: 0
@@ -267,7 +265,6 @@ removing:
               link_to_entity: false
               native_language: false
             group_column: value
-            group_columns: {  }
             group_rows: true
             delta_limit: 0
             delta_offset: 0
@@ -333,7 +330,6 @@ removing:
             validate:
               type: none
               fail: 'not found'
-            validate_options: {  }
         row:
           type: data_field
           options:
@@ -387,14 +383,12 @@ removing:
             disable_sql_rewrite: false
             distinct: false
             replica: false
-            query_tags: {  }
         defaults:
           query: false
           group_by: false
           relationships: false
           fields: false
           arguments: false
-        relationships: {  }
         group_by: true
         path: taxonomy-data-export/%
       cache_metadata:
@@ -460,7 +454,6 @@ removing:
               thousand_separator: ''
               prefix_suffix: true
             group_column: value
-            group_columns: {  }
             group_rows: true
             delta_limit: 0
             delta_offset: 0
@@ -525,7 +518,6 @@ removing:
             settings:
               link_to_entity: true
             group_column: value
-            group_columns: {  }
             group_rows: true
             delta_limit: 0
             delta_offset: 0
@@ -592,7 +584,6 @@ removing:
               link_to_entity: false
               native_language: false
             group_column: value
-            group_columns: {  }
             group_rows: true
             delta_limit: 0
             delta_offset: 0
@@ -636,10 +627,8 @@ removing:
             validate:
               type: none
               fail: 'not found'
-            validate_options: {  }
         defaults:
           relationships: false
           fields: false
           arguments: false
-        relationships: {  }
         path: taxonomy-export/%

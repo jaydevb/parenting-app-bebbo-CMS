@@ -13,11 +13,9 @@ removing:
     field_unique_name:
       type: string_textfield
       weight: 2
-      region: content
       settings:
         size: 60
         placeholder: ''
-      third_party_settings: {  }
     path:
       weight: 4
     status:

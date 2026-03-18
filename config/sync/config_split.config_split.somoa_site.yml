@@ -13,9 +13,22 @@ folder: ../config/somoa
 module: {  }
 theme: {  }
 complete_list:
+  - block.block.claro_help_search
   - core.extension
-  - system.site
-  - workflows.workflow.group_workflow
+  - field.field.group.country.field_language_name_in_local
+  - field.field.group.country.field_language_visibility_in_app
+  - field.field.node.article.field_type_of_article
+  - field.field.taxonomy_term.category.field_type_of_article
+  - field.field.taxonomy_term.child_age.field_unique_name
+  - field.storage.group.field_language_name_in_local
+  - field.storage.group.field_language_visibility_in_app
+  - field.storage.node.field_type_of_article
+  - field.storage.taxonomy_term.field_type_of_article
+  - language.content_settings.taxonomy_term.type_of_article
+  - language.entity.fj-en
+  - language.entity.fj-fj
+  - language.entity.ws-en
+  - language.entity.ws-sm
   - entity_share_client.import_config.config_production
   - entity_share_server.channel.content_article_mandatory_tr
   - entity_share_server.channel.content_article_nonmandatory_tr
@@ -47,20 +60,19 @@ complete_list:
   - entity_share_server.channel.taxonomy_standard_deviation_tr
   - entity_share_server.channel.taxonomy_subcategory_tr
   - entity_share_server.channel.taxonomy_type_of_support_tr
-  - language.entity.fj-en
-  - language.entity.fj-fj
-  - language.entity.ws-en
-  - language.entity.ws-sm
   - mobile_app_links.android_packages
   - mobile_app_links.ios
   - pb_custom_form.landing_pages
   - pb_custom_form.language_redirects
+  - shortcut.set.default
+  - system.site
+  - taxonomy.vocabulary.type_of_article
   - tmgmt.translator.deepl_free
   - tmgmt.translator.deepl_pro
   - tmgmt.translator.google
   - tmgmt.translator.microsoft
+  - workflows.workflow.group_workflow
 partial_list:
-  - block.block.claro_help_search
   - core.base_field_override.taxonomy_term.activity_category.description
   - core.base_field_override.taxonomy_term.category.description
   - core.base_field_override.taxonomy_term.chatbot_category.description
@@ -95,12 +107,9 @@ partial_list:
   - feeds.feed_type.taxonomy_keywords
   - feeds.feed_type.taxonomy_keywords_serbia_serbian
   - field.field.group.country.field_app_name
-  - field.field.group.country.field_language_name_in_local
-  - field.field.group.country.field_language_visibility_in_app
   - field.field.node.activities.body
   - field.field.node.article.body
   - field.field.node.article.field_references_and_comments
-  - field.field.node.article.field_type_of_article
   - field.field.node.child_development.body
   - field.field.node.child_development.field_milestone_instructions
   - field.field.node.child_growth.body
@@ -114,24 +123,15 @@ partial_list:
   - field.field.node.vaccinations.body
   - field.field.node.video_article.body
   - field.field.node.video_article.field_references_and_comments
-  - field.field.taxonomy_term.category.field_type_of_article
-  - field.field.taxonomy_term.child_age.field_unique_name
   - field.storage.group.field_app_name
-  - field.storage.group.field_language_name_in_local
-  - field.storage.group.field_language_visibility_in_app
-  - field.storage.node.field_type_of_article
-  - field.storage.taxonomy_term.field_type_of_article
   - filelog.settings
   - filter.format.admin_full_html
   - group.role.country-admin
   - group.role.country-editor
-  - language.content_settings.taxonomy_term.type_of_article
   - language.entity.en
   - language.negotiation
   - purge.logger_channels
-  - shortcut.set.default
   - structure_sync.data
-  - taxonomy.vocabulary.type_of_article
   - tmgmt.settings
   - tmgmt.translator.file
   - tmgmt.translator.local
