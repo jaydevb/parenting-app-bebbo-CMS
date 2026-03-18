@@ -23,6 +23,7 @@ dependencies:
     - serialization
     - text
     - user
+    - views_data_export
 id: bebbo_v2_apis
 label: 'Bebbo v2 APIs'
 module: views
@@ -1537,7 +1538,6 @@ display:
       style:
         type: bebbo_serializer
         options:
-          uses_fields: false
           formats:
             json: json
       row:
@@ -2331,11 +2331,25 @@ display:
         options:
           offset: 0
       style:
-        type: bebbo_serializer
+        type: data_export
         options:
-          uses_fields: false
           formats:
             json: json
+          csv_settings:
+            delimiter: ','
+            enclosure: '"'
+            escape_char: \
+            strip_tags: true
+            trim: true
+            encoding: utf8
+            utf8_bom: '0'
+            use_serializer_encode_only: false
+            output_header: true
+          xml_settings:
+            encoding: UTF-8
+            root_node_name: response
+            item_node_name: item
+            format_output: false
       row:
         type: data_field
         options:
