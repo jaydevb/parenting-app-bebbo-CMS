@@ -1,8 +1,0 @@
-adding: {  }
-removing:
-  display:
-    default:
-      display_options:
-        fields:
-          name:
-            label: Name

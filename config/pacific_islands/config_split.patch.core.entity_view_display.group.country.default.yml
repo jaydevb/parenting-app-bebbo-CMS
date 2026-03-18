@@ -1,4 +1,16 @@
-adding: {  }
+adding:
+  dependencies:
+    config:
+      - field.field.group.country.field_app_name
+      - field.field.group.country.field_language_visibility_in_app
+  content:
+    field_app_name:
+      type: list_default
+      label: above
+      weight: 4
+      region: content
+  hidden:
+    field_language_visibility_in_app: true
 removing:
   dependencies:
     config:

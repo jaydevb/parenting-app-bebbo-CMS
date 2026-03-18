@@ -15,6 +15,5 @@ removing:
       display_options:
         cache:
           type: none
-          options: {  }
         defaults:
           cache: false
