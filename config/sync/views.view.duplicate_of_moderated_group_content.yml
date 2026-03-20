@@ -793,7 +793,7 @@ display:
             group_items:
               1: {  }
               2: {  }
-              3: {  }
+              0: {  }
       filter_groups:
         operator: AND
         groups:

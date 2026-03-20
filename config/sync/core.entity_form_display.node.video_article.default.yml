@@ -217,6 +217,10 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  url_redirects:
+    region: content
+    settings: {  }
+    third_party_settings: {  }
 hidden:
   field_generic_content: true
   field_pre_populated: true
