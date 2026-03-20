@@ -21,6 +21,7 @@ dependencies:
     - field.field.node.video_article.field_related_articles
     - field.field.node.video_article.field_related_video_articles
     - field.field.node.video_article.field_seasons
+    - field.field.node.video_article.field_target_audience
     - node.type.video_article
     - workflows.workflow.group_workflow
   module:
@@ -154,6 +155,16 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  field_target_audience:
+    type: entity_reference_autocomplete
+    weight: 51
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   langcode:
     type: language_select
     weight: 2
@@ -216,6 +227,11 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  url_redirects:
+    weight: 50
+    region: content
+    settings: {  }
     third_party_settings: {  }
 hidden:
   field_generic_content: true

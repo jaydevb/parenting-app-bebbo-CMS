@@ -22,6 +22,7 @@ dependencies:
     - field.field.node.video_article.field_related_articles
     - field.field.node.video_article.field_related_video_articles
     - field.field.node.video_article.field_seasons
+    - field.field.node.video_article.field_target_audience
     - node.type.video_article
   module:
     - text
@@ -68,4 +69,5 @@ hidden:
   field_related_articles: true
   field_related_video_articles: true
   field_seasons: true
+  field_target_audience: true
   langcode: true

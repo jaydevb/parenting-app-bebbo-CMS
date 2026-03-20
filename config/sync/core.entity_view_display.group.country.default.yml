@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.group.country.field_2_0_branding
     - field.field.group.country.field_app_name
     - field.field.group.country.field_content_toggle
     - field.field.group.country.field_country_email
@@ -24,6 +25,15 @@ targetEntityType: group
 bundle: country
 mode: default
 content:
+  field_2_0_branding:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 6
+    region: content
   field_app_name:
     type: list_default
     label: above
