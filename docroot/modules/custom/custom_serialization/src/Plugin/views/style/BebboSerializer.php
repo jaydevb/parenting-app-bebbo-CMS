@@ -272,21 +272,18 @@ class BebboSerializer extends Serializer {
    */
   private function transformRows(string $displayId, array $rows): array {
     return match ($displayId) {
-      'weekly_overview_export' => $this->transformPregnancyWeekly($rows),
-      'guide_rest_export'      => $this->transformGuide($rows),
-      // Add new display cases here for each new REST export display.
+      'weekly_overview_export'  => $this->transformPregnancyWeekly($rows),
+      'guide_rest_export'       => $this->transformGuide($rows),
+      'vaccination_rest_export' => $this->transformVaccinations($rows),
       default => $rows,
     };
   }
 
   /**
-   * Transforms rows for the pregnancy_weekly_overview view.
+   * Transforms rows for the pregnancy weekly overview display.
    *
-   * - Resolves featured_image_1 / featured_image_2 media IDs to absolute
-   *   WebP URLs via a single batch entity load (no N+1 queries).
-   * - Casts prental_age to int.
-   * - Casts average_height / average_weight to 2-decimal float strings.
-   * - Converts related_articles comma string to a deduplicated int array.
+   * Resolves media fields to WebP URLs, casts numeric fields, and converts
+   * related_articles to a deduplicated int array.
    *
    * @param array $rows
    *   Raw rows from the view.
@@ -299,74 +296,12 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
-    $mediaFields = ['featured_image_1', 'featured_image_2'];
+    $this->resolveMediaToWebp($rows, ['featured_image_1', 'featured_image_2']);
 
-    // 1. Collect every media ID across all rows in one pass.
-    $mediaIds = array_unique(array_filter(
-      array_merge(...array_map(
-        fn($row) => array_map(fn($f) => $row[$f] ?? NULL, $mediaFields),
-        $rows
-      )),
-      'is_numeric'
-    ));
-
-    // 2. Batch-load all media entities once → build ID → WebP URL map.
-    // Load image style once (same style used by CustomSerializer).
-    // buildUrl() produces the resized derivative URL; the WebP module then
-    // generates the .webp file alongside it on first request.
-    // Falls back to the raw file URL if the image style is missing.
-    $loadedStyle = $this->entityTypeManager
-      ->getStorage('image_style')
-      ->load('content_1200xh_');
-    $imageStyle = $loadedStyle instanceof ImageStyle ? $loadedStyle : NULL;
-
-    $urlMap = [];
-    if ($mediaIds) {
-      foreach ($this->entityTypeManager->getStorage('media')->loadMultiple($mediaIds) as $media) {
-        if (!$media instanceof MediaInterface) {
-          continue;
-        }
-        $file = $media->get('field_media_image')->entity;
-        if ($file instanceof FileInterface) {
-          $uri = $file->getFileUri();
-          // Build the styled URL (e.g. /styles/content_1200xh_/public/…).
-          // Fallback to raw absolute URL if image style is unavailable.
-          $styledUrl = $imageStyle
-            ? $imageStyle->buildUrl($uri)
-            : $this->fileUrlGenerator->generateAbsoluteString($uri);
-          // Convert jpg/jpeg/png → .webp
-          // (mirrors CustomSerializerHelper::convertToWebp).
-          $urlMap[$media->id()] = preg_replace('/\.(jpg|jpeg|png)(\?.*)?$/i', '.webp$2', $styledUrl) ?? $styledUrl;
-        }
-      }
-    }
-
-    // 3. Apply per-row field transformations.
     foreach ($rows as &$row) {
-      // Media ID → WebP URL. NULL when media is missing or unpublished.
-      foreach ($mediaFields as $field) {
-        $row[$field] = $urlMap[(int) ($row[$field] ?? 0)] ?? NULL;
-      }
-
-      $row['id']             = (int) ($row['id'] ?? 0);
-      $row['prental_age']    = (int) ($row['prental_age'] ?? 0);
-      $row['average_height'] = round((float) ($row['average_height'] ?? 0), 2);
-      $row['average_weight'] = round((float) ($row['average_weight'] ?? 0), 2);
-
-      // raw_output:true on a multi-value entity reference field delivers an
-      // array of target IDs directly. raw_output:false delivers a rendered
-      // comma-separated string of labels. Handle both so the code is robust.
-      $rawArticles = $row['related_articles'] ?? [];
-      if (is_array($rawArticles)) {
-        $articleIds = $rawArticles;
-      }
-      else {
-        $articleIds = array_filter(
-          array_map('trim', explode(',', (string) $rawArticles)),
-          'is_numeric'
-        );
-      }
-      $row['related_articles'] = array_values(array_unique(array_map('intval', $articleIds)));
+      $this->castToInt($row, ['id', 'prental_age']);
+      $this->castToFloat($row, ['average_height', 'average_weight']);
+      $this->toIntArray($row, ['related_articles']);
     }
     unset($row);
 
@@ -374,12 +309,10 @@ class BebboSerializer extends Serializer {
   }
 
   /**
-   * Transforms rows for the guide_rest_export display.
+   * Transforms rows for the guide REST export display.
    *
-   * - Casts id to int.
-   * - Converts child_age, related_articles, related_games to deduplicated
-   *   int arrays. Handles both raw array (raw_output:true) and
-   *   comma-separated string (raw_output:false) from the view row plugin.
+   * Casts id to int and converts multi-value reference fields to int arrays.
+   * Removes related_articles when empty.
    *
    * @param array $rows
    *   Raw rows from the view.
@@ -392,35 +325,183 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
-    // Fields that must become deduplicated int arrays.
-    $multiIntFields = ['child_age', 'related_articles', 'related_games'];
-
     foreach ($rows as &$row) {
-      $row['id'] = (int) ($row['id'] ?? 0);
+      $this->castToInt($row, ['id']);
+      $this->toIntArray($row, ['child_age', 'related_articles', 'related_games']);
 
-      foreach ($multiIntFields as $field) {
-        $raw = $row[$field] ?? [];
-        if (is_array($raw)) {
-          $ids = $raw;
-        }
-        else {
-          $ids = array_filter(
-            array_map('trim', explode(',', (string) $raw)),
-            'is_numeric'
-          );
-        }
-        $ids = array_values(array_unique(array_map('intval', $ids)));
-        if ($field === 'related_articles' && empty($ids)) {
-          unset($row[$field]);
-        }
-        else {
-          $row[$field] = $ids;
-        }
+      // Remove related_articles when empty (display-specific rule).
+      if (empty($row['related_articles'])) {
+        unset($row['related_articles']);
       }
     }
     unset($row);
 
     return $rows;
+  }
+
+  /**
+   * Transforms rows for the vaccination REST export display.
+   *
+   * Casts numeric fields to int, converts pinned_article to a deduplicated
+   * int array, and decodes HTML entities in title.
+   *
+   * @param array $rows
+   *   Raw rows from the view.
+   *
+   * @return array
+   *   Transformed rows.
+   */
+  private function transformVaccinations(array $rows): array {
+    if (empty($rows)) {
+      return $rows;
+    }
+
+    foreach ($rows as &$row) {
+      $this->castToInt($row, ['id', 'growth_period', 'pinned_video_article', 'old_calendar', 'pinned_article']);
+      $this->toIntArray($row, ['related_articles']);
+      $this->decodeHtmlEntities($row, ['title']);
+    }
+    unset($row);
+
+    return $rows;
+  }
+
+  /**
+   * Casts the given row fields to integers.
+   *
+   * Missing or empty values default to 0.
+   *
+   * @param array $row
+   *   A single row (passed by reference).
+   * @param array $fields
+   *   Field names to cast.
+   */
+  private function castToInt(array &$row, array $fields): void {
+    foreach ($fields as $field) {
+      $row[$field] = (int) ($row[$field] ?? 0);
+    }
+  }
+
+  /**
+   * Rounds the given row fields to floats with a fixed number of decimals.
+   *
+   * Missing or empty values default to 0.0.
+   *
+   * @param array $row
+   *   A single row (passed by reference).
+   * @param array $fields
+   *   Field names to cast.
+   * @param int $decimals
+   *   Number of decimal places (default 2).
+   */
+  private function castToFloat(array &$row, array $fields, int $decimals = 2): void {
+    foreach ($fields as $field) {
+      $row[$field] = round((float) ($row[$field] ?? 0), $decimals);
+    }
+  }
+
+  /**
+   * Converts row fields to deduplicated integer arrays.
+   *
+   * Handles both raw arrays (raw_output:true) and comma-separated strings
+   * (raw_output:false) from the Views row plugin.
+   *
+   * @param array $row
+   *   A single row (passed by reference).
+   * @param array $fields
+   *   Field names to convert.
+   */
+  private function toIntArray(array &$row, array $fields): void {
+    foreach ($fields as $field) {
+      $raw = $row[$field] ?? [];
+      if (is_array($raw)) {
+        $ids = $raw;
+      }
+      else {
+        $ids = array_filter(
+          array_map('trim', explode(',', (string) $raw)),
+          'is_numeric'
+        );
+      }
+      $row[$field] = array_values(array_unique(array_map('intval', $ids)));
+    }
+  }
+
+  /**
+   * Decodes HTML entities in the given row fields.
+   *
+   * @param array $row
+   *   A single row (passed by reference).
+   * @param array $fields
+   *   Field names to decode.
+   */
+  private function decodeHtmlEntities(array &$row, array $fields): void {
+    foreach ($fields as $field) {
+      if (!empty($row[$field])) {
+        $row[$field] = htmlspecialchars_decode((string) $row[$field], ENT_QUOTES | ENT_HTML5);
+      }
+    }
+  }
+
+  /**
+   * Resolves media ID fields to styled WebP URLs across all rows.
+   *
+   * Batch-collects media IDs, loads entities in a single query, builds
+   * an ID-to-URL map with the content_1200xh_ image style, and replaces
+   * each media ID with the corresponding absolute WebP URL.
+   *
+   * @param array $rows
+   *   All rows (passed by reference).
+   * @param array $fields
+   *   Field names containing media IDs.
+   */
+  private function resolveMediaToWebp(array &$rows, array $fields): void {
+    // 1. Collect every media ID across all rows in one pass.
+    $mediaIds = array_unique(array_filter(
+      array_merge(...array_map(
+        fn($row) => array_map(fn($f) => $row[$f] ?? NULL, $fields),
+        $rows
+      )),
+      'is_numeric'
+    ));
+
+    if (empty($mediaIds)) {
+      return;
+    }
+
+    // 2. Load image style once; fallback to raw URL if missing.
+    $loadedStyle = $this->entityTypeManager
+      ->getStorage('image_style')
+      ->load('content_1200xh_');
+    $imageStyle = $loadedStyle instanceof ImageStyle ? $loadedStyle : NULL;
+
+    // 3. Batch-load media entities and build ID → WebP URL map.
+    $urlMap = [];
+    foreach ($this->entityTypeManager->getStorage('media')->loadMultiple($mediaIds) as $media) {
+      if (!$media instanceof MediaInterface) {
+        continue;
+      }
+      $file = $media->get('field_media_image')->entity;
+      if ($file instanceof FileInterface) {
+        $uri = $file->getFileUri();
+        $styledUrl = $imageStyle
+          ? $imageStyle->buildUrl($uri)
+          : $this->fileUrlGenerator->generateAbsoluteString($uri);
+        $urlMap[$media->id()] = preg_replace(
+          '/\.(jpg|jpeg|png)(\?.*)?$/i',
+          '.webp$2',
+          $styledUrl
+        ) ?? $styledUrl;
+      }
+    }
+
+    // 4. Replace media IDs with URLs in each row.
+    foreach ($rows as &$row) {
+      foreach ($fields as $field) {
+        $row[$field] = $urlMap[(int) ($row[$field] ?? 0)] ?? NULL;
+      }
+    }
+    unset($row);
   }
 
   /**
