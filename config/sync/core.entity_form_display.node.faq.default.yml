@@ -6,6 +6,7 @@ dependencies:
     - field.field.node.faq.body
     - field.field.node.faq.field_answer_part_2
     - field.field.node.faq.field_chatbot_subcategory
+    - field.field.node.faq.field_child_s_age
     - field.field.node.faq.field_licensed_content
     - field.field.node.faq.field_mandatory_content
     - field.field.node.faq.field_pinned_article
@@ -52,6 +53,16 @@ content:
     weight: 4
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_child_s_age:
+    type: entity_reference_autocomplete
+    weight: 121
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
   field_mandatory_content:
     type: boolean_checkbox
@@ -132,6 +143,11 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  url_redirects:
+    weight: 50
+    region: content
+    settings: {  }
     third_party_settings: {  }
 hidden:
   field_licensed_content: true

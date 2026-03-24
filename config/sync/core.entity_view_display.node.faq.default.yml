@@ -6,6 +6,7 @@ dependencies:
     - field.field.node.faq.body
     - field.field.node.faq.field_answer_part_2
     - field.field.node.faq.field_chatbot_subcategory
+    - field.field.node.faq.field_child_s_age
     - field.field.node.faq.field_licensed_content
     - field.field.node.faq.field_mandatory_content
     - field.field.node.faq.field_pinned_article
@@ -45,6 +46,14 @@ content:
       link: false
     third_party_settings: {  }
     weight: 4
+    region: content
+  field_child_s_age:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 101
     region: content
   field_licensed_content:
     type: boolean

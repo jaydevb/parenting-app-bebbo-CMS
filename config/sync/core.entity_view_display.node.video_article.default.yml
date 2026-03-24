@@ -21,6 +21,7 @@ dependencies:
     - field.field.node.video_article.field_related_articles
     - field.field.node.video_article.field_related_video_articles
     - field.field.node.video_article.field_seasons
+    - field.field.node.video_article.field_target_audience
     - node.type.video_article
   module:
     - text
@@ -179,6 +180,14 @@ content:
       link: true
     third_party_settings: {  }
     weight: 113
+    region: content
+  field_target_audience:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 22
     region: content
   links:
     settings: {  }

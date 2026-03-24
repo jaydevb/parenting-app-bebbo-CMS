@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.taxonomy_term.subcategory.field_category
     - field.field.taxonomy_term.subcategory.field_child_age
+    - field.field.taxonomy_term.subcategory.field_unique_name
     - taxonomy.vocabulary.subcategory
   module:
     - text
@@ -35,6 +36,14 @@ content:
       link: true
     third_party_settings: {  }
     weight: 2
+    region: content
+  field_unique_name:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 3
     region: content
 hidden:
   langcode: true

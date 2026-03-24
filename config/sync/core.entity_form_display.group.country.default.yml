@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.group.country.field_2_0_branding
     - field.field.group.country.field_app_name
     - field.field.group.country.field_content_toggle
     - field.field.group.country.field_country_email
@@ -24,6 +25,13 @@ targetEntityType: group
 bundle: country
 mode: default
 content:
+  field_2_0_branding:
+    type: media_library_widget
+    weight: 26
+    region: content
+    settings:
+      media_types: {  }
+    third_party_settings: {  }
   field_app_name:
     type: options_select
     weight: 1

@@ -22,6 +22,7 @@ dependencies:
     - field.field.node.video_article.field_related_articles
     - field.field.node.video_article.field_related_video_articles
     - field.field.node.video_article.field_seasons
+    - field.field.node.video_article.field_target_audience
     - node.type.video_article
   module:
     - layout_builder
@@ -188,4 +189,5 @@ hidden:
   feeds_item: true
   field_meta_keywords: true
   field_pre_populated: true
+  field_target_audience: true
   langcode: true
