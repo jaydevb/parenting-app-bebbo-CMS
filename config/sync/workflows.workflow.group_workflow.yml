@@ -9,9 +9,11 @@ dependencies:
     - node.type.child_growth
     - node.type.daily_homescreen_messages
     - node.type.faq
+    - node.type.guide
     - node.type.health_check_ups
     - node.type.milestone
     - node.type.page
+    - node.type.pregnancy_weekly_overview
     - node.type.survey
     - node.type.vaccinations
     - node.type.video_article
@@ -240,9 +242,11 @@ type_settings:
       - child_growth
       - daily_homescreen_messages
       - faq
+      - guide
       - health_check_ups
       - milestone
       - page
+      - pregnancy_weekly_overview
       - survey
       - vaccinations
       - video_article

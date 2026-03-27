@@ -10,27 +10,48 @@ dependencies:
     - field.field.node.guide.field_related_games
     - node.type.guide
   module:
+    - text
     - user
 id: node.guide.full
 targetEntityType: node
 bundle: guide
 mode: full
 content:
+  field_child_s_age:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_message:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 4
+    region: content
   field_related_articles:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 107
+    weight: 2
+    region: content
+  field_related_games:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
     region: content
   links:
     settings: {  }
     third_party_settings: {  }
-    weight: 100
+    weight: 0
     region: content
 hidden:
-  field_child_s_age: true
-  field_message: true
-  field_related_games: true
   langcode: true

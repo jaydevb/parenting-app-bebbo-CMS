@@ -14,31 +14,86 @@ dependencies:
     - field.field.node.pregnancy_weekly_overview.field_related_articles
     - node.type.pregnancy_weekly_overview
   module:
+    - options
     - user
 id: node.pregnancy_weekly_overview.full
 targetEntityType: node
 bundle: pregnancy_weekly_overview
 mode: full
 content:
+  field_average_height:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_average_weight:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 7
+    region: content
+  field_featured_image_1:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_featured_image_2:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_fruit:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_fun_fact:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_parental_week:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 5
+    region: content
   field_related_articles:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 107
+    weight: 8
     region: content
   links:
     settings: {  }
     third_party_settings: {  }
-    weight: 100
+    weight: 0
     region: content
 hidden:
-  field_average_height: true
-  field_average_weight: true
-  field_featured_image_1: true
-  field_featured_image_2: true
-  field_fruit: true
-  field_fun_fact: true
-  field_parental_week: true
   langcode: true
