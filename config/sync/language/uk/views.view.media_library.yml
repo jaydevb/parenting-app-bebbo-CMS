@@ -15,6 +15,9 @@ display:
           sort_asc_label: Зрост
           sort_desc_label: Спад
       filters:
+        status:
+          expose:
+            label: 'Publishing status'
         name:
           expose:
             label: "Назва (ім'я)"

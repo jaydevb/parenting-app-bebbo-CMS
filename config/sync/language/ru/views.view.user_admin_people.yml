@@ -43,6 +43,9 @@ display:
         roles_target_id:
           expose:
             label: Роль
+        permission:
+          expose:
+            label: Permission
   page_1:
     display_options:
       menu:

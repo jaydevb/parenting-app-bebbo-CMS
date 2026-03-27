@@ -9,6 +9,7 @@ dependencies:
     - field.field.user.user.user_picture
     - image.style.thumbnail
   module:
+    - path
     - svg_image
     - user
 _core:
@@ -25,12 +26,13 @@ content:
     third_party_settings: {  }
   field_receive_content_moderation:
     type: boolean_checkbox
-    weight: 4
+    weight: 2
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
-  google_analytics:
+  path:
+    type: path
     weight: 3
     region: content
     settings: {  }
@@ -46,6 +48,7 @@ content:
 hidden:
   contact: true
   feeds_item: true
+  google_analytics: true
   langcode: true
   language: true
   timezone: true
