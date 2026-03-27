@@ -6,7 +6,8 @@ id: milestone_english
 class: null
 field_plugin_method: null
 cck_plugin_method: null
-migration_tags: milestone_english
+migration_tags:
+  - milestone_english
 migration_group: milestone
 label: 'Milestone English'
 source:
@@ -67,6 +68,8 @@ process:
 destination:
   plugin: 'entity:node'
   default_bundle: milestone
+idMap: {  }
 migration_dependencies:
   required: {  }
   optional: {  }
+include: null

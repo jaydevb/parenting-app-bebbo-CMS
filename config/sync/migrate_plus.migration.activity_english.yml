@@ -6,7 +6,8 @@ id: activity_english
 class: null
 field_plugin_method: null
 cck_plugin_method: null
-migration_tags: activity_english
+migration_tags:
+  - activity_english
 migration_group: activity
 label: activity_english
 source:
@@ -66,6 +67,8 @@ process:
 destination:
   plugin: 'entity:node'
   default_bundle: activities
+idMap: {  }
 migration_dependencies:
   required: {  }
   optional: {  }
+include: null

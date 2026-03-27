@@ -25,6 +25,8 @@ display:
           label: Мітка
         type:
           label: Тип
+        changed:
+          label: Changed
         operations:
           label: Операції
       filters:

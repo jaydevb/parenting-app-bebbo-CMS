@@ -20,6 +20,8 @@ display:
           label: Мітка
         type:
           label: Тип
+        changed:
+          label: Changed
         operations:
           label: Операції
   checkout:
@@ -29,3 +31,5 @@ display:
           label: Мітка
         type:
           label: Тип
+        changed:
+          label: Changed

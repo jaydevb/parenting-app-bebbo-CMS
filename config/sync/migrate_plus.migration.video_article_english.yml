@@ -6,7 +6,8 @@ id: video_article_english
 class: null
 field_plugin_method: null
 cck_plugin_method: null
-migration_tags: video_article_english
+migration_tags:
+  - video_article_english
 migration_group: video_article
 label: 'Video Article English'
 source:
@@ -91,6 +92,8 @@ process:
 destination:
   plugin: 'entity:node'
   default_bundle: video_article
+idMap: {  }
 migration_dependencies:
   required: {  }
   optional: {  }
+include: null
