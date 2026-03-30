@@ -95,7 +95,6 @@ complete_list:
   - tmgmt.translator.google
   - tmgmt.translator.microsoft
   - views.view.duplicate_of_tax_test
-  - workflows.workflow.group_workflow
 partial_list:
   - block.block.claro_help_search
   - block.block.languagedropdownswitcher

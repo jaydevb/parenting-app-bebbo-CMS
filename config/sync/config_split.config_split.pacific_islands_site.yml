@@ -357,4 +357,3 @@ partial_list:
   - views.view.tmgmt_local_manage_translate_task
   - views.view.tmgmt_local_task_items
   - views.view.tmgmt_local_task_overview
-  - workflows.workflow.group_workflow

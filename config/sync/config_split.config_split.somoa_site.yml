@@ -71,7 +71,6 @@ complete_list:
   - tmgmt.translator.deepl_pro
   - tmgmt.translator.google
   - tmgmt.translator.microsoft
-  - workflows.workflow.group_workflow
 partial_list:
   - core.base_field_override.taxonomy_term.activity_category.description
   - core.base_field_override.taxonomy_term.category.description

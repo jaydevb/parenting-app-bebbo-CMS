@@ -43,7 +43,6 @@ complete_list:
   - tmgmt.translator.google
   - tmgmt.translator.memsource
   - tmgmt.translator.microsoft
-  - workflows.workflow.group_workflow
 partial_list:
   - block.block.claro_help_search
   - block.block.languagedropdownswitcher
