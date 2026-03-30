@@ -1121,7 +1121,7 @@ class CustomSerializer extends Serializer {
             'id' => (int) $tid,
             'name' => $tax_result[$tax]->name,
             'parent_category_id' => $term_obj ? (int) $term_obj->get('field_chatbot_category')->target_id : 0,
-            'unique_name' => ($term_obj && !empty($term_obj->get('field_unique_name')->value)) ? $term_obj->get('field_unique_name')->value : $this->generateMachineName($term_obj, $tax_result[$tax]->name),
+            'unique_name' => ($term_obj && !empty($term_obj->get('field_unique_name')->value)) ? $term_obj->get('field_unique_name')->value : "",
           ];
         }
         elseif ($vocabulary_machine_name === "category") {
@@ -1136,7 +1136,7 @@ class CustomSerializer extends Serializer {
           $term_data[] = [
             'id' => (int) $tid,
             'name' => $tax_result[$tax]->name,
-            'unique_name' => ($term_obj && !empty($term_obj->get('field_unique_name')->value)) ? $term_obj->get('field_unique_name')->value : $this->generateMachineName($term_obj, $tax_result[$tax]->name),
+            'unique_name' => ($term_obj && !empty($term_obj->get('field_unique_name')->value)) ? $term_obj->get('field_unique_name')->value : "",
             'field_type_of_article' => $field_type_of_article,
           ];
         }
@@ -1145,7 +1145,7 @@ class CustomSerializer extends Serializer {
           $term_data[] = [
             'id' => (int) $tid,
             'name' => $tax_result[$tax]->name,
-            'unique_name' => ($term_obj && !empty($term_obj->get('field_unique_name')->value)) ? $term_obj->get('field_unique_name')->value : $this->generateMachineName($term_obj, $tax_result[$tax]->name),
+            'unique_name' => ($term_obj && !empty($term_obj->get('field_unique_name')->value)) ? $term_obj->get('field_unique_name')->value : "",
           ];
         }
         else {
@@ -1157,38 +1157,6 @@ class CustomSerializer extends Serializer {
       }
       return $term_data;
     }
-  }
-
-  /**
-   * Generates a machine name from a taxonomy term.
-   *
-   * Uses the English source translation of the term name as the basis so the
-   * result is stable across all language requests. Falls back to the supplied
-   * $fallback_name (the current-language name) when no English translation
-   * exists.
-   *
-   * The generated value:
-   * - is lowercased
-   * - has all non-alphanumeric characters replaced with underscores
-   * - has consecutive underscores collapsed to a single underscore
-   * - has leading/trailing underscores trimmed
-   *
-   * @param \Drupal\taxonomy\TermInterface|null $term_obj
-   *   The loaded term entity (may be NULL).
-   * @param string $fallback_name
-   *   The current-language term name used when no English translation exists.
-   *
-   * @return string
-   *   The generated machine name.
-   */
-  protected function generateMachineName($term_obj, string $fallback_name): string {
-    if ($term_obj && $term_obj->hasTranslation('en')) {
-      $source_name = $term_obj->getTranslation('en')->getName();
-    }
-    else {
-      $source_name = $fallback_name;
-    }
-    return trim(preg_replace('/_+/', '_', preg_replace('/[^a-z0-9_]/', '_', strtolower($source_name))), '_');
   }
 
   /**
