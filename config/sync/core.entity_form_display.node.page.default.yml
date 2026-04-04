@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.page.body
+    - field.field.node.page.field_embedded_images
     - field.field.node.page.field_licensed_content
     - field.field.node.page.field_mandatory_content
     - field.field.node.page.field_meta_tags
@@ -38,6 +39,14 @@ content:
     weight: 3
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_embedded_images:
+    type: string_textfield
+    weight: 51
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
   field_mandatory_content:
     type: boolean_checkbox

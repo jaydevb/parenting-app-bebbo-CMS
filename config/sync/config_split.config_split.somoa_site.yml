@@ -171,3 +171,4 @@ partial_list:
   - views.view.tmgmt_local_task_overview
   - views.view.user_admin_people
   - views.view.users_list
+  - views.view.bebbo_v2_apis

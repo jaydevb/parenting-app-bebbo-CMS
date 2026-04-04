@@ -9,6 +9,7 @@ module:
   allowed_languages: 0
   automated_cron: 0
   basic_auth: 0
+  bebbo_serializer: 0
   big_pipe: 0
   block: 0
   block_content: 0

@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.full
     - field.field.node.page.body
+    - field.field.node.page.field_embedded_images
     - field.field.node.page.field_licensed_content
     - field.field.node.page.field_mandatory_content
     - field.field.node.page.field_meta_tags
@@ -144,6 +145,7 @@ content:
     weight: 101
     region: content
 hidden:
+  field_embedded_images: true
   field_meta_tags: true
   field_pre_populated: true
   langcode: true

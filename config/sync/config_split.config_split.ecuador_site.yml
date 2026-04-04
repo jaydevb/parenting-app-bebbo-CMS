@@ -155,7 +155,6 @@ complete_list:
   - tmgmt.translator.google
   - tmgmt.translator.memsource
   - tmgmt.translator.microsoft
-  - workflows.workflow.group_workflow
 partial_list:
   - block.block.claro_help_search
   - block.block.kosovologo
@@ -305,3 +304,4 @@ partial_list:
   - views.view.tmgmt_local_task_overview
   - views.view.user_admin_people
   - views.view.users_list
+  - views.view.bebbo_v2_apis
