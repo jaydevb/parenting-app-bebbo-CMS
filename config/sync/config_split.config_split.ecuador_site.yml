@@ -22,7 +22,6 @@ complete_list:
   - google_analytics.settings
   - language.entity.ec-es
   - language.entity.es
-  - core.extension
   - mobile_app_links.android
   - mobile_app_links.android_packages
   - mobile_app_links.ios

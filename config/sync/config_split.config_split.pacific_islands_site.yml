@@ -17,7 +17,6 @@ complete_list:
   - entity_share_server.channel.content_article_nonm_health_tr_
   - entity_share_server.channel.content_article_nonm_play_kg_
   - entity_share_server.channel.content_basic_page_kg_
-  - core.extension
   - language.entity.ar
   - language.entity.pc-en
   - language.entity.ws-en
