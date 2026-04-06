@@ -1,0 +1,19 @@
+adding:
+  dependencies:
+    config:
+      - field.field.taxonomy_term.subcategory.field_child_s_age
+  content:
+    field_child_s_age:
+      type: options_select
+      weight: 4
+      region: content
+      settings: {  }
+      third_party_settings: {  }
+removing:
+  dependencies:
+    config:
+      - field.field.taxonomy_term.subcategory.field_child_age
+  content:
+    field_child_age:
+      type: options_select
+      weight: 4
