@@ -196,5 +196,7 @@ content:
     region: content
 hidden:
   feeds_item: true
+  field_body_rendered: true
+  field_embedded_images: true
   field_pre_populated: true
   langcode: true
