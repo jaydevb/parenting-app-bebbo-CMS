@@ -16,7 +16,6 @@ complete_list:
   - block.block.claro_logo
   - block.block.kosovologo
   - block.block.logo
-  - core.extension
   - system.site
   - entity_share_client.import_config.config_stage
   - taxonomy.vocabulary.subcategory

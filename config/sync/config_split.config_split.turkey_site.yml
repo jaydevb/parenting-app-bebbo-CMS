@@ -163,4 +163,3 @@ partial_list:
   - views.view.user_admin_people
   - views.view.users_list
   - views.view.bebbo_v2_apis
-  - core.extension
