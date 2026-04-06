@@ -67,6 +67,8 @@ process:
 destination:
   plugin: 'entity:node'
   default_bundle: milestone
+idMap: {  }
 migration_dependencies:
   required: {  }
   optional: {  }
+include: null

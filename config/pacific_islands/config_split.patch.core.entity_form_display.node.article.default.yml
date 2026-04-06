@@ -117,5 +117,4 @@ removing:
       weight: 15
     uid:
       weight: 20
-    url_redirects:
-      weight: 50
+

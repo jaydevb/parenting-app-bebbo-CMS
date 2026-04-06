@@ -22,5 +22,3 @@ removing:
       weight: 14
     translation:
       weight: 15
-    url_redirects:
-      weight: 50

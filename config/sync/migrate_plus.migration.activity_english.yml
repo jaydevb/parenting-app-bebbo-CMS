@@ -66,6 +66,8 @@ process:
 destination:
   plugin: 'entity:node'
   default_bundle: activities
+idMap: {  }
 migration_dependencies:
   required: {  }
   optional: {  }
+include: null

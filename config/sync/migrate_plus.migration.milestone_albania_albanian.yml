@@ -41,6 +41,8 @@ destination:
   plugin: 'entity:node'
   default_bundle: milestone
   translations: true
+idMap: {  }
 migration_dependencies:
   required: {  }
   optional: {  }
+include: null

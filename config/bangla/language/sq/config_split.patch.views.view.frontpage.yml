@@ -1,8 +1,0 @@
-adding:
-  display:
-    default:
-      display_options:
-        empty:
-          title:
-            title: 'Welcome to [site:name]'
-removing: {  }

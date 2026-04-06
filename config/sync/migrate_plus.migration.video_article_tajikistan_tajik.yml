@@ -42,6 +42,8 @@ destination:
   plugin: 'entity:node'
   default_bundle: video_article
   translations: true
+idMap: {  }
 migration_dependencies:
   required: {  }
   optional: {  }
+include: null

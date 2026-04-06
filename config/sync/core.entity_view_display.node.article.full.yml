@@ -176,7 +176,9 @@ content:
     weight: 2
     region: content
 hidden:
+  field_body_rendered: true
   field_do_not_feature: true
+  field_embedded_images: true
   field_meta_keywords: true
   field_pre_populated: true
   field_subcategory: true
