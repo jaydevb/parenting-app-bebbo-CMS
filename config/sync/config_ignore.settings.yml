@@ -13,9 +13,9 @@ ignored_config_entities:
   - purge.logger_channels
   - smtp.settings
   - 'tmgmt.translator.*'
-  - views.view.entity_share_client_entity_import_status
   - tmgmt.translator.deepl_free
   - tmgmt.translator.deepl_pro
   - tmgmt.translator.google
   - tmgmt.translator.memsource
   - tmgmt.translator.microsoft
+  - views.view.entity_share_client_entity_import_status

@@ -83,6 +83,55 @@ display:
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
+        uuid:
+          id: uuid
+          table: forcefull_check_update_api
+          field: uuid
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          label: Author
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
         countries_id:
           id: countries_id
           table: forcefull_check_update_api
@@ -140,7 +189,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: standard
-          label: 'Created At'
+          label: 'CU date'
           exclude: false
           alter:
             alter_text: false
@@ -189,7 +238,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: standard
-          label: 'Flag Status'
+          label: 'Content Update (CU)'
           exclude: false
           alter:
             alter_text: false
@@ -230,15 +279,113 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-        uuid:
-          id: uuid
+        update_type:
+          id: update_type
           table: forcefull_check_update_api
-          field: uuid
+          field: update_type
           relationship: none
           group_type: group
           admin_label: ''
           plugin_id: standard
-          label: Author
+          label: 'Update Type'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+        google_play_url:
+          id: google_play_url
+          table: forcefull_check_update_api
+          field: google_play_url
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          label: 'Google Play URL'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+        app_store_url:
+          id: app_store_url
+          table: forcefull_check_update_api
+          field: app_store_url
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          label: 'App Store URL'
           exclude: false
           alter:
             alter_text: false
@@ -427,6 +574,57 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
+        update_type:
+          id: update_type
+          table: forcefull_check_update_api
+          field: update_type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: string
+          operator: '='
+          value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: update_type_op
+            label: 'Update type'
+            description: null
+            use_operator: false
+            operator: update_type_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: update_type
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            placeholder: null
+          is_grouped: true
+          group_info:
+            label: 'Update type'
+            description: ''
+            identifier: update_type
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items:
+              1:
+                title: 'Content Update'
+                operator: '='
+                value: content_update
+              2:
+                title: 'App Update'
+                operator: '='
+                value: app_update
+              3:
+                title: ''
+                operator: '='
+                value: ''
       style:
         type: table
         options:
