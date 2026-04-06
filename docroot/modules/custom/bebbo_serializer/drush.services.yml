@@ -1,0 +1,17 @@
+services:
+  bebbo_serializer.embedded_images_commands:
+    class: Drupal\bebbo_serializer\Commands\EmbeddedImagesCommands
+    arguments:
+      - '@entity_type.manager'
+      - '@bebbo_serializer.embedded_images_extractor'
+    tags:
+      - { name: drush.command }
+
+  bebbo_serializer.body_rendered_commands:
+    class: Drupal\bebbo_serializer\Commands\BodyRenderedCommands
+    arguments:
+      - '@entity_type.manager'
+      - '@bebbo_serializer.body_rendered_processor'
+      - '@request_stack'
+    tags:
+      - { name: drush.command }
