@@ -13,6 +13,7 @@ folder: ../config/zimbabwe
 module: {  }
 theme: {  }
 complete_list:
+  - core.extension
   - system.site
   - entity_share_client.import_config.config_production
   - entity_share_server.channel.content_article_mandatory_tr
@@ -48,6 +49,7 @@ complete_list:
   - language.entity.zw-en
   - language.entity.zw-nd
   - language.entity.zw-sn
+  - language/en/system.menu.main
   - mobile_app_links.android_packages
   - mobile_app_links.ios
   - pb_custom_form.landing_pages

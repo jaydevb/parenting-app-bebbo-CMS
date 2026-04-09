@@ -14,6 +14,7 @@ module: {  }
 theme: {  }
 complete_list:
   - block.block.claro_help_search
+  - core.extension
   - field.field.group.country.field_language_name_in_local
   - field.field.group.country.field_language_visibility_in_app
   - field.field.node.article.field_type_of_article
