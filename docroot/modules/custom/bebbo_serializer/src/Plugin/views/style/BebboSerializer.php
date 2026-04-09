@@ -3,17 +3,14 @@
 namespace Drupal\bebbo_serializer\Plugin\views\style;
 
 use Drupal\Core\Database\Connection;
+use Drupal\file\FileInterface;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
-use Drupal\file\FileInterface;
 use Drupal\group\Entity\Group;
-use Drupal\image\Entity\ImageStyle;
 use Drupal\language_visibility_control\LanguageVisibilityService;
-use Drupal\media\MediaInterface;
 use Drupal\rest\Plugin\views\style\Serializer;
 use Drupal\rest\Plugin\views\display\RestExport;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -78,13 +75,6 @@ class BebboSerializer extends Serializer {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The file URL generator.
-   *
-   * @var \Drupal\Core\File\FileUrlGeneratorInterface
-   */
-  protected FileUrlGeneratorInterface $fileUrlGenerator;
-
-  /**
    * The database connection.
    *
    * @var \Drupal\Core\Database\Connection
@@ -112,7 +102,6 @@ class BebboSerializer extends Serializer {
     RequestStack $request_stack,
     LanguageManagerInterface $language_manager,
     EntityTypeManagerInterface $entity_type_manager,
-    FileUrlGeneratorInterface $file_url_generator,
     Connection $database,
     LanguageVisibilityService $language_visibility_service,
   ) {
@@ -128,7 +117,6 @@ class BebboSerializer extends Serializer {
     $this->requestStack = $request_stack;
     $this->languageManager = $language_manager;
     $this->entityTypeManager = $entity_type_manager;
-    $this->fileUrlGenerator = $file_url_generator;
     $this->database = $database;
     $this->languageVisibilityService = $language_visibility_service;
   }
@@ -148,7 +136,6 @@ class BebboSerializer extends Serializer {
       $container->get('request_stack'),
       $container->get('language_manager'),
       $container->get('entity_type.manager'),
-      $container->get('file_url_generator'),
       $container->get('database'),
       $container->get('language_visibility_control.service'),
     );
@@ -327,12 +314,15 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
-    $this->resolveMediaToWebp($rows, ['featured_image_1', 'featured_image_2']);
-
     foreach ($rows as &$row) {
       $this->castToInt($row, ['id', 'prental_age']);
       $this->castToFloat($row, ['average_height', 'average_weight']);
       $this->toIntArray($row, ['related_articles']);
+
+      // Parse view → featured_image_1 and view_1 → featured_image_2
+      // from the embedded media_details view JSON output {url, name, alt}.
+      $row['featured_image_1'] = $this->parseViewCoverImage($row['featured_image_1'] ?? NULL);
+      $row['featured_image_2'] = $this->parseViewCoverImage($row['featured_image_2'] ?? NULL);
     }
     unset($row);
 
@@ -414,8 +404,6 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
-    $this->resolveMediaToObjects($rows, ['cover_image']);
-
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'activity_category', 'equipment',
@@ -424,6 +412,10 @@ class BebboSerializer extends Serializer {
       $this->toIntArray($row, ['child_age', 'related_milestone']);
       $this->toStringArray($row, ['embedded_images']);
       $this->decodeHtmlEntities($row, ['title']);
+
+      // Parse view → cover_image ({url, name, alt}) from the embedded
+      // media_details view (media_image_rest_export display) JSON output.
+      $row['cover_image'] = $this->parseViewCoverImage($row['cover_image'] ?? NULL);
     }
     unset($row);
 
@@ -451,8 +443,6 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
-    $this->resolveMediaToObjects($rows, ['cover_image']);
-
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'field_type_of_article', 'category', 'subcategory',
@@ -463,6 +453,10 @@ class BebboSerializer extends Serializer {
       ]);
       $this->toStringArray($row, ['embedded_images']);
       $this->decodeHtmlEntities($row, ['title']);
+
+      // Parse view → cover_image ({url, name, alt}) from the embedded
+      // media_details view (media_image_rest_export display) JSON output.
+      $row['cover_image'] = $this->parseViewCoverImage($row['cover_image'] ?? NULL);
     }
     unset($row);
 
@@ -488,9 +482,6 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
-    $this->resolveVideoMedia($rows, ['cover_video']);
-    $this->resolveMediaToThumbnail($rows, ['cover_video_image'], skipWebp: TRUE);
-
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
@@ -502,11 +493,8 @@ class BebboSerializer extends Serializer {
       $this->toStringArray($row, ['embedded_images']);
       $this->decodeHtmlEntities($row, ['title']);
 
-      // Rename cover_video_image → cover_image to match v1 output.
-      if (array_key_exists('cover_video_image', $row)) {
-        $row['cover_image'] = $row['cover_video_image'];
-        unset($row['cover_video_image']);
-      }
+      $row['cover_video'] = $this->parseViewVideoMedia($row['cover_video'] ?? NULL);
+      $row['cover_image'] = $this->parseViewCoverImage($row['cover_image'] ?? NULL);
     }
     unset($row);
 
@@ -660,15 +648,6 @@ class BebboSerializer extends Serializer {
       return TRUE;
     }));
 
-    // Resolve cover_video_image to thumbnail image {url, name, alt}.
-    // Uses resolveMediaToThumbnail because the underlying media can be
-    // image, remote_video, or video — for videos it extracts the thumbnail
-    // (matching v1 customMediaFormatter behavior for the cover_image key).
-    $this->resolveMediaToThumbnail($rows, ['cover_video_image']);
-
-    // Resolve cover_video (can be image, remote_video, or video).
-    $this->resolveVideoMedia($rows, ['cover_video']);
-
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
@@ -677,14 +656,17 @@ class BebboSerializer extends Serializer {
       $this->toIntArray($row, ['child_age', 'keywords', 'related_articles']);
       $this->decodeHtmlEntities($row, ['title']);
 
+      $coverVideo = $this->parseViewVideoMedia($row['cover_video'] ?? NULL);
+      $coverImage = $this->parseViewCoverImage($row['cover_image'] ?? NULL);
+
       // Pinned-content type-specific field handling (matches v1 logic).
       $type = $row['type'] ?? '';
       if ($type === 'Article') {
-        unset($row['cover_video'], $row['cover_video_image']);
+        // Articles have no video fields.
       }
       elseif ($type === 'Video Article') {
-        $row['cover_image'] = $row['cover_video_image'];
-        unset($row['cover_video_image']);
+        $row['cover_video'] = $coverVideo;
+        $row['cover_image'] = $coverImage;
       }
     }
     unset($row);
@@ -721,15 +703,6 @@ class BebboSerializer extends Serializer {
       $seen[$id] = TRUE;
       return TRUE;
     }));
-
-    // Resolve cover_image (direct image media) to {url, name, alt}.
-    $this->resolveMediaToObjects($rows, ['cover_image']);
-
-    // Resolve cover_video_image to thumbnail {url, name, alt}.
-    $this->resolveMediaToThumbnail($rows, ['cover_video_image']);
-
-    // Resolve cover_video (image, remote_video, or video).
-    $this->resolveVideoMedia($rows, ['cover_video']);
 
     foreach ($rows as &$row) {
       $this->castToInt($row, [
@@ -1515,9 +1488,26 @@ class BebboSerializer extends Serializer {
     // 1. Filter out CountryID 131.
     $rows = array_values(array_filter($rows, fn($row) => ($row['CountryID'] ?? '') !== '131'));
 
-    // 2. Resolve media fields to {url, name, alt} objects.
-    $mediaFields = ['country_national_partner', 'country_sponsor_logo', 'unicef_logo'];
-    $this->resolveMediaToObjects($rows, $mediaFields);
+    // 2. Resolve media fields from raw IDs to {url, name, alt} objects.
+    $mediaKeys = ['country_national_partner', 'country_sponsor_logo', 'unicef_logo'];
+    $allMediaIds = [];
+    foreach ($rows as $row) {
+      foreach ($mediaKeys as $key) {
+        $id = $row[$key] ?? '';
+        if (!empty($id) && $id !== '0') {
+          $allMediaIds[] = (int) $id;
+        }
+      }
+    }
+    $resolvedMedia = $this->resolveMediaIds($allMediaIds);
+    $emptyMedia = ['url' => '', 'name' => '', 'alt' => ''];
+    foreach ($rows as &$row) {
+      foreach ($mediaKeys as $key) {
+        $id = (int) ($row[$key] ?? 0);
+        $row[$key] = ($id > 0 && isset($resolvedMedia[$id])) ? $resolvedMedia[$id] : $emptyMedia;
+      }
+    }
+    unset($row);
 
     // 3. Batch-load all Group entities needed for language building.
     $groupIds = array_filter(array_column($rows, 'CountryID'));
@@ -1630,6 +1620,18 @@ class BebboSerializer extends Serializer {
       }
 
       $data = $langData[$langcode] ?? [];
+
+      // Get per-language content_toggle. Only read from an explicit
+      // translation; if no translation exists, default to empty string.
+      // The top-level content_toggle field provides backward-compat fallback.
+      if ($group->hasTranslation($langcode)) {
+        $toggleValues = $group->getTranslation($langcode)->get('field_content_toggle')->getValue();
+        $contentToggle = implode(', ', array_column($toggleValues, 'value'));
+      }
+      else {
+        $contentToggle = '';
+      }
+
       $languages[] = [
         'name' => $countryName,
         'displayName' => $data['custom_language_name_local'] ?? '',
@@ -1637,6 +1639,7 @@ class BebboSerializer extends Serializer {
         'locale' => $data['custom_locale'] ?? '',
         'luxonLocale' => $data['custom_luxon'] ?? '',
         'pluralShow' => $data['custom_plural'] ?? '',
+        'content_toggle' => $contentToggle,
         'view_weight' => $configLang->get('weight') ?? 0,
       ];
     }
@@ -1692,358 +1695,6 @@ class BebboSerializer extends Serializer {
     }
 
     return $languages;
-  }
-
-  /**
-   * Resolves media ID fields to {url, name, alt} objects across all rows.
-   *
-   * Batch-collects media IDs, loads entities in a single query, builds
-   * an ID-to-object map with the content_1200xh_ image style and WebP
-   * conversion. Empty/false values become {url: "", name: "", alt: ""}.
-   *
-   * @param array $rows
-   *   All rows (passed by reference).
-   * @param array $fields
-   *   Field names containing media IDs.
-   */
-  private function resolveMediaToObjects(array &$rows, array $fields): void {
-    $emptyMedia = ['url' => '', 'name' => '', 'alt' => ''];
-
-    // 1. Collect every media ID across all rows.
-    $mediaIds = [];
-    foreach ($rows as $row) {
-      foreach ($fields as $field) {
-        if (!array_key_exists($field, $row)) {
-          continue;
-        }
-        $val = $row[$field];
-        if (is_numeric($val)) {
-          $mediaIds[] = (int) $val;
-        }
-      }
-    }
-    $mediaIds = array_unique($mediaIds);
-
-    if (empty($mediaIds)) {
-      // Replace existing keys with empty objects.
-      foreach ($rows as &$row) {
-        foreach ($fields as $field) {
-          if (array_key_exists($field, $row)) {
-            $row[$field] = $emptyMedia;
-          }
-        }
-      }
-      unset($row);
-      return;
-    }
-
-    // 2. Load image style once.
-    $loadedStyle = $this->entityTypeManager
-      ->getStorage('image_style')
-      ->load('content_1200xh_');
-    $imageStyle = $loadedStyle instanceof ImageStyle ? $loadedStyle : NULL;
-
-    // 3. Batch-load media entities and build ID → {url, name, alt} map.
-    $objectMap = [];
-    foreach ($this->entityTypeManager->getStorage('media')->loadMultiple($mediaIds) as $media) {
-      if (!$media instanceof MediaInterface) {
-        continue;
-      }
-
-      $file = $media->get('field_media_image')->entity;
-      $url = '';
-      if ($file instanceof FileInterface) {
-        $uri = $file->getFileUri();
-        $styledUrl = $imageStyle
-          ? $imageStyle->buildUrl($uri)
-          : $this->fileUrlGenerator->generateAbsoluteString($uri);
-        $url = preg_replace(
-          '/\.(jpg|jpeg|png)(\?.*)?$/i',
-          '.webp$2',
-          $styledUrl
-        ) ?? $styledUrl;
-      }
-
-      $altField = $media->get('field_media_image')->getValue();
-      $objectMap[$media->id()] = [
-        'url' => $url,
-        'name' => $media->get('name')->value ?? '',
-        'alt' => $altField[0]['alt'] ?? '',
-      ];
-    }
-
-    // 4. Replace media IDs with objects in each row.
-    foreach ($rows as &$row) {
-      foreach ($fields as $field) {
-        if (!array_key_exists($field, $row)) {
-          continue;
-        }
-        $val = $row[$field];
-        if (is_numeric($val) && isset($objectMap[(int) $val])) {
-          $row[$field] = $objectMap[(int) $val];
-        }
-        else {
-          $row[$field] = $emptyMedia;
-        }
-      }
-    }
-    unset($row);
-  }
-
-  /**
-   * Resolves media ID fields that may reference any media type.
-   *
-   * Unlike resolveMediaToObjects() which only handles image media, this
-   * method handles image, remote_video, and local video bundles with
-   * appropriate output structures for each type.
-   *
-   * @param array $rows
-   *   All rows (passed by reference).
-   * @param array $fields
-   *   Field names containing media IDs.
-   */
-  private function resolveVideoMedia(array &$rows, array $fields): void {
-    $emptyVideo = ['url' => '', 'name' => '', 'site' => ''];
-
-    // 1. Collect media IDs.
-    $mediaIds = [];
-    foreach ($rows as $row) {
-      foreach ($fields as $field) {
-        if (!array_key_exists($field, $row)) {
-          continue;
-        }
-        $val = $row[$field];
-        if (is_numeric($val)) {
-          $mediaIds[] = (int) $val;
-        }
-      }
-    }
-    $mediaIds = array_unique($mediaIds);
-
-    if (empty($mediaIds)) {
-      foreach ($rows as &$row) {
-        foreach ($fields as $field) {
-          if (array_key_exists($field, $row)) {
-            $row[$field] = $emptyVideo;
-          }
-        }
-      }
-      unset($row);
-      return;
-    }
-
-    // 2. Batch-load media entities and build ID → object map.
-    $loadedStyle = $this->entityTypeManager
-      ->getStorage('image_style')
-      ->load('content_1200xh_');
-    $imageStyle = $loadedStyle instanceof ImageStyle ? $loadedStyle : NULL;
-    $mediaMap = [];
-
-    foreach ($this->entityTypeManager->getStorage('media')
-      ->loadMultiple($mediaIds) as $media) {
-      if (!$media instanceof MediaInterface) {
-        continue;
-      }
-
-      $bundle = $media->bundle();
-
-      if ($bundle === 'image') {
-        $file = $media->get('field_media_image')->entity;
-        $url = '';
-        if ($file instanceof FileInterface) {
-          $uri = $file->getFileUri();
-          $styledUrl = $imageStyle
-            ? $imageStyle->buildUrl($uri)
-            : $this->fileUrlGenerator->generateAbsoluteString($uri);
-          $url = preg_replace(
-            '/\.(jpg|jpeg|png)(\?.*)?$/i',
-            '.webp$2',
-            $styledUrl
-          ) ?? $styledUrl;
-        }
-        $altField = $media->get('field_media_image')->getValue();
-        $mediaMap[$media->id()] = [
-          'url' => $url,
-          'name' => $media->get('name')->value ?? '',
-          'alt' => $altField[0]['alt'] ?? '',
-        ];
-      }
-      elseif ($bundle === 'remote_video') {
-        $oembed = $media->get('field_media_oembed_video')->value ?? '';
-        $site = (stripos($oembed, 'vimeo') !== FALSE)
-          ? 'vimeo'
-          : 'youtube';
-        $mediaMap[$media->id()] = [
-          'url' => $oembed,
-          'name' => $media->get('name')->value ?? '',
-          'site' => $site,
-        ];
-      }
-      elseif ($bundle === 'video') {
-        $file = $media->get('field_media_video_file')->entity ?? NULL;
-        $url = ($file instanceof FileInterface)
-          ? $this->fileUrlGenerator->generateAbsoluteString(
-            $file->getFileUri()
-          )
-          : '';
-        $mediaMap[$media->id()] = [
-          'url' => $url,
-          'name' => $media->get('name')->value ?? '',
-          'site' => 'video',
-        ];
-      }
-    }
-
-    // 3. Replace IDs with resolved objects.
-    foreach ($rows as &$row) {
-      foreach ($fields as $field) {
-        if (!array_key_exists($field, $row)) {
-          continue;
-        }
-        $mid = $row[$field];
-        $row[$field] = (is_numeric($mid) && isset($mediaMap[(int) $mid]))
-          ? $mediaMap[(int) $mid]
-          : $emptyVideo;
-      }
-    }
-    unset($row);
-  }
-
-  /**
-   * Resolves media ID fields to their thumbnail/preview image.
-   *
-   * For image media, returns the styled WebP image (same as
-   * resolveMediaToObjects). For remote_video and video media, extracts
-   * the thumbnail file and returns it as a WebP URL. This matches v1
-   * customMediaFormatter behavior when key is "cover_image".
-   *
-   * Always returns {url, name, alt} regardless of media bundle.
-   *
-   * @param array $rows
-   *   All rows (passed by reference).
-   * @param array $fields
-   *   Field names containing media IDs.
-   * @param bool $skipWebp
-   *   If TRUE, return the original image URL without WebP conversion.
-   *   Used for video article cover images to match v1 behaviour.
-   */
-  private function resolveMediaToThumbnail(array &$rows, array $fields, bool $skipWebp = FALSE): void {
-    $emptyMedia = ['url' => '', 'name' => '', 'alt' => ''];
-
-    // 1. Collect media IDs.
-    $mediaIds = [];
-    foreach ($rows as $row) {
-      foreach ($fields as $field) {
-        if (!array_key_exists($field, $row)) {
-          continue;
-        }
-        $val = $row[$field];
-        if (is_numeric($val)) {
-          $mediaIds[] = (int) $val;
-        }
-      }
-    }
-    $mediaIds = array_unique($mediaIds);
-
-    if (empty($mediaIds)) {
-      foreach ($rows as &$row) {
-        foreach ($fields as $field) {
-          if (array_key_exists($field, $row)) {
-            $row[$field] = $emptyMedia;
-          }
-        }
-      }
-      unset($row);
-      return;
-    }
-
-    // 2. Load image style once.
-    $loadedStyle = $this->entityTypeManager
-      ->getStorage('image_style')
-      ->load('content_1200xh_');
-    $imageStyle = $loadedStyle instanceof ImageStyle ? $loadedStyle : NULL;
-    $baseUrl = $this->requestStack->getCurrentRequest()->getSchemeAndHttpHost();
-
-    // 3. Batch-load media entities and build ID → {url, name, alt} map.
-    $thumbMap = [];
-    foreach ($this->entityTypeManager->getStorage('media')
-      ->loadMultiple($mediaIds) as $media) {
-      if (!$media instanceof MediaInterface) {
-        continue;
-      }
-
-      $bundle = $media->bundle();
-      $name = $media->get('name')->value ?? '';
-
-      if ($bundle === 'image') {
-        // Image media: return styled image (WebP unless skipped).
-        $file = $media->get('field_media_image')->entity;
-        $url = '';
-        if ($file instanceof FileInterface) {
-          $uri = $file->getFileUri();
-          $styledUrl = $imageStyle
-            ? $imageStyle->buildUrl($uri)
-            : $this->fileUrlGenerator->generateAbsoluteString($uri);
-          $url = $skipWebp
-            ? $styledUrl
-            : (preg_replace(
-              '/\.(jpg|jpeg|png)(\?.*)?$/i',
-              '.webp$2',
-              $styledUrl
-            ) ?? $styledUrl);
-        }
-        $altField = $media->get('field_media_image')->getValue();
-        $thumbMap[$media->id()] = [
-          'url' => $url,
-          'name' => $name,
-          'alt' => $altField[0]['alt'] ?? '',
-        ];
-      }
-      else {
-        // Remote video / video: extract thumbnail file entity.
-        $tid = $media->get('thumbnail')->target_id ?? NULL;
-        $url = '';
-        if ($tid) {
-          $thumbFile = $this->entityTypeManager
-            ->getStorage('file')
-            ->load($tid);
-          if ($thumbFile instanceof FileInterface) {
-            $thumbUrl = $thumbFile->createFileUrl();
-            // Ensure absolute URL.
-            if (strpos($thumbUrl, $baseUrl) === FALSE) {
-              $thumbUrl = $baseUrl . $thumbUrl;
-            }
-            // Convert to WebP unless skipped.
-            $url = $skipWebp
-              ? $thumbUrl
-              : (preg_replace(
-                '/\.(jpg|jpeg|png)(\?.*)?$/i',
-                '.webp$2',
-                $thumbUrl
-              ) ?? $thumbUrl);
-          }
-        }
-        $thumbMap[$media->id()] = [
-          'url' => $url,
-          'name' => $name,
-          'alt' => '',
-        ];
-      }
-    }
-
-    // 4. Replace IDs with resolved thumbnail objects.
-    foreach ($rows as &$row) {
-      foreach ($fields as $field) {
-        if (!array_key_exists($field, $row)) {
-          continue;
-        }
-        $mid = $row[$field];
-        $row[$field] = (is_numeric($mid) && isset($thumbMap[(int) $mid]))
-          ? $thumbMap[(int) $mid]
-          : $emptyMedia;
-      }
-    }
-    unset($row);
   }
 
   /**
@@ -2157,64 +1808,142 @@ class BebboSerializer extends Serializer {
   }
 
   /**
-   * Resolves media ID fields to styled WebP URLs across all rows.
+   * Parses a cover_video view field JSON string to {url, name, site}.
    *
-   * Batch-collects media IDs, loads entities in a single query, builds
-   * an ID-to-URL map with the content_1200xh_ image style, and replaces
-   * each media ID with the corresponding absolute WebP URL.
+   * The view renders the field as a JSON array with one element:
+   * @code
+   * [{"url":"https://www.youtube.com/...","name":"...","site":"youtube"}]
+   * @endcode
    *
-   * @param array $rows
-   *   All rows (passed by reference).
-   * @param array $fields
-   *   Field names containing media IDs.
+   * @param mixed $raw
+   *   The raw field value from the row (expected JSON string).
+   *
+   * @return array
+   *   Resolved {url, name, site} object, or empty strings if parsing fails.
    */
-  private function resolveMediaToWebp(array &$rows, array $fields): void {
-    // 1. Collect every media ID across all rows in one pass.
-    $mediaIds = array_unique(array_filter(
-      array_merge(...array_map(
-        fn($row) => array_map(fn($f) => $row[$f] ?? NULL, $fields),
-        $rows
-      )),
-      'is_numeric'
-    ));
+  private function parseViewVideoMedia(mixed $raw): array {
+    $empty = ['url' => '', 'name' => '', 'site' => ''];
 
-    if (empty($mediaIds)) {
-      return;
+    if (empty($raw) || !is_string($raw)) {
+      return $empty;
     }
 
-    // 2. Load image style once; fallback to raw URL if missing.
-    $loadedStyle = $this->entityTypeManager
+    $decoded = json_decode($raw, TRUE);
+    if (!is_array($decoded) || empty($decoded[0])) {
+      return $empty;
+    }
+
+    $item = $decoded[0];
+    return [
+      'url' => (string) ($item['url'] ?? ''),
+      'name' => (string) ($item['name'] ?? ''),
+      'site' => (string) ($item['site'] ?? ''),
+    ];
+  }
+
+  /**
+   * Parses a cover_image view field JSON string to {url, name, alt}.
+   *
+   * The view renders the field as a JSON array with one element:
+   * @code
+   * [{"name":"temir.png","url":"\/sites\/...\/temir.png?itok=...","alt":"..."}]
+   * @endcode
+   *
+   * The "url" value is a relative path and is made absolute using the current
+   * request's scheme and host.
+   *
+   * @param mixed $raw
+   *   The raw field value from the row (expected JSON string).
+   *
+   * @return array
+   *   Resolved {url, name, alt} object, or empty strings if parsing fails.
+   */
+  private function parseViewCoverImage(mixed $raw): array {
+    $empty = ['url' => '', 'name' => '', 'alt' => ''];
+
+    if (empty($raw) || !is_string($raw)) {
+      return $empty;
+    }
+
+    $decoded = json_decode($raw, TRUE);
+    if (!is_array($decoded) || empty($decoded[0])) {
+      return $empty;
+    }
+
+    $item = $decoded[0];
+    $url = (string) ($item['url'] ?? '');
+    $name = (string) ($item['name'] ?? '');
+    $alt = (string) ($item['alt'] ?? '');
+
+    // Make the URL absolute if it is a root-relative path.
+    if ($url !== '' && !str_starts_with($url, 'http')) {
+      $request = $this->requestStack->getCurrentRequest();
+      $url = ($request !== NULL ? $request->getSchemeAndHttpHost() : '') . $url;
+    }
+
+    return ['url' => $url, 'name' => $name, 'alt' => $alt];
+  }
+
+  /**
+   * Batch-resolves media IDs to {url, name, alt} arrays.
+   *
+   * Loads media entities, extracts the image file, generates a styled URL
+   * using the content_1200xh_ image style, and returns the media name and
+   * alt text.
+   *
+   * @param array $mediaIds
+   *   Array of media entity IDs.
+   *
+   * @return array
+   *   Keyed by media ID, each value has url, name, and alt keys.
+   */
+  private function resolveMediaIds(array $mediaIds): array {
+    $empty = ['url' => '', 'name' => '', 'alt' => ''];
+    $mediaIds = array_filter(array_unique($mediaIds));
+    if (empty($mediaIds)) {
+      return [];
+    }
+
+    $mediaEntities = $this->entityTypeManager
+      ->getStorage('media')
+      ->loadMultiple($mediaIds);
+    $imageStyle = $this->entityTypeManager
       ->getStorage('image_style')
       ->load('content_1200xh_');
-    $imageStyle = $loadedStyle instanceof ImageStyle ? $loadedStyle : NULL;
 
-    // 3. Batch-load media entities and build ID → WebP URL map.
-    $urlMap = [];
-    foreach ($this->entityTypeManager->getStorage('media')->loadMultiple($mediaIds) as $media) {
-      if (!$media instanceof MediaInterface) {
+    $resolved = [];
+    foreach ($mediaIds as $id) {
+      if (!isset($mediaEntities[$id]) || !$mediaEntities[$id]->hasField('field_media_image')) {
+        $resolved[$id] = $empty;
         continue;
       }
+
+      $media = $mediaEntities[$id];
+      /** @var \Drupal\file\FileInterface|null $file */
       $file = $media->get('field_media_image')->entity;
-      if ($file instanceof FileInterface) {
-        $uri = $file->getFileUri();
-        $styledUrl = $imageStyle
-          ? $imageStyle->buildUrl($uri)
-          : $this->fileUrlGenerator->generateAbsoluteString($uri);
-        $urlMap[$media->id()] = preg_replace(
-          '/\.(jpg|jpeg|png)(\?.*)?$/i',
-          '.webp$2',
-          $styledUrl
-        ) ?? $styledUrl;
+      if (!$file instanceof FileInterface) {
+        $resolved[$id] = $empty;
+        continue;
       }
+
+      $name = (string) ($media->get('name')->value ?? '');
+      $imageField = $media->get('field_media_image')->getValue();
+      $alt = (string) ($imageField[0]['alt'] ?? '');
+
+      $url = '';
+      if ($imageStyle) {
+        $url = $imageStyle->buildUrl($file->getFileUri());
+      }
+
+      if ($url !== '' && !str_starts_with($url, 'http')) {
+        $request = $this->requestStack->getCurrentRequest();
+        $url = ($request !== NULL ? $request->getSchemeAndHttpHost() : '') . $url;
+      }
+
+      $resolved[$id] = ['url' => $url, 'name' => $name, 'alt' => $alt];
     }
 
-    // 4. Replace media IDs with URLs in each row.
-    foreach ($rows as &$row) {
-      foreach ($fields as $field) {
-        $row[$field] = $urlMap[(int) ($row[$field] ?? 0)] ?? NULL;
-      }
-    }
-    unset($row);
+    return $resolved;
   }
 
   /**

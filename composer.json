@@ -96,6 +96,7 @@
         "drupal/view_custom_table": "2.0.8",
         "drupal/views_bulk_operations": "^4.3.4",
         "drupal/views_data_export": "^1.0",
+        "drupal/views_field_view": "^1.0@beta",
         "drupal/webp": "^1.0@RC",
         "enshrined/svg-sanitize": "^0.22.0",
         "webflo/drupal-finder": "^1.3.1"

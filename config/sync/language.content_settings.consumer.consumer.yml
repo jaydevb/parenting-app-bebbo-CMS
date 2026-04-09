@@ -1,18 +1,17 @@
-uuid: 6c3277bc-3046-4e68-816b-14f7ec4c5e96
+uuid: 5bcdc142-c513-4a45-b0b1-5fcfc192628b
 langcode: en
 status: true
 dependencies:
-  config:
-    - taxonomy.vocabulary.type_of_article
   module:
+    - consumers
     - content_translation
 third_party_settings:
   content_translation:
     enabled: false
     bundle_settings:
       untranslatable_fields_hide: '0'
-id: taxonomy_term.type_of_article
-target_entity_type_id: taxonomy_term
-target_bundle: type_of_article
+id: consumer.consumer
+target_entity_type_id: consumer
+target_bundle: consumer
 default_langcode: site_default
 language_alterable: false

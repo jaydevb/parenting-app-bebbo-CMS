@@ -1,17 +1,17 @@
-uuid: 6e1ecd9c-8db9-4108-9659-7efae28df7b9
+uuid: 01b4d77f-bfe1-49ce-92c7-e270211ced80
 langcode: en
 status: true
 dependencies:
   config:
-    - group.type.country
-id: group.country.status
+    - taxonomy.vocabulary.type_of_article
+id: taxonomy_term.type_of_article.status
 field_name: status
-entity_type: group
-bundle: country
+entity_type: taxonomy_term
+bundle: type_of_article
 label: Published
 description: ''
 required: false
-translatable: true
+translatable: false
 default_value:
   -
     value: 1
