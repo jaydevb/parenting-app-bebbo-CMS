@@ -12,20 +12,32 @@ type: list_string
 settings:
   allowed_values:
     -
-      value: Chatbot
+      value: chatbot
       label: Chatbot
     -
-      value: "Child's Growth"
+      value: childs_growth
       label: "Child's Growth"
     -
-      value: 'Health Check-up'
+      value: health_check_up
       label: 'Health Check-up'
     -
-      value: Vaccination
+      value: vaccination
       label: Vaccination
     -
-      value: Pregnancy
+      value: pregnancy
       label: Pregnancy
+    -
+      value: baby_size
+      label: 'Baby Size'
+    -
+      value: guide
+      label: Guide
+    -
+      value: learning
+      label: Learning
+    -
+      value: ai_chatbot
+      label: 'AI Chatbot'
   allowed_values_function: ''
 module: options
 locked: false
