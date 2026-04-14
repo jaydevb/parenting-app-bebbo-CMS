@@ -5,6 +5,7 @@ display:
       exposed_form:
         options:
           submit_button: Фільтр
+          reset_button_label: Скинути
           exposed_sorts_label: 'Впорядкувати за'
           sort_asc_label: Зрост
           sort_desc_label: Спад
@@ -22,13 +23,24 @@ display:
       fields:
         title:
           label: Title
+          separator: ', '
   assigned:
     display_options:
       fields:
         status:
           label: Стан
+          separator: ', '
+        tuid:
+          separator: ', '
         title:
           label: Title
+          separator: ', '
+        source_language:
+          separator: ', '
+        target_language:
+          separator: ', '
+        loop_count:
+          separator: ', '
         operations:
           label: Операції
       filters:
@@ -39,14 +51,28 @@ display:
           expose:
             label: Title
   closed:
+    display_title: Закрито
     display_options:
+      menu:
+        title: Закрито
       fields:
         status:
           label: Стан
+          separator: ', '
         created:
           label: Created
+          separator: ', '
+        tuid:
+          separator: ', '
         title:
           label: Title
+          separator: ', '
+        source_language:
+          separator: ', '
+        target_language:
+          separator: ', '
+        loop_count:
+          separator: ', '
         operations:
           label: Операції
       filters:
@@ -61,10 +87,21 @@ display:
       fields:
         status:
           label: Стан
+          separator: ', '
         created:
           label: Created
+          separator: ', '
+        tuid:
+          separator: ', '
         title:
           label: Title
+          separator: ', '
+        source_language:
+          separator: ', '
+        target_language:
+          separator: ', '
+        loop_count:
+          separator: ', '
         operations:
           label: Операції
       filters:
@@ -79,8 +116,17 @@ display:
       fields:
         status:
           label: Стан
+        tuid:
+          separator: ', '
         title:
           label: Title
+          separator: ', '
+        source_language:
+          separator: ', '
+        target_language:
+          separator: ', '
+        loop_count:
+          separator: ', '
         operations:
           label: Операції
       filters:
@@ -97,8 +143,18 @@ display:
           label: Стан
         created:
           label: Created
+          separator: ', '
+        tuid:
+          separator: ', '
         title:
           label: Title
+          separator: ', '
+        source_language:
+          separator: ', '
+        target_language:
+          separator: ', '
+        loop_count:
+          separator: ', '
         operations:
           label: Операції
       filters:
@@ -115,5 +171,12 @@ display:
           label: Стан
         title:
           label: Title
+          separator: ', '
+        source_language:
+          separator: ', '
+        target_language:
+          separator: ', '
+        loop_count:
+          separator: ', '
         operations:
           label: Операції

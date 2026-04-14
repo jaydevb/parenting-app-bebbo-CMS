@@ -7,13 +7,11 @@ dependencies:
     - media.type.image
     - media.type.remote_video
   module:
-    - file
     - media
     - rest
     - serialization
     - svg_image
     - user
-    - views_data_export
 id: media_details
 label: 'Media Details'
 module: views
@@ -306,12 +304,209 @@ display:
         - url.query_args
         - user.permissions
       tags: {  }
-  media_image_rest_export:
-    id: media_image_rest_export
-    display_title: 'MedIa Image Details API'
-    display_plugin: rest_export
-    position: 1
+  block_1:
+    id: block_1
+    display_title: 'Media Image Details API'
+    display_plugin: block
+    position: 4
     display_options:
+      title: 'Media Image Details API'
+      fields:
+        name:
+          id: name
+          table: media_field_data
+          field: name
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: media
+          entity_field: media
+          plugin_id: field
+          label: ''
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: false
+            ellipsis: false
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: string
+          settings:
+            link_to_entity: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        thumbnail__target_id:
+          id: thumbnail__target_id
+          table: media_field_data
+          field: thumbnail__target_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: media
+          entity_field: thumbnail
+          plugin_id: field
+          label: Thumbnail
+          exclude: false
+          alter:
+            alter_text: true
+            text: "{{ thumbnail__target_id|replace({'.jpg': '.webp', '.jpeg': '.webp', '.png': '.webp'}) }}"
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: false
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: target_id
+          type: image_url
+          settings:
+            image_style: content_1200xh_
+          group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        thumbnail__alt:
+          id: thumbnail__alt
+          table: media_field_data
+          field: thumbnail__alt
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: media
+          entity_field: thumbnail
+          plugin_id: field
+          label: 'Thumbnail (alt)'
+          exclude: false
+          alter:
+            alter_text: true
+            text: '{{ thumbnail__alt__alt }}'
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: target_id
+          type: image_url
+          settings:
+            image_style: content_1200xh_
+          group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
       pager:
         type: some
         options:
@@ -414,71 +609,42 @@ display:
         groups:
           1: AND
       style:
-        type: data_export
+        type: default
         options:
-          uses_fields: false
-          formats:
-            json: json
-          csv_settings:
-            delimiter: ','
-            enclosure: '"'
-            escape_char: \
-            strip_tags: true
-            trim: true
-            encoding: utf8
-            utf8_bom: '0'
-            use_serializer_encode_only: false
-            output_header: true
-          xml_settings:
-            encoding: UTF-8
-            root_node_name: response
-            item_node_name: item
-            format_output: false
+          grouping: {  }
+          row_class: ''
+          default_row_class: false
       row:
-        type: data_field
+        type: fields
         options:
-          field_options:
-            name:
-              alias: name
-              raw_output: false
-            thumbnail__target_id:
-              alias: url
-              raw_output: false
-            thumbnail__alt:
-              alias: alt
-              raw_output: false
+          default_field_elements: true
+          inline: {  }
+          separator: ''
+          hide_empty: false
       defaults:
-        relationships: false
+        title: false
+        pager: false
+        style: false
+        row: false
+        fields: false
         arguments: false
         filters: false
         filter_groups: false
-      relationships:
-        field_media_image_target_id:
-          id: field_media_image_target_id
-          table: media__field_media_image
-          field: field_media_image_target_id
-          relationship: none
-          group_type: group
-          admin_label: 'image from field_media_image'
-          plugin_id: standard
-          required: false
       display_description: ''
       display_extenders: {  }
-      path: v2/api/media-img/%
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_content'
         - 'languages:language_interface'
-        - request_format
         - url
         - user.permissions
       tags: {  }
-  media_video_rest_export:
-    id: media_video_rest_export
+  block_2:
+    id: block_2
     display_title: 'Media Remote Video Details API'
-    display_plugin: rest_export
-    position: 2
+    display_plugin: block
+    position: 4
     display_options:
       title: 'Media Remote Video Details API'
       fields:
@@ -523,7 +689,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: true
+          element_label_colon: false
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -588,7 +754,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: true
+          element_label_colon: false
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -651,7 +817,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: false
+          element_label_colon: true
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -775,72 +941,241 @@ display:
         groups:
           1: AND
       style:
-        type: data_export
+        type: default
         options:
-          uses_fields: false
-          formats:
-            json: json
-          csv_settings:
-            delimiter: ','
-            enclosure: '"'
-            escape_char: \
-            strip_tags: true
-            trim: true
-            encoding: utf8
-            utf8_bom: '0'
-            use_serializer_encode_only: false
-            output_header: true
-          xml_settings:
-            encoding: UTF-8
-            root_node_name: response
-            item_node_name: item
-            format_output: false
+          grouping: {  }
+          row_class: ''
+          default_row_class: false
       row:
-        type: data_field
+        type: fields
         options:
-          field_options:
-            name:
-              alias: name
-              raw_output: false
-            field_media_oembed_video:
-              alias: url
-              raw_output: false
-            field_media_oembed_video_1:
-              alias: site
-              raw_output: false
+          default_field_elements: true
+          inline: {  }
+          separator: ''
+          hide_empty: false
       defaults:
         title: false
-        relationships: false
+        pager: false
+        style: false
+        row: false
         fields: false
         arguments: false
         filters: false
         filter_groups: false
-      relationships: {  }
       display_description: ''
       display_extenders: {  }
-      path: v2/api/media-video/%
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_content'
         - 'languages:language_interface'
-        - request_format
         - url
         - user.permissions
       tags:
         - 'config:field.storage.media.field_media_oembed_video'
-  rest_export_1:
-    id: rest_export_1
+  block_3:
+    id: block_3
     display_title: 'Media Remote Video Thumb API'
-    display_plugin: rest_export
-    position: 3
+    display_plugin: block
+    position: 5
     display_options:
       title: 'Media Remote Video Thumb API'
-      pager:
-        type: some
-        options:
-          offset: 0
-          items_per_page: 1
+      fields:
+        name:
+          id: name
+          table: media_field_data
+          field: name
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: media
+          entity_field: media
+          plugin_id: field
+          label: ''
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: false
+            ellipsis: false
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: string
+          settings:
+            link_to_entity: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        thumbnail__target_id:
+          id: thumbnail__target_id
+          table: media_field_data
+          field: thumbnail__target_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: media
+          entity_field: thumbnail
+          plugin_id: field
+          label: Thumbnail
+          exclude: false
+          alter:
+            alter_text: true
+            text: "{{ thumbnail__target_id|replace({'.jpg': '.webp', '.jpeg': '.webp', '.png': '.webp'}) }}"
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: false
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: target_id
+          type: image_url
+          settings:
+            image_style: content_1200xh_
+          group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        thumbnail__alt:
+          id: thumbnail__alt
+          table: media_field_data
+          field: thumbnail__alt
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: media
+          entity_field: thumbnail
+          plugin_id: field
+          label: 'Thumbnail (alt)'
+          exclude: false
+          alter:
+            alter_text: true
+            text: '{{ thumbnail__alt__alt }}'
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: target_id
+          type: image_url
+          settings:
+            image_style: content_1200xh_
+          group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
       arguments:
         mid:
           id: mid
@@ -903,7 +1238,7 @@ display:
           plugin_id: bundle
           operator: in
           value:
-            remote_video: remote_video
+            image: image
           group: 1
           exposed: false
           expose:
@@ -938,53 +1273,34 @@ display:
         groups:
           1: AND
       style:
-        type: data_export
+        type: default
         options:
-          uses_fields: false
-          formats:
-            json: json
-          csv_settings:
-            delimiter: ','
-            enclosure: '"'
-            escape_char: \
-            strip_tags: true
-            trim: true
-            encoding: utf8
-            utf8_bom: '0'
-            use_serializer_encode_only: false
-            output_header: true
-          xml_settings:
-            encoding: UTF-8
-            root_node_name: response
-            item_node_name: item
-            format_output: false
+          grouping: {  }
+          row_class: ''
+          default_row_class: false
       row:
-        type: data_field
+        type: fields
         options:
-          field_options:
-            name:
-              alias: name
-              raw_output: false
-            thumbnail__target_id:
-              alias: url
-              raw_output: false
-            thumbnail__alt:
-              alias: alt
-              raw_output: false
+          default_field_elements: true
+          inline: {  }
+          separator: ''
+          hide_empty: false
       defaults:
         title: false
+        style: false
+        row: false
+        fields: false
         arguments: false
         filters: false
         filter_groups: false
       display_description: ''
       display_extenders: {  }
-      path: v2/api/media-video-thumb/%
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_content'
         - 'languages:language_interface'
-        - request_format
         - url
+        - url.query_args
         - user.permissions
       tags: {  }

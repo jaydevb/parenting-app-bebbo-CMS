@@ -4,6 +4,8 @@ display:
     display_options:
       exposed_form:
         options:
+          submit_button: Застосувати
+          reset_button_label: Скинути
           exposed_sorts_label: 'Впорядкувати за'
           sort_asc_label: Зрост
           sort_desc_label: Спад
@@ -20,10 +22,18 @@ display:
           label: Мітка
         type:
           label: Тип
+        word_count:
+          separator: ', '
+        tags_count:
+          separator: ', '
         changed:
           label: Changed
         operations:
           label: Операції
+      arguments:
+        tjid:
+          exception:
+            title: Все
   checkout:
     display_options:
       fields:
@@ -31,5 +41,8 @@ display:
           label: Мітка
         type:
           label: Тип
+        word_count:
+          separator: ', '
         changed:
           label: Changed
+          separator: ', '

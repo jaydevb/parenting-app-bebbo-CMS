@@ -18,6 +18,9 @@ display:
           separator: ', '
         status:
           label: Status
+          settings:
+            format_custom_false: 'Снято с публикации'
+            format_custom_true: Опубликовано
           separator: ', '
         changed:
           label: Updated
@@ -46,6 +49,13 @@ display:
         bundle:
           expose:
             label: Тип
+        status:
+          group_info:
+            group_items:
+              1:
+                title: Опубликовано
+              2:
+                title: 'Снято с публикации'
         langcode:
           expose:
             label: Language

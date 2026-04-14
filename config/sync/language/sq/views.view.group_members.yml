@@ -21,3 +21,5 @@ display:
         gid:
           exception:
             title: All
+  page_1:
+    display_title: Faqe

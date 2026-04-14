@@ -9,6 +9,8 @@ display:
           label: Author
         status:
           label: Status
+          settings:
+            format_custom_true: Publikuar
         operations:
           label: Operations
       exposed_form:
@@ -19,6 +21,11 @@ display:
         bundle:
           expose:
             label: Type
+        status:
+          group_info:
+            group_items:
+              1:
+                title: Publikuar
         langcode:
           expose:
             label: Language

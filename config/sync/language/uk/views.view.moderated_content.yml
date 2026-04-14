@@ -7,14 +7,19 @@ display:
       fields:
         title:
           label: Title
+          separator: ', '
         type:
           label: 'Content type'
+          separator: ', '
         name:
           label: Автор
+          separator: ', '
         moderation_state:
           label: 'Moderation state'
+          separator: ', '
         changed:
           label: Оновлено
+          separator: ', '
         operations:
           label: Операції
       pager:
@@ -31,6 +36,7 @@ display:
       exposed_form:
         options:
           submit_button: Фільтр
+          reset_button_label: Скинути
           exposed_sorts_label: 'Впорядкувати за'
           sort_asc_label: Зрост
           sort_desc_label: Спад

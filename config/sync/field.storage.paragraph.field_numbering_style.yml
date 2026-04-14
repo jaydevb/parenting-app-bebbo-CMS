@@ -1,0 +1,27 @@
+uuid: bd0b1518-d22f-46d4-b0da-b83eaf844c12
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - paragraphs
+id: paragraph.field_numbering_style
+field_name: field_numbering_style
+entity_type: paragraph
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: numbers
+      label: 'Numbers (1., 2., 3. Etc.)'
+    -
+      value: letters
+      label: 'Letters (A., B., C.)'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

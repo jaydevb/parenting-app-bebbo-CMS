@@ -1,0 +1,19 @@
+uuid: e25d7e1e-eef5-436f-acf3-120b8402d0fd
+langcode: en
+status: true
+dependencies:
+  module:
+    - bebbo_serializer
+    - paragraphs
+id: paragraph.field_answers
+field_name: field_answers
+entity_type: paragraph
+type: quiz_answer
+settings: {  }
+module: bebbo_serializer
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

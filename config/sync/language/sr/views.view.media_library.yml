@@ -5,10 +5,19 @@ display:
       fields:
         media_bulk_form:
           action_title: Action
+      pager:
+        options:
+          tags:
+            previous: ‹‹
       exposed_form:
         options:
           exposed_sorts_label: 'Sort by'
       filters:
+        status:
+          group_info:
+            group_items:
+              2:
+                title: Необјабљено
         name:
           expose:
             label: Name

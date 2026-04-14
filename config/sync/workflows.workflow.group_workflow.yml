@@ -7,6 +7,7 @@ dependencies:
     - node.type.article
     - node.type.child_development
     - node.type.child_growth
+    - node.type.course
     - node.type.daily_homescreen_messages
     - node.type.faq
     - node.type.guide
@@ -14,6 +15,7 @@ dependencies:
     - node.type.milestone
     - node.type.page
     - node.type.pregnancy_weekly_overview
+    - node.type.quiz
     - node.type.survey
     - node.type.vaccinations
     - node.type.video_article
@@ -240,6 +242,7 @@ type_settings:
       - article
       - child_development
       - child_growth
+      - course
       - daily_homescreen_messages
       - faq
       - guide
@@ -247,6 +250,7 @@ type_settings:
       - milestone
       - page
       - pregnancy_weekly_overview
+      - quiz
       - survey
       - vaccinations
       - video_article

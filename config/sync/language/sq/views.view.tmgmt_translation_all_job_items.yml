@@ -16,3 +16,5 @@ display:
       empty:
         area_text_custom:
           content: "<p style=\"text-align:center\">No Data Available</p>\r\n"
+  page_1:
+    display_title: Faqe

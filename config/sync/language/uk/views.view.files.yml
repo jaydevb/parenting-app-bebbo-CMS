@@ -5,6 +5,7 @@ display:
       fields:
         filename:
           label: "Назва (ім'я)"
+          separator: ', '
         filemime:
           label: 'MIME type'
         status:
@@ -23,6 +24,7 @@ display:
       exposed_form:
         options:
           submit_button: Фільтр
+          reset_button_label: Скинути
           exposed_sorts_label: 'Впорядкувати за'
           sort_asc_label: Зрост
           sort_desc_label: Спад
@@ -36,6 +38,8 @@ display:
   page_2:
     display_options:
       fields:
+        entity_label:
+          label: Сутність
         type:
           label: 'Entity type'
       pager:
@@ -47,3 +51,7 @@ display:
             items_per_page_label: 'Елементів на сторінку'
             items_per_page_options_all_label: '- Усе -'
             offset_label: Зміщення
+      arguments:
+        fid:
+          exception:
+            title: Все

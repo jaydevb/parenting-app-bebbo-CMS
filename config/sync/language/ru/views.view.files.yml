@@ -38,6 +38,8 @@ display:
   page_2:
     display_options:
       fields:
+        entity_label:
+          label: Сущность
         type:
           label: 'Entity type'
       pager:

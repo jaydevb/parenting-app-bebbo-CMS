@@ -11,6 +11,8 @@ display:
           label: Author
         status:
           label: Status
+          settings:
+            format_custom_false: Необјабљено
         operations:
           label: Operations
       exposed_form:
@@ -21,6 +23,11 @@ display:
         bundle:
           expose:
             label: Type
+        status:
+          group_info:
+            group_items:
+              2:
+                title: Необјабљено
         langcode:
           expose:
             label: Language

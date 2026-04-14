@@ -15,6 +15,7 @@ display:
         area_text_custom:
           content: 'There are no custom blocks available.'
   page_1:
+    display_title: Faqe
     display_options:
       menu:
         title: Blocks

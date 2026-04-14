@@ -1,0 +1,25 @@
+uuid: 1637006e-9fa8-43c3-9ea5-c4f04af2b3f5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_answers
+    - paragraphs.paragraphs_type.quiz_questions
+  module:
+    - bebbo_serializer
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: paragraph.quiz_questions.field_answers
+field_name: field_answers
+entity_type: paragraph
+bundle: quiz_questions
+label: Answers
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: quiz_answer

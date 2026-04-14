@@ -15,7 +15,7 @@ id: group.country.field_content_toggle
 field_name: field_content_toggle
 entity_type: group
 bundle: country
-label: 'Content toggle off'
+label: 'Content/Feature toggle off'
 description: 'Select tools or sections that should be disabled in the app.'
 required: false
 translatable: true

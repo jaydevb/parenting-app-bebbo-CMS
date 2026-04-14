@@ -1,0 +1,34 @@
+uuid: ecb516ca-1899-4e2e-a2dd-e9623049a007
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_resource_file_internal
+    - media.type.document
+    - paragraphs.paragraphs_type.course_module
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: paragraph.course_module.field_resource_file_internal
+field_name: field_resource_file_internal
+entity_type: paragraph
+bundle: course_module
+label: 'Resource File (Internal)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      document: document
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -13,6 +13,8 @@ display:
           label: Ролі
         operations:
           label: Операції
+        mail:
+          separator: ', '
       pager:
         options:
           tags:
@@ -27,6 +29,7 @@ display:
       exposed_form:
         options:
           submit_button: Фільтр
+          reset_button_label: Скинути
           exposed_sorts_label: 'Впорядкувати за'
           sort_asc_label: Зрост
           sort_desc_label: Спад
@@ -44,6 +47,7 @@ display:
           expose:
             label: Permission
   page_1:
+    display_title: Сторінка
     display_options:
       menu:
         title: List

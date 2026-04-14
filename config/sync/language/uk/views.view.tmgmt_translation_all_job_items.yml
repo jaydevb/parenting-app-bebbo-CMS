@@ -4,6 +4,8 @@ display:
     display_options:
       exposed_form:
         options:
+          submit_button: Застосувати
+          reset_button_label: Скинути
           exposed_sorts_label: 'Впорядкувати за'
           sort_asc_label: Зрост
           sort_desc_label: Спад
@@ -25,8 +27,17 @@ display:
           label: Мітка
         type:
           label: Тип
+        source_language:
+          separator: ', '
+        target_language:
+          separator: ', '
+        word_count:
+          separator: ', '
+        tags_count:
+          separator: ', '
         changed:
           label: Changed
+          separator: ', '
         operations:
           label: Операції
       filters:
@@ -39,3 +50,5 @@ display:
       empty:
         area_text_custom:
           content: "<p style=\"text-align:center\">No Data Available</p>\r\n"
+  page_1:
+    display_title: Сторінка

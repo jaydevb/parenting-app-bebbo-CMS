@@ -1,0 +1,47 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the pb_custom_field module.
+ */
+
+/**
+ * Update field_content_toggle value 'Pregnancy' to 'pregnancy'.
+ */
+function pb_custom_field_update_10002() {
+  $database = \Drupal::database();
+
+  // Update stored field data in the database.
+  $tables = [
+    'group__field_content_toggle',
+    'group_revision__field_content_toggle',
+  ];
+
+  foreach ($tables as $table) {
+    if ($database->schema()->tableExists($table)) {
+      $updated = $database->update($table)
+        ->fields(['field_content_toggle_value' => 'pregnancy'])
+        ->condition('field_content_toggle_value', 'Pregnancy')
+        ->execute();
+      \Drupal::logger('pb_custom_field')->notice("Updated @count rows in @table: 'Pregnancy' -> 'pregnancy'.", [
+        '@count' => $updated,
+        '@table' => $table,
+      ]);
+    }
+  }
+
+  // Update the active config directly to avoid config import validation error.
+  // Drupal blocks key changes on list fields with existing data during cim.
+  $config = \Drupal::configFactory()->getEditable('field.storage.group.field_content_toggle');
+  $allowed_values = $config->get('settings.allowed_values');
+  if ($allowed_values) {
+    foreach ($allowed_values as &$item) {
+      if ($item['value'] === 'Pregnancy') {
+        $item['value'] = 'pregnancy';
+      }
+    }
+    $config->set('settings.allowed_values', $allowed_values);
+    $config->save();
+    \Drupal::logger('pb_custom_field')->notice("Updated active config: 'Pregnancy' -> 'pregnancy' in field_content_toggle allowed values.");
+  }
+}
