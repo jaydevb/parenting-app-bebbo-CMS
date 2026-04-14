@@ -1,0 +1,38 @@
+uuid: dd7bd4ad-56b4-42d6-babd-e96ab36cb377
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_question
+    - node.type.quiz
+    - paragraphs.paragraphs_type.quiz_questions
+  module:
+    - entity_reference_revisions
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: node.quiz.field_question
+field_name: field_question
+entity_type: node
+bundle: quiz
+label: Question
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      quiz_questions: quiz_questions
+    negate: 0
+    target_bundles_drag_drop:
+      course_module:
+        weight: 3
+        enabled: false
+      quiz_questions:
+        weight: 4
+        enabled: true
+field_type: entity_reference_revisions

@@ -1,0 +1,15 @@
+course_module_count:
+  js:
+    js/course_module_count.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+
+quiz_question_count:
+  js:
+    js/quiz_question_count.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - core/drupalSettings

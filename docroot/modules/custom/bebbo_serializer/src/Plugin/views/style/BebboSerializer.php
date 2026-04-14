@@ -293,6 +293,8 @@ class BebboSerializer extends Serializer {
       'vocabulary_rest_export'     => $this->transformVocabularies($rows),
       'terms_rest_export'          => $this->transformTaxonomies($rows),
       'video_article_rest_export'  => $this->transformVideoArticles($rows),
+      'course_rest_export'         => $this->transformCourse($rows),
+      'quiz_rest_export'           => $this->transformQuiz($rows),
       default => $rows,
     };
   }
@@ -1488,23 +1490,15 @@ class BebboSerializer extends Serializer {
     // 1. Filter out CountryID 131.
     $rows = array_values(array_filter($rows, fn($row) => ($row['CountryID'] ?? '') !== '131'));
 
-    // 2. Resolve media fields from raw IDs to {url, name, alt} objects.
-    $mediaKeys = ['country_national_partner', 'country_sponsor_logo', 'unicef_logo'];
-    $allMediaIds = [];
-    foreach ($rows as $row) {
-      foreach ($mediaKeys as $key) {
-        $id = $row[$key] ?? '';
-        if (!empty($id) && $id !== '0') {
-          $allMediaIds[] = (int) $id;
-        }
-      }
-    }
-    $resolvedMedia = $this->resolveMediaIds($allMediaIds);
-    $emptyMedia = ['url' => '', 'name' => '', 'alt' => ''];
+    // 2. Parse media fields from embedded view HTML to {url, name, alt}.
+    $mediaKeys = [
+      'country_national_partner',
+      'country_sponsor_logo',
+      'unicef_logo',
+    ];
     foreach ($rows as &$row) {
       foreach ($mediaKeys as $key) {
-        $id = (int) ($row[$key] ?? 0);
-        $row[$key] = ($id > 0 && isset($resolvedMedia[$id])) ? $resolvedMedia[$id] : $emptyMedia;
+        $row[$key] = $this->parseViewCoverImage($row[$key] ?? NULL);
       }
     }
     unset($row);
@@ -1698,6 +1692,371 @@ class BebboSerializer extends Serializer {
   }
 
   /**
+   * Transforms rows for the course REST export display.
+   *
+   * Casts numeric fields, resolves cover_image, and batch-loads paragraph
+   * modules from field_module without N+1 queries. Each course gets a
+   * "module" array with structured module data.
+   *
+   * @param array $rows
+   *   Raw rows from the view.
+   *
+   * @return array
+   *   Transformed rows with nested module data.
+   */
+  private function transformCourse(array $rows): array {
+    if (empty($rows)) {
+      return $rows;
+    }
+
+    $langcode = $this->resolveLangcode();
+
+    // Collect all course nids from the view rows (aliased as "id").
+    $nids = array_filter(array_column($rows, 'id'), 'is_numeric');
+    $nids = array_map('intval', $nids);
+
+    // Single DB query: nid → paragraph target_ids (avoids loading full nodes).
+    $nidToParaIds = [];
+    if (!empty($nids)) {
+      $result = $this->database->select('node__field_module', 'fm')
+        ->fields('fm', ['entity_id', 'field_module_target_id'])
+        ->condition('fm.entity_id', $nids, 'IN')
+        ->condition('fm.deleted', 0)
+        ->condition('fm.langcode', $langcode)
+        ->orderBy('fm.entity_id')
+        ->orderBy('fm.delta')
+        ->execute();
+
+      foreach ($result as $record) {
+        $nidToParaIds[(int) $record->entity_id][] = (int) $record->field_module_target_id;
+      }
+    }
+
+    // Batch-load all paragraphs in one query.
+    $allParaIds = array_merge(...array_values($nidToParaIds ?: [[]]));
+    $paragraphs = [];
+    if (!empty($allParaIds)) {
+      /** @var \Drupal\paragraphs\Entity\Paragraph[] $paragraphs */
+      $paragraphs = $this->entityTypeManager
+        ->getStorage('paragraph')
+        ->loadMultiple($allParaIds);
+    }
+
+    // Collect document media IDs from paragraphs for batch resolution.
+    $docMediaIds = [];
+    foreach ($paragraphs as $paragraph) {
+      $translated = $paragraph->hasTranslation($langcode)
+        ? $paragraph->getTranslation($langcode)
+        : $paragraph;
+      if ($translated->hasField('field_resource_file_internal') && !$translated->get('field_resource_file_internal')->isEmpty()) {
+        $docMediaIds[] = (int) $translated->get('field_resource_file_internal')->target_id;
+      }
+    }
+
+    // Batch-load document media → {url, name}.
+    $resolvedDocs = $this->resolveDocumentMediaIds(array_unique($docMediaIds));
+
+    // Build module arrays per paragraph.
+    $paraData = [];
+    foreach ($paragraphs as $pid => $paragraph) {
+      $translated = $paragraph->hasTranslation($langcode)
+        ? $paragraph->getTranslation($langcode)
+        : $paragraph;
+
+      $moduleTitle = '';
+      if ($translated->hasField('field_module_title')) {
+        $moduleTitle = (string) ($translated->get('field_module_title')->value ?? '');
+      }
+
+      $numberingStyle = '';
+      if ($translated->hasField('field_numbering_style')) {
+        $numberingStyle = (string) ($translated->get('field_numbering_style')->value ?? '');
+      }
+
+      $optionalModule = FALSE;
+      if ($translated->hasField('field_optional_module')) {
+        $optionalModule = (bool) $translated->get('field_optional_module')->value;
+      }
+
+      // Course content as int array (same pattern as related_articles).
+      $courseContent = [];
+      if ($translated->hasField('field_course_content')) {
+        foreach ($translated->get('field_course_content') as $item) {
+          if (!empty($item->target_id)) {
+            $courseContent[] = (int) $item->target_id;
+          }
+        }
+      }
+
+      // Resource files: both fields are independent, not fallbacks.
+      $resourceFileInternal = NULL;
+      if ($translated->hasField('field_resource_file_internal') && !$translated->get('field_resource_file_internal')->isEmpty()) {
+        $mediaId = (int) $translated->get('field_resource_file_internal')->target_id;
+        $resourceFileInternal = $resolvedDocs[$mediaId] ?? NULL;
+      }
+
+      $resourceFile = NULL;
+      if ($translated->hasField('field_resource_file') && !$translated->get('field_resource_file')->isEmpty()) {
+        $link = $translated->get('field_resource_file')->first();
+        $resourceFile = [
+          'url' => (string) ($link->uri ?? ''),
+          'name' => (string) ($link->title ?? ''),
+        ];
+      }
+
+      $paraData[$pid] = [
+        'module_title' => $moduleTitle,
+        'content_numbering' => $numberingStyle,
+        'optional_module' => $optionalModule,
+        'course_content' => $courseContent,
+        'resource_file' => $resourceFile,
+        'resource_file_internal' => $resourceFileInternal,
+      ];
+    }
+
+    // Transform each row.
+    foreach ($rows as &$row) {
+      $nid = (int) ($row['id'] ?? 0);
+      $this->castToInt($row, [
+        'id', 'course_duration',
+        'number_of_modules', 'final_assessment',
+      ]);
+      $this->toIntArray($row, ['child_age', 'target_audience', 'course_category']);
+      $this->castToBool($row, ['feedback_required', 'module_locked']);
+      $this->decodeHtmlEntities($row, ['title']);
+
+      $row['cover_image'] = $this->parseViewCoverImage(
+        $row['cover_image'] ?? NULL
+      );
+      $row['certificate'] = $this->parseViewCoverImage(
+        $row['certificate'] ?? NULL
+      );
+
+      // Build modules array from pre-loaded paragraph data.
+      $modules = [];
+      if (!empty($nidToParaIds[$nid])) {
+        foreach ($nidToParaIds[$nid] as $pid) {
+          if (isset($paraData[$pid])) {
+            $modules[] = $paraData[$pid];
+          }
+        }
+      }
+      $row['module'] = $modules;
+    }
+    unset($row);
+
+    return $rows;
+  }
+
+  /**
+   * Transforms rows for the quiz REST export display.
+   *
+   * Batch-loads quiz_questions paragraphs from field_question and nests
+   * them in each quiz row as a "questions" array. Resolves question images
+   * via the existing resolveMediaIds() batch loader.
+   *
+   * @param array $rows
+   *   Raw rows from the view.
+   *
+   * @return array
+   *   Transformed rows with nested question data.
+   */
+  private function transformQuiz(array $rows): array {
+    if (empty($rows)) {
+      return $rows;
+    }
+
+    $langcode = $this->resolveLangcode();
+
+    // Collect all quiz nids from the view rows (aliased as "id").
+    $nids = array_filter(array_column($rows, 'id'), 'is_numeric');
+    $nids = array_map('intval', $nids);
+
+    // Single DB query: nid → paragraph target_ids.
+    $nidToParaIds = [];
+    if (!empty($nids)) {
+      $result = $this->database->select('node__field_question', 'fq')
+        ->fields('fq', ['entity_id', 'field_question_target_id'])
+        ->condition('fq.entity_id', $nids, 'IN')
+        ->condition('fq.deleted', 0)
+        ->condition('fq.langcode', $langcode)
+        ->orderBy('fq.entity_id')
+        ->orderBy('fq.delta')
+        ->execute();
+
+      foreach ($result as $record) {
+        $nidToParaIds[(int) $record->entity_id][] = (int) $record->field_question_target_id;
+      }
+    }
+
+    // Batch-load all paragraphs in one query.
+    $allParaIds = array_merge(
+      ...array_values($nidToParaIds ?: [[]])
+    );
+    $paragraphs = [];
+    if (!empty($allParaIds)) {
+      /** @var \Drupal\paragraphs\Entity\Paragraph[] $paragraphs */
+      $paragraphs = $this->entityTypeManager
+        ->getStorage('paragraph')
+        ->loadMultiple($allParaIds);
+    }
+
+    // Collect image media IDs from paragraphs for batch resolution.
+    $imageMediaIds = [];
+    foreach ($paragraphs as $paragraph) {
+      $translated = $paragraph->hasTranslation($langcode)
+        ? $paragraph->getTranslation($langcode)
+        : $paragraph;
+      if ($translated->hasField('field_question_image')
+        && !$translated->get('field_question_image')->isEmpty()) {
+        $imageMediaIds[] = (int) $translated
+          ->get('field_question_image')->target_id;
+      }
+    }
+
+    // Batch-load image media → {url, name, alt}.
+    $resolvedImages = $this->resolveMediaIds(
+      array_unique($imageMediaIds)
+    );
+    $emptyImage = ['url' => '', 'name' => '', 'alt' => ''];
+
+    // Build question arrays per paragraph.
+    $paraData = [];
+    foreach ($paragraphs as $pid => $paragraph) {
+      $translated = $paragraph->hasTranslation($langcode)
+        ? $paragraph->getTranslation($langcode)
+        : $paragraph;
+
+      $questionType = '';
+      if ($translated->hasField('field_question_type')) {
+        $questionType = (string) ($translated
+          ->get('field_question_type')->value ?? '');
+      }
+
+      $questionText = '';
+      if ($translated->hasField('field_question')) {
+        $questionText = (string) ($translated
+          ->get('field_question')->value ?? '');
+      }
+
+      // Resolve question image.
+      $image = $emptyImage;
+      if ($translated->hasField('field_question_image')
+        && !$translated->get('field_question_image')->isEmpty()) {
+        $mediaId = (int) $translated
+          ->get('field_question_image')->target_id;
+        $image = $resolvedImages[$mediaId] ?? $emptyImage;
+      }
+
+      // Build answers array from custom quiz_answer field.
+      $answers = [];
+      if ($translated->hasField('field_answers')) {
+        foreach ($translated->get('field_answers') as $answerItem) {
+          $answerText = (string) ($answerItem->value ?? '');
+          if ($answerText === '') {
+            continue;
+          }
+          $isCorrect = $answerItem->get('is_correct')->getValue();
+          $answers[] = [
+            'answer' => $answerText,
+            'correct_answer' => (bool) $isCorrect,
+          ];
+        }
+      }
+
+      $explanation = '';
+      if ($translated->hasField('field_explanation')) {
+        $explanation = (string) ($translated
+          ->get('field_explanation')->value ?? '');
+      }
+
+      $paraData[$pid] = [
+        'type' => $questionType,
+        'question' => $questionText,
+        'image' => $image,
+        'answers' => $answers,
+        'explanation' => $explanation,
+      ];
+    }
+
+    // Transform each row.
+    foreach ($rows as &$row) {
+      $nid = (int) ($row['id'] ?? 0);
+      $this->castToInt($row, [
+        'id', 'passing_score',
+        'number_of_questions',
+      ]);
+      $this->decodeHtmlEntities($row, ['title']);
+
+      // Build questions array from pre-loaded paragraph data.
+      $questions = [];
+      if (!empty($nidToParaIds[$nid])) {
+        foreach ($nidToParaIds[$nid] as $pid) {
+          if (isset($paraData[$pid])) {
+            $questions[] = $paraData[$pid];
+          }
+        }
+      }
+      $row['questions'] = $questions;
+    }
+    unset($row);
+
+    return $rows;
+  }
+
+  /**
+   * Batch-resolves document media IDs to {url, name} arrays.
+   *
+   * Loads document media entities, extracts the file, and returns the
+   * direct file URL and media name.
+   *
+   * @param array $mediaIds
+   *   Array of media entity IDs (document type).
+   *
+   * @return array
+   *   Keyed by media ID, each value has url and name keys.
+   */
+  private function resolveDocumentMediaIds(array $mediaIds): array {
+    $mediaIds = array_filter(array_unique($mediaIds));
+    if (empty($mediaIds)) {
+      return [];
+    }
+
+    $mediaEntities = $this->entityTypeManager
+      ->getStorage('media')
+      ->loadMultiple($mediaIds);
+
+    $resolved = [];
+    $request = $this->requestStack->getCurrentRequest();
+    $baseUrl = $request !== NULL ? $request->getSchemeAndHttpHost() : '';
+
+    foreach ($mediaIds as $id) {
+      if (!isset($mediaEntities[$id]) || !$mediaEntities[$id]->hasField('field_media_file')) {
+        continue;
+      }
+
+      $media = $mediaEntities[$id];
+      /** @var \Drupal\file\FileInterface|null $file */
+      $file = $media->get('field_media_file')->entity;
+      if (!$file instanceof FileInterface) {
+        continue;
+      }
+
+      $url = $file->createFileUrl(FALSE);
+      if ($url !== '' && !str_starts_with($url, 'http')) {
+        $url = $baseUrl . $url;
+      }
+
+      $resolved[$id] = [
+        'url' => $url,
+        'name' => (string) ($media->get('name')->value ?? ''),
+      ];
+    }
+
+    return $resolved;
+  }
+
+  /**
    * Casts the given row fields to integers.
    *
    * Missing or empty values default to 0.
@@ -1711,6 +2070,27 @@ class BebboSerializer extends Serializer {
     foreach ($fields as $field) {
       if (array_key_exists($field, $row)) {
         $row[$field] = (int) ($row[$field] ?? 0);
+      }
+    }
+  }
+
+  /**
+   * Casts the given row fields to booleans.
+   *
+   * Treats "1", "True", "true" as TRUE; everything else as FALSE.
+   *
+   * @param array $row
+   *   A single row (passed by reference).
+   * @param array $fields
+   *   Field names to cast.
+   */
+  private function castToBool(array &$row, array $fields): void {
+    foreach ($fields as $field) {
+      if (array_key_exists($field, $row)) {
+        $row[$field] = filter_var(
+          $row[$field],
+          FILTER_VALIDATE_BOOLEAN
+        );
       }
     }
   }
@@ -1808,18 +2188,17 @@ class BebboSerializer extends Serializer {
   }
 
   /**
-   * Parses a cover_video view field JSON string to {url, name, site}.
+   * Parses a cover_video view field HTML to {url, name, site}.
    *
-   * The view renders the field as a JSON array with one element:
-   * @code
-   * [{"url":"https://www.youtube.com/...","name":"...","site":"youtube"}]
-   * @endcode
+   * The embedded media_details view renders unformatted HTML with
+   * labeled fields. An empty media reference has no "view-content"
+   * wrapper.
    *
    * @param mixed $raw
-   *   The raw field value from the row (expected JSON string).
+   *   The raw field value (HTML string from the embedded view).
    *
    * @return array
-   *   Resolved {url, name, site} object, or empty strings if parsing fails.
+   *   Resolved {url, name, site}, or empty strings on failure.
    */
   private function parseViewVideoMedia(mixed $raw): array {
     $empty = ['url' => '', 'name' => '', 'site' => ''];
@@ -1828,35 +2207,44 @@ class BebboSerializer extends Serializer {
       return $empty;
     }
 
-    $decoded = json_decode($raw, TRUE);
-    if (!is_array($decoded) || empty($decoded[0])) {
+    if (!str_contains($raw, 'view-content')) {
       return $empty;
     }
 
-    $item = $decoded[0];
-    return [
-      'url' => (string) ($item['url'] ?? ''),
-      'name' => (string) ($item['name'] ?? ''),
-      'site' => (string) ($item['site'] ?? ''),
-    ];
+    $url = '';
+    $pattern = '/views-field-field-media-oembed-video"'
+      . '.*?field-content[^>]*>(.*?)<\/span>/s';
+    if (preg_match($pattern, $raw, $m)) {
+      $url = trim(strip_tags($m[1]));
+    }
+
+    $name = '';
+    if (preg_match('/views-field-name.*?field-content[^>]*>(.*?)<\/span>/s', $raw, $m)) {
+      $name = trim(strip_tags($m[1]));
+    }
+
+    $site = '';
+    $sitePattern = '/views-field-field-media-oembed-video-1'
+      . '.*?field-content[^>]*>(.*?)<\/span>/s';
+    if (preg_match($sitePattern, $raw, $m)) {
+      $site = trim(strip_tags($m[1]));
+    }
+
+    return ['url' => $url, 'name' => $name, 'site' => $site];
   }
 
   /**
-   * Parses a cover_image view field JSON string to {url, name, alt}.
+   * Parses a cover_image view field HTML to {url, name, alt}.
    *
-   * The view renders the field as a JSON array with one element:
-   * @code
-   * [{"name":"temir.png","url":"\/sites\/...\/temir.png?itok=...","alt":"..."}]
-   * @endcode
-   *
-   * The "url" value is a relative path and is made absolute using the current
-   * request's scheme and host.
+   * The embedded media_details view renders unformatted HTML with
+   * labeled fields. The thumbnail URL is root-relative and made
+   * absolute using the current request's scheme and host.
    *
    * @param mixed $raw
-   *   The raw field value from the row (expected JSON string).
+   *   The raw field value (HTML string from the embedded view).
    *
    * @return array
-   *   Resolved {url, name, alt} object, or empty strings if parsing fails.
+   *   Resolved {url, name, alt}, or empty strings on failure.
    */
   private function parseViewCoverImage(mixed $raw): array {
     $empty = ['url' => '', 'name' => '', 'alt' => ''];
@@ -1865,20 +2253,38 @@ class BebboSerializer extends Serializer {
       return $empty;
     }
 
-    $decoded = json_decode($raw, TRUE);
-    if (!is_array($decoded) || empty($decoded[0])) {
+    // No view-content wrapper means empty media reference.
+    if (!str_contains($raw, 'view-content')) {
       return $empty;
     }
 
-    $item = $decoded[0];
-    $url = (string) ($item['url'] ?? '');
-    $name = (string) ($item['name'] ?? '');
-    $alt = (string) ($item['alt'] ?? '');
+    $name = '';
+    $namePattern = '/views-field-name'
+      . '.*?field-content[^>]*>(.*?)<\/span>/s';
+    if (preg_match($namePattern, $raw, $m)) {
+      $name = trim(strip_tags($m[1]));
+    }
+
+    $url = '';
+    $urlPattern = '/Thumbnail:\s*<\/span>'
+      . '\s*<span[^>]*>(.*?)<\/span>/s';
+    if (preg_match($urlPattern, $raw, $m)) {
+      $url = trim(strip_tags($m[1]));
+    }
+
+    $alt = '';
+    $altPattern = '/views-field-thumbnail__alt'
+      . '.*?field-content[^>]*>(.*?)<\/span>/s';
+    if (preg_match($altPattern, $raw, $m)) {
+      $alt = trim(strip_tags($m[1]));
+    }
 
     // Make the URL absolute if it is a root-relative path.
     if ($url !== '' && !str_starts_with($url, 'http')) {
       $request = $this->requestStack->getCurrentRequest();
-      $url = ($request !== NULL ? $request->getSchemeAndHttpHost() : '') . $url;
+      $url = ($request !== NULL
+        ? $request->getSchemeAndHttpHost()
+        : '') . $url;
     }
 
     return ['url' => $url, 'name' => $name, 'alt' => $alt];

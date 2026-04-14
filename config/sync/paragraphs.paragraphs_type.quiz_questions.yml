@@ -1,0 +1,10 @@
+uuid: 99c7d461-b42b-4007-8956-b20239bc24b3
+langcode: en
+status: true
+dependencies: {  }
+id: quiz_questions
+label: 'Quiz Questions'
+icon_uuid: null
+icon_default: null
+description: ''
+behavior_plugins: {  }

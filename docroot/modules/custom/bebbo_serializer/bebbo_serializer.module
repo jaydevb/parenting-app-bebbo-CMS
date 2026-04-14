@@ -8,6 +8,7 @@
 use Drupal\node\NodeInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\query\Sql;
 
 /**
@@ -74,6 +75,10 @@ function bebbo_serializer_views_query_alter(ViewExecutable $view, QueryPluginBas
  * (drupal-media converted to img tags) for article nodes.
  */
 function bebbo_serializer_node_presave(NodeInterface $node): void {
+  // Auto-compute paragraph counts for course and quiz nodes.
+  _bebbo_serializer_populate_number_of_modules($node);
+  _bebbo_serializer_populate_number_of_questions($node);
+
   // Only process published nodes with a body field.
   if (!$node->isPublished() || !$node->hasField('body')) {
     return;
@@ -187,4 +192,136 @@ function _bebbo_serializer_populate_body_rendered(NodeInterface $node, string $b
     'value' => $rendered,
     'format' => 'full_html',
   ]);
+}
+
+/**
+ * Sets field_number_of_modules to the count of field_module paragraph items.
+ *
+ * @param \Drupal\node\NodeInterface $node
+ *   The node being saved.
+ */
+function _bebbo_serializer_populate_number_of_modules(NodeInterface $node): void {
+  if ($node->bundle() !== 'course') {
+    return;
+  }
+
+  if (!$node->hasField('field_module') || !$node->hasField('field_number_of_modules')) {
+    return;
+  }
+
+  $count = $node->get('field_module')->count();
+  $node->set('field_number_of_modules', $count);
+}
+
+/**
+ * Sets field_number_of_questions from field_question count.
+ *
+ * @param \Drupal\node\NodeInterface $node
+ *   The node being saved.
+ */
+function _bebbo_serializer_populate_number_of_questions(NodeInterface $node): void {
+  if ($node->bundle() !== 'quiz') {
+    return;
+  }
+
+  if (!$node->hasField('field_question') || !$node->hasField('field_number_of_questions')) {
+    return;
+  }
+
+  $count = $node->get('field_question')->count();
+  $node->set('field_number_of_questions', $count);
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Makes paragraph count fields readonly and attaches JS for real-time
+ * updates on course and quiz node forms.
+ */
+function bebbo_serializer_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  // Course: auto-compute number of modules.
+  if (in_array($form_id, ['node_course_form', 'node_course_edit_form'], TRUE)) {
+    if (isset($form['field_number_of_modules'])) {
+      $form['field_number_of_modules']['#disabled'] = TRUE;
+    }
+    $form['#attached']['library'][] = 'bebbo_serializer/course_module_count';
+  }
+
+  // Quiz: auto-compute number of questions, validate passing score.
+  if (in_array($form_id, ['node_quiz_form', 'node_quiz_edit_form'], TRUE)) {
+    if (isset($form['field_number_of_questions'])) {
+      $form['field_number_of_questions']['#disabled'] = TRUE;
+    }
+    if (isset($form['field_passing_score'])) {
+      $form['field_passing_score']['widget'][0]['value']['#description'] = t('The passing score out of 0');
+    }
+    $form['#validate'][] = '_bebbo_serializer_quiz_passing_score_validate';
+    $form['#validate'][] = '_bebbo_serializer_quiz_question_count_validate';
+    $form['#attached']['library'][] = 'bebbo_serializer/quiz_question_count';
+    $form['#attached']['drupalSettings']['bebboQuizType'] = [
+      'singleQuestionValue' => 'single_question_quiz',
+    ];
+  }
+}
+
+/**
+ * Counts non-removed paragraph items in the field_question form state.
+ *
+ * The field_number_of_questions widget is #disabled so Drupal resets its
+ * submitted value to the default. This helper counts paragraphs directly
+ * from form state instead.
+ */
+function _bebbo_serializer_count_questions(FormStateInterface $form_state): int {
+  $questions = $form_state->getValue('field_question');
+  if (!is_array($questions)) {
+    return 0;
+  }
+
+  $count = 0;
+  foreach ($questions as $delta => $item) {
+    if (!is_numeric($delta) || empty($item['subform'])) {
+      continue;
+    }
+    $count++;
+  }
+  return $count;
+}
+
+/**
+ * Validates that passing score does not exceed the number of questions.
+ */
+function _bebbo_serializer_quiz_passing_score_validate(array &$form, FormStateInterface $form_state): void {
+  $passing_score = (int) $form_state->getValue(['field_passing_score', 0, 'value']);
+  $question_count = _bebbo_serializer_count_questions($form_state);
+
+  if ($passing_score > $question_count) {
+    $form_state->setErrorByName(
+      'field_passing_score',
+      t('Passing score (@score) cannot exceed the number of questions (@count).', [
+        '@score' => $passing_score,
+        '@count' => $question_count,
+      ])
+    );
+  }
+}
+
+/**
+ * Validates that a single question quiz has at most one question.
+ */
+function _bebbo_serializer_quiz_question_count_validate(array &$form, FormStateInterface $form_state): void {
+  $quiz_type = $form_state->getValue(['field_quiz_type', 0, 'value']);
+  if ($quiz_type !== 'single_question_quiz') {
+    return;
+  }
+
+  $question_count = _bebbo_serializer_count_questions($form_state);
+
+  if ($question_count > 1) {
+    $form_state->setErrorByName(
+      'field_question',
+      t('A "Single question quiz" can have at most 1 question. You currently have @count questions.', [
+        '@count' => $question_count,
+      ])
+    );
+  }
 }

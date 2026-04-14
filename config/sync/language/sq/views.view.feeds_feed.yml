@@ -20,3 +20,5 @@ display:
         type:
           expose:
             label: Type
+  page_1:
+    display_title: Faqe

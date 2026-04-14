@@ -4,12 +4,16 @@ display:
     display_options:
       exposed_form:
         options:
+          submit_button: Застосувати
+          reset_button_label: Скинути
           exposed_sorts_label: 'Впорядкувати за'
           sort_asc_label: Зрост
           sort_desc_label: Спад
       pager:
         options:
           tags:
+            previous: ‹‹
+            next: ››
             first: '« Перша'
             last: 'Остання »'
           expose:
@@ -19,10 +23,15 @@ display:
       fields:
         name:
           label: User
+          separator: ', '
         group_roles:
           label: Ролі
+          separator: ', '
         changed:
           label: Оновлено
+          separator: ', '
+        created:
+          separator: ', '
         view_group_content:
           text: 'Manage member'
         edit_group_content:
@@ -31,3 +40,9 @@ display:
           text: 'Edit member'
         dropbutton:
           label: Операції
+      arguments:
+        gid:
+          exception:
+            title: Все
+  page_1:
+    display_title: Сторінка

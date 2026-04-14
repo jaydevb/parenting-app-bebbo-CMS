@@ -14,6 +14,9 @@ display:
           label: Author
         status:
           label: Status
+          settings:
+            format_custom_false: 'Снято с публикации'
+            format_custom_true: Опубликовано
         changed:
           label: Updated
         operations:
@@ -42,10 +45,17 @@ display:
         status:
           expose:
             label: Status
+          group_info:
+            group_items:
+              1:
+                title: Опубликовано
+              2:
+                title: 'Снято с публикации'
         langcode:
           expose:
             label: Language
   page_1:
+    display_title: Страница
     display_options:
       menu:
         title: Content

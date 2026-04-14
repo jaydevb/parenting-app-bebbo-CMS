@@ -1,0 +1,26 @@
+uuid: 725dac9c-baa1-4ce5-b4db-d55aa732e7a9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_optional_module
+    - paragraphs.paragraphs_type.course_module
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: paragraph.course_module.field_optional_module
+field_name: field_optional_module
+entity_type: paragraph
+bundle: course_module
+label: 'Optional module'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: 'true'
+  off_label: 'false'
+field_type: boolean

@@ -18,6 +18,7 @@ dependencies:
     - rest
     - serialization
     - user
+    - views_field_view
 id: country_listing
 label: 'Country listing'
 module: views
@@ -953,7 +954,7 @@ display:
           admin_label: ''
           plugin_id: field
           label: ''
-          exclude: false
+          exclude: true
           alter:
             alter_text: false
             text: ''
@@ -1015,7 +1016,7 @@ display:
           admin_label: ''
           plugin_id: field
           label: ''
-          exclude: false
+          exclude: true
           alter:
             alter_text: false
             text: ''
@@ -1077,7 +1078,7 @@ display:
           admin_label: ''
           plugin_id: field
           label: ''
-          exclude: false
+          exclude: true
           alter:
             alter_text: false
             text: ''
@@ -1316,6 +1317,162 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        view:
+          id: view
+          table: views
+          field: view
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: view
+          label: 'Country National Partner Image'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          view: media_details
+          display: block_1
+          arguments: '{{ raw_fields.field_country_national_partner }}'
+        view_1:
+          id: view_1
+          table: views
+          field: view
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: view
+          label: 'Country Sponsor Logo'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          view: media_details
+          display: block_1
+          arguments: '{{ raw_fields.field_unicef_logo }}'
+        view_2:
+          id: view_2
+          table: views
+          field: view
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: view
+          label: 'UNICEF logo'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          view: media_details
+          display: block_1
+          arguments: '{{ raw_fields.field_unicef_logo }}'
       pager:
         type: none
         options:
@@ -1401,15 +1558,6 @@ display:
             field_country_email:
               alias: country_email
               raw_output: false
-            field_country_national_partner:
-              alias: country_national_partner
-              raw_output: false
-            field_country_sponsor_logo:
-              alias: country_sponsor_logo
-              raw_output: false
-            field_unicef_logo:
-              alias: unicef_logo
-              raw_output: false
             field_language:
               alias: langcode
               raw_output: true
@@ -1420,7 +1568,13 @@ display:
               alias: app_name
               raw_output: false
             view:
-              alias: ''
+              alias: country_national_partner
+              raw_output: false
+            view_1:
+              alias: country_sponsor_logo
+              raw_output: false
+            view_2:
+              alias: unicef_logo
               raw_output: false
       defaults:
         title: false

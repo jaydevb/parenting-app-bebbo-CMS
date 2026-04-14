@@ -28,6 +28,7 @@ display:
           expose:
             label: Permission
   page_1:
+    display_title: Faqe
     display_options:
       menu:
         title: List

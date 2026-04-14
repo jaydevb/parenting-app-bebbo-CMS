@@ -4,6 +4,8 @@ display:
     display_options:
       exposed_form:
         options:
+          submit_button: Застосувати
+          reset_button_label: Скинути
           exposed_sorts_label: 'Впорядкувати за'
           sort_asc_label: Зрост
           sort_desc_label: Спад
@@ -16,12 +18,18 @@ display:
       fields:
         title:
           label: Title
+          separator: ', '
         type:
           label: Тип
+          separator: ', '
         name:
           label: Автор
+          separator: ', '
         changed:
           label: Оновлено
+          separator: ', '
+        imported:
+          separator: ', '
         operations:
           label: Операції
       filters:
@@ -31,3 +39,5 @@ display:
         type:
           expose:
             label: Тип
+  page_1:
+    display_title: Сторінка

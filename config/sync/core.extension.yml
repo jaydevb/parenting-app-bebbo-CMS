@@ -32,6 +32,7 @@ module:
   dynamic_page_cache: 0
   editor: 0
   entity: 0
+  entity_reference_revisions: 0
   entity_share: 0
   entity_share_async: 0
   entity_share_client: 0
@@ -149,6 +150,7 @@ module:
   content_translation: 10
   views: 10
   contextual_range_filter: 11
+  paragraphs: 11
   standard: 1000
 theme:
   claro: 0
