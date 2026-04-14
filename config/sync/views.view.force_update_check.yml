@@ -140,7 +140,154 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: standard
-          label: 'Created At'
+          label: 'CU/AU date'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+        update_type:
+          id: update_type
+          table: forcefull_check_update_api
+          field: update_type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          label: 'Update type'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+        google_play_url:
+          id: google_play_url
+          table: forcefull_check_update_api
+          field: google_play_url
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          label: 'Google play url'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+        app_store_url:
+          id: app_store_url
+          table: forcefull_check_update_api
+          field: app_store_url
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          label: 'App Update (AU)'
           exclude: false
           alter:
             alter_text: false
@@ -189,7 +336,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: standard
-          label: 'Flag Status'
+          label: 'Content Update (CU)'
           exclude: false
           alter:
             alter_text: false
@@ -280,7 +427,7 @@ display:
           empty_zero: false
           hide_alter_empty: true
       pager:
-        type: mini
+        type: full
         options:
           offset: 0
           pagination_heading_level: h4
@@ -290,6 +437,8 @@ display:
           tags:
             next: ››
             previous: ‹‹
+            first: '« First'
+            last: 'Last »'
           expose:
             items_per_page: false
             items_per_page_label: 'Items per page'
@@ -298,6 +447,7 @@ display:
             items_per_page_options_all_label: '- All -'
             offset: false
             offset_label: Offset
+          quantity: 9
       exposed_form:
         type: basic
         options:
@@ -334,6 +484,52 @@ display:
           exposed: false
       arguments: {  }
       filters:
+        countries_id:
+          id: countries_id
+          table: forcefull_check_update_api
+          field: countries_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: string
+          operator: '='
+          value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: countries_id_op
+            label: 'Country Id'
+            description: ''
+            use_operator: false
+            operator: countries_id_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: countries_id
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              global_admin: '0'
+              reviewer: '0'
+              editor: '0'
+              sme: '0'
+              se: '0'
+              administrator: '0'
+            placeholder: ''
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
         flag_status:
           id: flag_status
           table: forcefull_check_update_api
@@ -381,10 +577,10 @@ display:
                 title: Disable
                 operator: '='
                 value: '0'
-        countries_id:
-          id: countries_id
+        update_type:
+          id: update_type
           table: forcefull_check_update_api
-          field: countries_id
+          field: update_type
           relationship: none
           group_type: group
           admin_label: ''
@@ -394,39 +590,48 @@ display:
           group: 1
           exposed: true
           expose:
-            operator_id: countries_id_op
-            label: 'Country Id'
-            description: ''
+            operator_id: update_type_op
+            label: 'Update type'
+            description: null
             use_operator: false
-            operator: countries_id_op
+            operator: update_type_op
             operator_limit_selection: false
             operator_list: {  }
-            identifier: countries_id
+            identifier: update_type
             required: false
             remember: false
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              global_admin: '0'
-              reviewer: '0'
-              editor: '0'
-              sme: '0'
-              se: '0'
-              administrator: '0'
-            placeholder: ''
-          is_grouped: false
+            placeholder: null
+          is_grouped: true
           group_info:
-            label: ''
+            label: 'Update type'
             description: ''
-            identifier: ''
+            identifier: update_type
             optional: true
             widget: select
             multiple: false
             remember: false
             default_group: All
             default_group_multiple: {  }
-            group_items: {  }
+            group_items:
+              1:
+                title: 'Content Update'
+                operator: '='
+                value: content_update
+              2:
+                title: 'App Update'
+                operator: '='
+                value: app_update
+              3:
+                title: ''
+                operator: '='
+                value: ''
+      filter_groups:
+        operator: AND
+        groups:
+          1: AND
       style:
         type: table
         options:
