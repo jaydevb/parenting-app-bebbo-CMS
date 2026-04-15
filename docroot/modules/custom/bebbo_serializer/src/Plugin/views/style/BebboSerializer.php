@@ -286,8 +286,9 @@ class BebboSerializer extends Serializer {
       'home_screen_rest_export'  => $this->transformDailyHomeScreenMessages($rows),
       'standard_deviation_rest_export' => $this->transformStandardDeviation($rows),
       'milestones_rest_export' => $this->transformMilestones($rows),
-      'child_dev_boy_rest_export'  => $this->transformChildDevelopment($rows),
-      'child_dev_girl_rest_export' => $this->transformChildDevelopment($rows),
+      'child_dev_boy_rest_export'  => $this->transformChildDevPinned($rows),
+      'child_dev_girl_rest_export' => $this->transformChildDevPinned($rows),
+      'child_development_rest_export' => $this->transformChildDevelopment($rows),
       'health_checkup_rest_export' => $this->transformHealthCheckUps($rows),
       'survey_rest_export'         => $this->transformSurveys($rows),
       'vocabulary_rest_export'     => $this->transformVocabularies($rows),
@@ -631,7 +632,7 @@ class BebboSerializer extends Serializer {
    * @return array
    *   Transformed rows.
    */
-  private function transformChildDevelopment(array $rows): array {
+  private function transformChildDevPinned(array $rows): array {
     if (empty($rows)) {
       return $rows;
     }
@@ -654,6 +655,7 @@ class BebboSerializer extends Serializer {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
         'licensed', 'premature', 'mandatory',
+        'boy_video_article', 'girl_video_article',
       ]);
       $this->toIntArray($row, ['child_age', 'keywords', 'related_articles']);
       $this->decodeHtmlEntities($row, ['title']);
@@ -670,6 +672,37 @@ class BebboSerializer extends Serializer {
         $row['cover_video'] = $coverVideo;
         $row['cover_image'] = $coverImage;
       }
+    }
+    unset($row);
+
+    return $rows;
+  }
+
+  /**
+   * Transforms rows for the child development data listing display.
+   *
+   * Unlike the boy/girl pinned-content displays (transformChildDevPinned),
+   * this display returns the child_development nodes themselves with
+   * boy_video_article, girl_video_article, and milestone fields — no media,
+   * no cover_video, no deduplication.
+   *
+   * @param array $rows
+   *   Raw rows from the view.
+   *
+   * @return array
+   *   Transformed rows.
+   */
+  private function transformChildDevelopment(array $rows): array {
+    if (empty($rows)) {
+      return $rows;
+    }
+
+    foreach ($rows as &$row) {
+      $this->castToInt($row, [
+        'id', 'boy_video_article', 'girl_video_article', 'mandatory',
+      ]);
+      $this->toIntArray($row, ['child_age']);
+      $this->decodeHtmlEntities($row, ['title']);
     }
     unset($row);
 
@@ -710,6 +743,7 @@ class BebboSerializer extends Serializer {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
         'licensed', 'premature', 'mandatory',
+        'growth_period', 'pinned_article', 'pinned_video_article',
       ]);
       $this->toIntArray($row, [
         'child_age', 'related_articles', 'related_video_articles',

@@ -69,7 +69,7 @@ function bebbo_serializer_views_query_alter(ViewExecutable $view, QueryPluginBas
  * Implements hook_node_presave().
  *
  * Auto-populates field_embedded_images by extracting image URLs
- * from <drupal-media> tags in the body field.
+ * from <drupal-media> and <img> tags in the body field.
  *
  * Auto-populates field_body_rendered with pre-rendered body HTML
  * (drupal-media converted to img tags) for article nodes.
@@ -95,7 +95,7 @@ function bebbo_serializer_node_presave(NodeInterface $node): void {
 }
 
 /**
- * Populates field_embedded_images from <drupal-media> tags in body HTML.
+ * Populates field_embedded_images from <drupal-media> and <img> tags in body.
  *
  * @param \Drupal\node\NodeInterface $node
  *   The node being saved.
@@ -121,8 +121,10 @@ function _bebbo_serializer_populate_embedded_images(NodeInterface $node, string 
     return;
   }
 
-  // Clear field if body is empty or has no drupal-media tags.
-  if (empty($body) || strpos($body, '<drupal-media') === FALSE) {
+  // Clear field if body is empty or has no embedded images.
+  $hasDrupalMedia = strpos($body, '<drupal-media') !== FALSE;
+  $hasImgTags = stripos($body, '<img') !== FALSE;
+  if (empty($body) || (!$hasDrupalMedia && !$hasImgTags)) {
     if (!empty($existing)) {
       $node->set('field_embedded_images', []);
     }

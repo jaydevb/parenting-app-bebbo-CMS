@@ -5047,6 +5047,71 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        title_1:
+          id: title_1
+          table: node_field_data
+          field: title
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: title
+          plugin_id: field
+          label: 'Unique Name'
+          exclude: false
+          alter:
+            alter_text: true
+            text: "{{ title_1|lower|replace({' ': '_'}) }}"
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: string
+          settings:
+            link_to_entity: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         field_mandatory_content:
           id: field_mandatory_content
           table: node__field_mandatory_content
@@ -5264,6 +5329,9 @@ display:
               raw_output: false
             body:
               alias: body
+              raw_output: false
+            title_1:
+              alias: unique_name
               raw_output: false
             field_mandatory_content:
               alias: mandatory
@@ -8356,8 +8424,9 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: target_id
-          type: entity_reference_entity_id
-          settings: {  }
+          type: entity_reference_label
+          settings:
+            link: false
           group_column: target_id
           group_columns: {  }
           group_rows: true
@@ -8973,37 +9042,34 @@ display:
         options:
           field_options:
             nid:
-              alias: ''
+              alias: id
+              raw_output: false
+            type:
+              alias: type
               raw_output: false
             title:
-              alias: ''
+              alias: title
+              raw_output: false
+            field_child_age:
+              alias: child_age
+              raw_output: false
+            field_pinned_article_for_boy:
+              alias: boy_video_article
+              raw_output: false
+            field_pinned_article_for_girl:
+              alias: girl_video_article
+              raw_output: false
+            field_milestone_instructions:
+              alias: milestone
               raw_output: false
             created:
-              alias: ''
+              alias: created_at
               raw_output: false
             changed:
-              alias: ''
+              alias: updated_at
               raw_output: false
-            field_featured_image_1:
-              alias: ''
-              raw_output: false
-            field_featured_image_2:
-              alias: ''
-              raw_output: false
-            field_average_height:
-              alias: ''
-              raw_output: false
-            field_average_weight:
-              alias: ''
-              raw_output: false
-            field_fun_fact:
-              alias: ''
-              raw_output: false
-            field_related_articles:
-              alias: ''
-              raw_output: false
-            field_parental_week:
-              alias: ''
+            field_mandatory_content:
+              alias: mandatory
               raw_output: false
       defaults:
         title: false
@@ -12016,11 +12082,11 @@ display:
         - 'config:field.storage.node.field_related_games'
   health_checkup_rest_export:
     id: health_checkup_rest_export
-    display_title: 'Health Check-Ups Pinned Content API'
+    display_title: 'Health Check-Ups API'
     display_plugin: rest_export
     position: 13
     display_options:
-      title: 'Health Check-Ups Pinned Content API'
+      title: 'Health Check-Ups API'
       fields:
         nid:
           id: nid
@@ -12140,8 +12206,9 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: target_id
-          type: entity_reference_entity_id
-          settings: {  }
+          type: entity_reference_label
+          settings:
+            link: false
           group_column: target_id
           group_columns: {  }
           group_rows: true
@@ -13569,7 +13636,7 @@ display:
             more_link: false
             more_link_text: ''
             more_link_path: ''
-            strip_tags: true
+            strip_tags: false
             trim: false
             preserve_tags: ''
             html: false
@@ -16183,18 +16250,36 @@ display:
           exclude: false
           alter:
             alter_text: false
+            text: ''
             make_link: false
+            path: ''
             absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
             word_boundary: false
             ellipsis: false
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
             strip_tags: false
             trim: false
+            preserve_tags: ''
             html: false
           element_type: ''
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: true
+          element_label_colon: false
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -16205,7 +16290,7 @@ display:
           click_sort_column: value
           type: string
           settings:
-            link_to_entity: true
+            link_to_entity: false
           group_column: value
           group_columns: {  }
           group_rows: true

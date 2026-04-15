@@ -110,8 +110,8 @@ class EmbeddedImagesCommands extends DrushCommands {
         $translation = $node->getTranslation($langcode);
         $body = $translation->get('body')->value ?? '';
 
-        // Skip if body is empty or has no drupal-media tags.
-        if (empty($body) || strpos($body, '<drupal-media') === FALSE) {
+        // Skip if body is empty or has no embedded images.
+        if (empty($body) || (strpos($body, '<drupal-media') === FALSE && stripos($body, '<img') === FALSE)) {
           continue;
         }
 
