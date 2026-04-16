@@ -5368,6 +5368,7 @@ display:
     display_plugin: rest_export
     position: 11
     display_options:
+      enabled: false
       title: 'Child Development Boy Pinned Content API'
       fields:
         nid:
@@ -6836,6 +6837,7 @@ display:
     display_plugin: rest_export
     position: 11
     display_options:
+      enabled: false
       title: 'Child Development Girl Pinned Content API'
       fields:
         nid:

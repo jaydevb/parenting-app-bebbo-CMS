@@ -16,7 +16,7 @@ field_name: field_resource_file_internal
 entity_type: paragraph
 bundle: course_module
 label: 'Resource File (Internal)'
-description: ''
+description: "Upload a document or audio file. Supported formats include: <br>\r\nDocuments: PDF <br>\r\nAudio: MP3, WAV, AAC, M4A"
 required: false
 translatable: true
 default_value: {  }

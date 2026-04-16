@@ -4,7 +4,7 @@ status: true
 dependencies: {  }
 id: document
 label: Document
-description: ''
+description: 'Use this media type to upload and manage documents and audio files.'
 source: file
 queue_thumbnail_downloads: false
 new_revision: false

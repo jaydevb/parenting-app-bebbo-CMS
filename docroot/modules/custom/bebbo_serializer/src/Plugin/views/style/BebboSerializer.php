@@ -1524,6 +1524,19 @@ class BebboSerializer extends Serializer {
     // 1. Filter out CountryID 131.
     $rows = array_values(array_filter($rows, fn($row) => ($row['CountryID'] ?? '') !== '131'));
 
+    // 1b. Deduplicate rows by CountryID.
+    // The Views query joins group__field_language (multi-value), producing
+    // one row per language value per group. Keep only the first occurrence.
+    $seen = [];
+    $rows = array_values(array_filter($rows, function ($row) use (&$seen) {
+      $id = $row['CountryID'] ?? '';
+      if (isset($seen[$id])) {
+        return FALSE;
+      }
+      $seen[$id] = TRUE;
+      return TRUE;
+    }));
+
     // 2. Parse media fields from embedded view HTML to {url, name, alt}.
     $mediaKeys = [
       'country_national_partner',
@@ -1557,6 +1570,10 @@ class BebboSerializer extends Serializer {
       }
       elseif ($group instanceof Group) {
         $row['languages'] = $this->buildLanguagesForGroup($row['name'] ?? '', $group);
+        // Override top-level content_toggle with the default language value
+        // for backward compatibility. Per-language values live in languages[].
+        $defaultToggle = $group->getUntranslated()->get('field_content_toggle')->getValue();
+        $row['content_toggle'] = implode(', ', array_column($defaultToggle, 'value'));
       }
       else {
         $row['languages'] = [];
