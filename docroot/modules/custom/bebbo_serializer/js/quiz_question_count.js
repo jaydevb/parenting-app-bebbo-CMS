@@ -5,7 +5,7 @@
 
   // Flag to track whether auto-removal is in progress so we don't
   // re-trigger during the AJAX rebuild attach cycles.
-  var removing = FALSE;
+  var removing = false;
 
   function getQuestionCount() {
     var $wrapper = $('[data-drupal-selector="edit-field-question-wrapper"]');
@@ -59,7 +59,7 @@
       return;
     }
 
-    removing = TRUE;
+    removing = true;
     var $lastRemove = $removeButtons.last();
     $lastRemove.trigger('mousedown');
   }
@@ -111,7 +111,7 @@
   Drupal.behaviors.bebboSerializerQuestionCount = {
     attach: function (context) {
       // Reset removal flag on every attach (AJAX rebuild completed).
-      removing = FALSE;
+      removing = false;
 
       // Runs on initial load and every AJAX rebuild (paragraph add/remove).
       updateQuestionCount();

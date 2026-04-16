@@ -95,6 +95,14 @@ content:
     settings:
       display_label: true
     third_party_settings: {  }
+  field_embedded_images:
+    type: string_textfield
+    weight: 31
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   field_keywords:
     type: entity_reference_autocomplete_tags
     weight: 9
@@ -267,5 +275,4 @@ content:
     third_party_settings: {  }
 hidden:
   field_body_rendered: true
-  field_embedded_images: true
   field_generic_content: true
