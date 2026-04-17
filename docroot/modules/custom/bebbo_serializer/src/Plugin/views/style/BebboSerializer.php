@@ -1380,6 +1380,7 @@ class BebboSerializer extends Serializer {
 
     // 1. Collect all unique term IDs for batch resolution.
     $termIds = [];
+    $sdTermIds = [];
     foreach ($rows as $row) {
       if (!empty($row['growth_type']) && is_numeric($row['growth_type'])) {
         $termIds[] = (int) $row['growth_type'];
@@ -1387,8 +1388,12 @@ class BebboSerializer extends Serializer {
       foreach ($this->splitNumericIds($row['child_age'] ?? '') as $id) {
         $termIds[] = $id;
       }
+      if (!empty($row['standard_deviation']) && is_numeric($row['standard_deviation'])) {
+        $sdTermIds[] = (int) $row['standard_deviation'];
+      }
     }
     $termNameMap = $this->resolveTermUniqueNames(array_unique($termIds));
+    $sdNameMap = $this->resolveTermNames(array_unique($sdTermIds));
 
     // 2. Static maps — SD label to output key per growth type.
     $sdLabelMaps = [
@@ -1443,7 +1448,7 @@ class BebboSerializer extends Serializer {
         'pinned_article' => $row['pinned_article'] ?? '',
         'title'          => htmlspecialchars_decode((string) ($row['title'] ?? ''), ENT_QUOTES | ENT_HTML5),
         'body'           => str_replace(["\r", "\n"], '', (string) ($row['body'] ?? '')),
-        'sd_label'       => trim((string) ($row['standard_deviation'] ?? '')),
+        'sd_label'       => $sdNameMap[(int) ($row['standard_deviation'] ?? 0)] ?? '',
         'bucket_key'     => $bucketKey,
       ];
     }
@@ -1557,6 +1562,31 @@ class BebboSerializer extends Serializer {
     return $this->database->select('taxonomy_term__field_unique_name', 't')
       ->fields('t', ['entity_id', 'field_unique_name_value'])
       ->condition('entity_id', $termIds, 'IN')
+      ->execute()
+      ->fetchAllKeyed();
+  }
+
+  /**
+   * Resolves taxonomy term IDs to their display names.
+   *
+   * Uses a direct DB query against taxonomy_term_field_data for the term
+   * label (name column). Mirrors V1's Term::load($tid)->getName() but
+   * batch-friendly and without entity hydration.
+   *
+   * @param int[] $termIds
+   *   Term IDs to resolve.
+   *
+   * @return array<int, string>
+   *   Map of term ID to term name.
+   */
+  private function resolveTermNames(array $termIds): array {
+    if (empty($termIds)) {
+      return [];
+    }
+    return $this->database->select('taxonomy_term_field_data', 't')
+      ->fields('t', ['tid', 'name'])
+      ->condition('tid', $termIds, 'IN')
+      ->condition('default_langcode', 1)
       ->execute()
       ->fetchAllKeyed();
   }
@@ -1932,6 +1962,7 @@ class BebboSerializer extends Serializer {
       ]);
       $this->toIntArray($row, ['child_age', 'target_audience', 'course_category']);
       $this->castToBool($row, ['feedback_required', 'module_locked']);
+      $this->toStringArray($row, ['feedback_question']);
       $this->decodeHtmlEntities($row, ['title']);
 
       $row['cover_image'] = $this->parseViewCoverImage(

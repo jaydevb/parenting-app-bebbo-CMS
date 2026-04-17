@@ -15,7 +15,7 @@ field_name: field_course_duration
 entity_type: node
 bundle: course
 label: 'Course Duration'
-description: ''
+description: 'In minutes'
 required: false
 translatable: true
 default_value: {  }

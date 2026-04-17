@@ -27,7 +27,7 @@ mode: default
 content:
   field_2_0_branding:
     type: media_library_widget
-    weight: 26
+    weight: 13
     region: content
     settings:
       media_types: {  }
@@ -109,13 +109,6 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-  langcode:
-    type: language_select
-    weight: 2
-    region: content
-    settings:
-      include_locked: true
-    third_party_settings: {  }
   status:
     type: boolean_checkbox
     weight: 11
@@ -131,5 +124,6 @@ content:
 hidden:
   field_language_name_in_local: true
   field_language_visibility_in_app: true
+  langcode: true
   path: true
   uid: true
