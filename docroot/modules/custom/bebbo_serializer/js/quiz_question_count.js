@@ -12,7 +12,8 @@
     if (!$wrapper.length) {
       return 0;
     }
-    return $wrapper.find('.paragraphs-subform').length;
+    // Count only top-level paragraph rows (present in both expanded and collapsed states).
+    return $wrapper.find('.field-multiple-table:first > tbody > tr.draggable').length;
   }
 
   function getQuizType() {

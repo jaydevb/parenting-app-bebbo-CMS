@@ -7,8 +7,8 @@
       return;
     }
 
-    // Each paragraph item has a .paragraphs-subform element.
-    var count = $wrapper.find('.paragraphs-subform').length;
+    // Count only top-level paragraph rows (not nested field tables inside subforms).
+    var count = $wrapper.find('.field-multiple-table:first > tbody > tr.draggable').length;
 
     var $input = $('[data-drupal-selector="edit-field-number-of-modules-0-value"]');
     if ($input.length) {

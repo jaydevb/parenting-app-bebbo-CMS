@@ -18,7 +18,7 @@ bundle: course
 label: 'Cover Image'
 description: 'Upload an image of dimensions 1600 in width for best results'
 required: true
-translatable: false
+translatable: true
 default_value: {  }
 default_value_callback: ''
 settings:
