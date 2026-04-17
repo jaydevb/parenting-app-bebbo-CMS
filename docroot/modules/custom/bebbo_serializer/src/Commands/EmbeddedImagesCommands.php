@@ -3,7 +3,7 @@
 namespace Drupal\bebbo_serializer\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\bebbo_serializer\Service\EmbeddedImagesExtractor;
+use Drupal\bebbo_serializer\Service\BodyImageProcessor;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -19,27 +19,27 @@ class EmbeddedImagesCommands extends DrushCommands {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The embedded images extractor service.
+   * The body image processor service.
    *
-   * @var \Drupal\bebbo_serializer\Service\EmbeddedImagesExtractor
+   * @var \Drupal\bebbo_serializer\Service\BodyImageProcessor
    */
-  protected EmbeddedImagesExtractor $extractor;
+  protected BodyImageProcessor $processor;
 
   /**
    * Constructs an EmbeddedImagesCommands object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\bebbo_serializer\Service\EmbeddedImagesExtractor $extractor
-   *   The embedded images extractor service.
+   * @param \Drupal\bebbo_serializer\Service\BodyImageProcessor $processor
+   *   The body image processor service.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
-    EmbeddedImagesExtractor $extractor,
+    BodyImageProcessor $processor,
   ) {
     parent::__construct();
     $this->entityTypeManager = $entity_type_manager;
-    $this->extractor = $extractor;
+    $this->processor = $processor;
   }
 
   /**
@@ -115,7 +115,7 @@ class EmbeddedImagesCommands extends DrushCommands {
           continue;
         }
 
-        $urls = $this->extractor->extractImageUrls($body);
+        $urls = $this->processor->extractImageUrls($body);
 
         if (empty($urls)) {
           continue;

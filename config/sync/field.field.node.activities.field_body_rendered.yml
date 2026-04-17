@@ -1,24 +1,28 @@
-uuid: 281a57ea-906d-48fc-838d-2332d5ddb75e
+uuid: ff79d78a-d7a6-44c1-9fc7-c858f05e6e42
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_embedded_images
+    - field.storage.node.field_body_rendered
+    - filter.format.full_html
     - node.type.activities
   module:
+    - text
     - tmgmt_content
 third_party_settings:
   tmgmt_content:
     excluded: false
-id: node.activities.field_embedded_images
-field_name: field_embedded_images
+id: node.activities.field_body_rendered
+field_name: field_body_rendered
 entity_type: node
 bundle: activities
-label: 'Embedded Images'
+label: 'Body Rendered'
 description: ''
 required: false
 translatable: true
 default_value: {  }
 default_value_callback: ''
-settings: {  }
-field_type: string
+settings:
+  allowed_formats:
+    - full_html
+field_type: text_long

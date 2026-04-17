@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.activities.body
     - field.field.node.activities.field_activity_category
+    - field.field.node.activities.field_body_rendered
     - field.field.node.activities.field_child_age
     - field.field.node.activities.field_cover_image
     - field.field.node.activities.field_embedded_images
@@ -42,6 +43,13 @@ content:
       link: false
     third_party_settings: {  }
     weight: 3
+    region: content
+  field_body_rendered:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 12
     region: content
   field_child_age:
     type: entity_reference_label
