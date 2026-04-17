@@ -40,14 +40,6 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
-  field_embedded_images:
-    type: string_textfield
-    weight: 51
-    region: content
-    settings:
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
   field_mandatory_content:
     type: boolean_checkbox
     weight: 11
@@ -134,11 +126,12 @@ content:
       placeholder: ''
     third_party_settings: {  }
   url_redirects:
-    weight: 50
+    weight: 14
     region: content
     settings: {  }
     third_party_settings: {  }
 hidden:
   feeds_item: true
+  field_embedded_images: true
   field_licensed_content: true
   layout_builder__layout: true

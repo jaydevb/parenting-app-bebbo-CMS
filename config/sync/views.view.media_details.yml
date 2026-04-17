@@ -659,8 +659,8 @@ display:
           label: URL
           exclude: false
           alter:
-            alter_text: false
-            text: ''
+            alter_text: true
+            text: '{{ field_media_oembed_video }}'
             make_link: false
             path: ''
             absolute: false
@@ -725,7 +725,7 @@ display:
           exclude: false
           alter:
             alter_text: false
-            text: ''
+            text: '{{ name }}'
             make_link: false
             path: ''
             absolute: false
@@ -754,7 +754,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: false
+          element_label_colon: true
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -1059,7 +1059,7 @@ display:
           label: Thumbnail
           exclude: false
           alter:
-            alter_text: true
+            alter_text: false
             text: "{{ thumbnail__target_id|replace({'.jpg': '.webp', '.jpeg': '.webp', '.png': '.webp'}) }}"
             make_link: false
             path: ''
@@ -1226,48 +1226,6 @@ display:
           group: 1
           expose:
             operator: ''
-        bundle:
-          id: bundle
-          table: media_field_data
-          field: bundle
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: media
-          entity_field: bundle
-          plugin_id: bundle
-          operator: in
-          value:
-            image: image
-          group: 1
-          exposed: false
-          expose:
-            operator_id: ''
-            label: ''
-            description: ''
-            use_operator: false
-            operator: ''
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: ''
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
       filter_groups:
         operator: AND
         groups:

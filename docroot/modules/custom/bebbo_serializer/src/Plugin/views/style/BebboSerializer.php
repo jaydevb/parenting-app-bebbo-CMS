@@ -289,6 +289,7 @@ class BebboSerializer extends Serializer {
       'child_dev_boy_rest_export'  => $this->transformChildDevPinned($rows),
       'child_dev_girl_rest_export' => $this->transformChildDevPinned($rows),
       'child_development_rest_export' => $this->transformChildDevelopment($rows),
+      'child_growth_rest_export'   => $this->transformChildGrowth($rows),
       'health_checkup_rest_export' => $this->transformHealthCheckUps($rows),
       'survey_rest_export'         => $this->transformSurveys($rows),
       'vocabulary_rest_export'     => $this->transformVocabularies($rows),
@@ -548,14 +549,40 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
+    $nids = array_column($rows, 'id');
+    $englishTitles = $this->getEnglishNodeTitles($nids);
+
     foreach ($rows as &$row) {
       $this->castToInt($row, ['id', 'mandatory']);
       $this->toStringArray($row, ['embedded_images']);
       $this->decodeHtmlEntities($row, ['title']);
+
+      if (!empty($englishTitles[$row['id']])) {
+        $row['unique_name'] = str_replace(' ', '_', strtolower($englishTitles[$row['id']]));
+      }
+      else {
+        $row['unique_name'] = '';
+      }
     }
     unset($row);
 
     return $rows;
+  }
+
+  /**
+   * Loads English node titles for the given node IDs.
+   */
+  private function getEnglishNodeTitles(array $nids): array {
+    if (empty($nids)) {
+      return [];
+    }
+
+    return $this->database->select('node_field_data', 'n')
+      ->fields('n', ['nid', 'title'])
+      ->condition('nid', array_filter(array_unique($nids)), 'IN')
+      ->condition('langcode', 'en')
+      ->execute()
+      ->fetchAllKeyed(0, 1);
   }
 
   /**
@@ -710,6 +737,32 @@ class BebboSerializer extends Serializer {
   }
 
   /**
+   * Transforms rows for the child growth REST export display.
+   *
+   * Casts numeric fields to int and converts child_age and
+   * related_articles to deduplicated int arrays.
+   *
+   * @param array $rows
+   *   Raw rows from the view.
+   *
+   * @return array
+   *   Transformed rows.
+   */
+  private function transformChildGrowth(array $rows): array {
+    if (empty($rows)) {
+      return $rows;
+    }
+
+    foreach ($rows as &$row) {
+      $this->castToInt($row, ['id', 'growth_type', 'standard_deviation', 'mandatory']);
+      $this->toIntArray($row, ['child_age', 'pinned_articles']);
+    }
+    unset($row);
+
+    return $rows;
+  }
+
+  /**
    * Transforms rows for the health check-ups pinned-content display.
    *
    * Similar to child development but includes a direct cover_image field
@@ -809,7 +862,7 @@ class BebboSerializer extends Serializer {
     foreach ($rows as $row) {
       $parts = explode(',', $row['name'] ?? '', 2);
       $machineName = trim($parts[0]);
-      if ($machineName === '') {
+      if ($machineName === '' || $machineName === 'keywords') {
         continue;
       }
       $label = htmlspecialchars_decode(
@@ -1124,10 +1177,15 @@ class BebboSerializer extends Serializer {
     $query = $this->buildTermBaseQuery('category', $langcode);
     $query->leftJoin('taxonomy_term__field_unique_name', 'un', 'un.entity_id = td.tid');
     $query->leftJoin('taxonomy_term__field_type_of_article', 'toa', 'toa.entity_id = td.tid');
-    // Resolve the entity reference to a label via JOIN to term field data.
-    $query->leftJoin('taxonomy_term_field_data', 'toa_td', "toa_td.tid = toa.field_type_of_article_target_id AND toa_td.langcode = td.langcode");
+    // Resolve the entity reference to a label via two JOINs: first try the
+    // requested language, then fall back to English. This matches V1's
+    // entity-loading behaviour where Drupal returns the default-language
+    // value when no translation exists (e.g. type_of_article terms are
+    // English-only on most sites).
+    $query->leftJoin('taxonomy_term_field_data', 'toa_td_lang', "toa_td_lang.tid = toa.field_type_of_article_target_id AND toa_td_lang.langcode = td.langcode");
+    $query->leftJoin('taxonomy_term_field_data', 'toa_td_en', "toa_td_en.tid = toa.field_type_of_article_target_id AND toa_td_en.langcode = 'en'");
     $query->addField('un', 'field_unique_name_value', 'unique_name');
-    $query->addField('toa_td', 'name', 'type_of_article');
+    $query->addExpression("COALESCE(toa_td_lang.name, toa_td_en.name)", 'type_of_article');
 
     $results = $query->execute()->fetchAll();
     $terms = [];
@@ -2262,21 +2320,26 @@ class BebboSerializer extends Serializer {
       return $empty;
     }
 
+    // Match </span> or </div> — the field-content wrapper element varies
+    // by theme and display settings. Using only </span> causes the lazy
+    // capture to overshoot into the next field's label text.
+    $closingTag = '<\/(?:span|div)>';
+
     $url = '';
     $pattern = '/views-field-field-media-oembed-video"'
-      . '.*?field-content[^>]*>(.*?)<\/span>/s';
+      . '.*?field-content[^>]*>(.*?)' . $closingTag . '/s';
     if (preg_match($pattern, $raw, $m)) {
       $url = trim(strip_tags($m[1]));
     }
 
     $name = '';
-    if (preg_match('/views-field-name.*?field-content[^>]*>(.*?)<\/span>/s', $raw, $m)) {
+    if (preg_match('/views-field-name.*?field-content[^>]*>(.*?)' . $closingTag . '/s', $raw, $m)) {
       $name = trim(strip_tags($m[1]));
     }
 
     $site = '';
     $sitePattern = '/views-field-field-media-oembed-video-1'
-      . '.*?field-content[^>]*>(.*?)<\/span>/s';
+      . '.*?field-content[^>]*>(.*?)' . $closingTag . '/s';
     if (preg_match($sitePattern, $raw, $m)) {
       $site = trim(strip_tags($m[1]));
     }
@@ -2309,23 +2372,26 @@ class BebboSerializer extends Serializer {
       return $empty;
     }
 
+    // Match </span> or </div> — the field-content wrapper element varies.
+    $closingTag = '<\/(?:span|div)>';
+
     $name = '';
     $namePattern = '/views-field-name'
-      . '.*?field-content[^>]*>(.*?)<\/span>/s';
+      . '.*?field-content[^>]*>(.*?)' . $closingTag . '/s';
     if (preg_match($namePattern, $raw, $m)) {
       $name = trim(strip_tags($m[1]));
     }
 
     $url = '';
-    $urlPattern = '/Thumbnail:\s*<\/span>'
-      . '\s*<span[^>]*>(.*?)<\/span>/s';
+    $urlPattern = '/Thumbnail:\s*<\/(?:span|div)>'
+      . '\s*<(?:span|div)[^>]*>(.*?)' . $closingTag . '/s';
     if (preg_match($urlPattern, $raw, $m)) {
       $url = trim(strip_tags($m[1]));
     }
 
     $alt = '';
     $altPattern = '/views-field-thumbnail__alt'
-      . '.*?field-content[^>]*>(.*?)<\/span>/s';
+      . '.*?field-content[^>]*>(.*?)' . $closingTag . '/s';
     if (preg_match($altPattern, $raw, $m)) {
       $alt = trim(strip_tags($m[1]));
     }

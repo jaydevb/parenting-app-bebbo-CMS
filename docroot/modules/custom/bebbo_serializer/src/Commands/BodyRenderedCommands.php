@@ -3,7 +3,7 @@
 namespace Drupal\bebbo_serializer\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\bebbo_serializer\Service\BodyRenderedProcessor;
+use Drupal\bebbo_serializer\Service\BodyImageProcessor;
 use Drush\Commands\DrushCommands;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -20,11 +20,11 @@ class BodyRenderedCommands extends DrushCommands {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The body rendered processor service.
+   * The body image processor service.
    *
-   * @var \Drupal\bebbo_serializer\Service\BodyRenderedProcessor
+   * @var \Drupal\bebbo_serializer\Service\BodyImageProcessor
    */
-  protected BodyRenderedProcessor $processor;
+  protected BodyImageProcessor $processor;
 
   /**
    * The request stack.
@@ -38,14 +38,14 @@ class BodyRenderedCommands extends DrushCommands {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\bebbo_serializer\Service\BodyRenderedProcessor $processor
-   *   The body rendered processor service.
+   * @param \Drupal\bebbo_serializer\Service\BodyImageProcessor $processor
+   *   The body image processor service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
-    BodyRenderedProcessor $processor,
+    BodyImageProcessor $processor,
     RequestStack $request_stack,
   ) {
     parent::__construct();

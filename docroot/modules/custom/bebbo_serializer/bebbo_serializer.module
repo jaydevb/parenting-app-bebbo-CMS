@@ -131,9 +131,9 @@ function _bebbo_serializer_populate_embedded_images(NodeInterface $node, string 
     return;
   }
 
-  /** @var \Drupal\bebbo_serializer\Service\EmbeddedImagesExtractor $extractor */
-  $extractor = \Drupal::service('bebbo_serializer.embedded_images_extractor');
-  $urls = $extractor->extractImageUrls($body);
+  /** @var \Drupal\bebbo_serializer\Service\BodyImageProcessor $processor */
+  $processor = \Drupal::service('bebbo_serializer.body_image_processor');
+  $urls = $processor->extractImageUrls($body);
 
   // Only update field if URLs actually changed.
   if ($urls === $existing) {
@@ -181,8 +181,8 @@ function _bebbo_serializer_populate_body_rendered(NodeInterface $node, string $b
   $langcode = $node->language()->getId();
   $baseUrl = \Drupal::request()->getSchemeAndHttpHost();
 
-  /** @var \Drupal\bebbo_serializer\Service\BodyRenderedProcessor $processor */
-  $processor = \Drupal::service('bebbo_serializer.body_rendered_processor');
+  /** @var \Drupal\bebbo_serializer\Service\BodyImageProcessor $processor */
+  $processor = \Drupal::service('bebbo_serializer.body_image_processor');
   $rendered = $processor->render($body, $bodyFormat, $langcode, $baseUrl);
 
   // Only update if the rendered value actually changed.

@@ -3,7 +3,7 @@ services:
     class: Drupal\bebbo_serializer\Commands\EmbeddedImagesCommands
     arguments:
       - '@entity_type.manager'
-      - '@bebbo_serializer.embedded_images_extractor'
+      - '@bebbo_serializer.body_image_processor'
     tags:
       - { name: drush.command }
 
@@ -11,7 +11,15 @@ services:
     class: Drupal\bebbo_serializer\Commands\BodyRenderedCommands
     arguments:
       - '@entity_type.manager'
-      - '@bebbo_serializer.body_rendered_processor'
+      - '@bebbo_serializer.body_image_processor'
       - '@request_stack'
+    tags:
+      - { name: drush.command }
+
+  bebbo_serializer.file_paths_fix_commands:
+    class: Drupal\bebbo_serializer\Commands\FilePathsFixCommands
+    arguments:
+      - '@entity_type.manager'
+      - '@file_system'
     tags:
       - { name: drush.command }
