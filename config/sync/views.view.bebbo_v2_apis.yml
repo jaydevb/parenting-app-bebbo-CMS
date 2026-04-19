@@ -11308,7 +11308,7 @@ display:
               raw_output: false
             field_feedback_question:
               alias: feedback_question
-              raw_output: false
+              raw_output: true
       query:
         type: views_query
         options:
