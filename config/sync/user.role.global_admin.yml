@@ -49,11 +49,15 @@ dependencies:
     - node.type.article
     - node.type.child_development
     - node.type.child_growth
+    - node.type.course
     - node.type.daily_homescreen_messages
     - node.type.faq
+    - node.type.guide
     - node.type.health_check_ups
     - node.type.milestone
     - node.type.page
+    - node.type.pregnancy_weekly_overview
+    - node.type.quiz
     - node.type.survey
     - node.type.vaccinations
     - node.type.video_article
@@ -271,12 +275,16 @@ permissions:
   - 'edit own article content'
   - 'edit own child_development content'
   - 'edit own child_growth content'
+  - 'edit own course content'
   - 'edit own daily_homescreen_messages content'
   - 'edit own faq content'
+  - 'edit own guide content'
   - 'edit own health_check_ups content'
   - 'edit own image media'
   - 'edit own milestone content'
   - 'edit own page content'
+  - 'edit own pregnancy_weekly_overview content'
+  - 'edit own quiz content'
   - 'edit own remote_video media'
   - 'edit own survey content'
   - 'edit own vaccinations content'
@@ -543,9 +551,11 @@ permissions:
   - 'view content_health_check_up_language feeds'
   - 'view content_homescreen_messages feeds'
   - 'view content_vaccination_languages feeds'
+  - 'view course revisions'
   - 'view daily_homescreen_messages revisions'
   - 'view editorial_menu in toolbar'
   - 'view faq revisions'
+  - 'view guide revisions'
   - 'view health_check_ups revisions'
   - 'view media_image_import feeds'
   - 'view media_remote_video feeds'
@@ -589,6 +599,8 @@ permissions:
   - 'view own unpublished media'
   - 'view own user_import feeds'
   - 'view page revisions'
+  - 'view pregnancy_weekly_overview revisions'
+  - 'view quiz revisions'
   - 'view survey revisions'
   - 'view taxonomy_age_period feeds'
   - 'view taxonomy_age_period_language feeds'

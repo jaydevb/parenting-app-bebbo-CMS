@@ -11,11 +11,15 @@ dependencies:
     - node.type.article
     - node.type.child_development
     - node.type.child_growth
+    - node.type.course
     - node.type.daily_homescreen_messages
     - node.type.faq
+    - node.type.guide
     - node.type.health_check_ups
     - node.type.milestone
     - node.type.page
+    - node.type.pregnancy_weekly_overview
+    - node.type.quiz
     - node.type.survey
     - node.type.vaccinations
     - node.type.video_article
@@ -47,25 +51,33 @@ permissions:
   - 'create activities content'
   - 'create article content'
   - 'create content translations'
+  - 'create course content'
   - 'create faq content'
+  - 'create guide content'
   - 'create image media'
   - 'create media'
   - 'create milestone content'
   - 'create page content'
+  - 'create quiz content'
   - 'create remote_video media'
   - 'create survey content'
   - 'create video media'
   - 'create video_article content'
+  - 'delete any pregnancy_weekly_overview content'
   - 'delete own files'
   - 'edit any activities content'
   - 'edit any article content'
   - 'edit any child_development content'
   - 'edit any child_growth content'
+  - 'edit any course content'
   - 'edit any daily_homescreen_messages content'
   - 'edit any faq content'
+  - 'edit any guide content'
   - 'edit any health_check_ups content'
   - 'edit any milestone content'
   - 'edit any page content'
+  - 'edit any pregnancy_weekly_overview content'
+  - 'edit any quiz content'
   - 'edit any survey content'
   - 'edit any vaccinations content'
   - 'edit any video_article content'
@@ -73,12 +85,16 @@ permissions:
   - 'edit own article content'
   - 'edit own child_development content'
   - 'edit own child_growth content'
+  - 'edit own course content'
   - 'edit own daily_homescreen_messages content'
   - 'edit own faq content'
+  - 'edit own guide content'
   - 'edit own health_check_ups content'
   - 'edit own image media'
   - 'edit own milestone content'
   - 'edit own page content'
+  - 'edit own pregnancy_weekly_overview content'
+  - 'edit own quiz content'
   - 'edit own remote_video media'
   - 'edit own survey content'
   - 'edit own vaccinations content'
@@ -122,14 +138,18 @@ permissions:
   - 'view article revisions'
   - 'view child_development revisions'
   - 'view child_growth revisions'
+  - 'view course revisions'
   - 'view daily_homescreen_messages revisions'
   - 'view editorial_menu in toolbar'
   - 'view faq revisions'
+  - 'view guide revisions'
   - 'view health_check_ups revisions'
   - 'view latest version'
   - 'view milestone revisions'
   - 'view own unpublished content'
   - 'view page revisions'
+  - 'view pregnancy_weekly_overview revisions'
+  - 'view quiz revisions'
   - 'view survey revisions'
   - 'view vaccinations revisions'
   - 'view video_article revisions'
