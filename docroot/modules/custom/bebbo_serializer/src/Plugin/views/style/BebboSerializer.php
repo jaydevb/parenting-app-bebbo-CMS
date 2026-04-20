@@ -2494,11 +2494,9 @@ class BebboSerializer extends Serializer {
         $url = ($request !== NULL ? $request->getSchemeAndHttpHost() : '') . $url;
       }
 
-      // Append .webp before query string to match imageapi_optimize pattern.
+      // Replace original extension with .webp before query string.
       if ($url !== '') {
-        $parts = explode('?', $url, 2);
-        $parts[0] .= '.webp';
-        $url = implode('?', $parts);
+        $url = preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp$2', $url) ?? $url;
       }
 
       $resolved[$id] = ['url' => $url, 'name' => $name, 'alt' => $alt];
