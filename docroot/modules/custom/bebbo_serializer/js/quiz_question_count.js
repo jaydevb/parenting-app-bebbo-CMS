@@ -35,8 +35,8 @@
 
     var isSingle = getQuizType() === SINGLE_QUESTION;
 
-    // Hide/show the main "Add Quiz Questions" button area.
-    $wrapper.find('.paragraphs-add-wrapper').toggle(!isSingle);
+    // Hide/show the entire "Add Quiz Questions" action area (button + label).
+    $wrapper.find('.field-actions').toggle(!isSingle);
 
     // Hide/show duplicate buttons on each existing paragraph.
     $wrapper.find('input[name*="_duplicate"]').closest('.paragraphs-dropdown').toggle(!isSingle);
