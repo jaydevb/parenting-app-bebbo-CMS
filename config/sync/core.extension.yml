@@ -109,6 +109,7 @@ module:
   seckit: 0
   serialization: 0
   shortcut: 0
+  simple_oauth: 0
   smtp: 0
   sophron: 0
   structure_sync: 0
