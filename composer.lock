@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6e8370530228bf79a25d25d1e5a47d32",
+    "content-hash": "6daafa5fb6279f70624e3fc100fa17fa",
     "packages": [
         {
             "name": "acquia/drupal-spec-tool",
