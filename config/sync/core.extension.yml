@@ -20,7 +20,6 @@ module:
   config_ignore: 0
   config_split: 0
   config_translation: 0
-  consumers: 0
   content_moderation: 0
   content_moderation_notifications: 0
   contextual: 0
@@ -94,6 +93,7 @@ module:
   pb_custom_migrate: 0
   pb_custom_rest_api: 0
   pb_custom_standard_deviation: 0
+  pb_strings: 0
   phpass: 0
   purge: 0
   purge_processor_cron: 0
