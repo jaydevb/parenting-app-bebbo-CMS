@@ -525,6 +525,7 @@ class BebboSerializer extends Serializer {
     foreach ($rows as &$row) {
       $this->castToInt($row, ['id', 'chatbot_subcategory', 'related_article', 'mandatory']);
       $this->decodeHtmlEntities($row, ['question']);
+      $this->toIntArray($row, ['child_age']);
     }
     unset($row);
 
@@ -1630,6 +1631,7 @@ class BebboSerializer extends Serializer {
       'country_national_partner',
       'country_sponsor_logo',
       'unicef_logo',
+      'field_2_0_branding',
     ];
     foreach ($rows as &$row) {
       foreach ($mediaKeys as $key) {
@@ -2250,7 +2252,7 @@ class BebboSerializer extends Serializer {
   private function castToFloat(array &$row, array $fields, int $decimals = 2): void {
     foreach ($fields as $field) {
       if (array_key_exists($field, $row)) {
-        $row[$field] = round((float) ($row[$field] ?? 0), $decimals);
+        $row[$field] = (float) number_format((float) ($row[$field] ?? 0), $decimals, '.', '');
       }
     }
   }

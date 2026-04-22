@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.page.body
+    - field.field.node.page.field_body_rendered
     - field.field.node.page.field_embedded_images
     - field.field.node.page.field_licensed_content
     - field.field.node.page.field_mandatory_content
@@ -130,6 +131,21 @@ third_party_settings:
                 third_party_settings: {  }
             weight: 6
             additional: {  }
+          ba709254-a679-4408-b9d1-3270589610a3:
+            uuid: ba709254-a679-4408-b9d1-3270589610a3
+            region: content
+            configuration:
+              id: 'field_block:node:page:field_body_rendered'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: text_default
+                label: above
+                settings: {  }
+                third_party_settings: {  }
+            weight: 7
+            additional: {  }
         third_party_settings: {  }
 _core:
   default_config_hash: g1S3_GLaxq4l3I9RIca5Mlz02MxI2KmOquZpHw59akM
@@ -149,6 +165,13 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: -20
+    region: content
+  field_body_rendered:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 12
     region: content
   field_embedded_images:
     type: string

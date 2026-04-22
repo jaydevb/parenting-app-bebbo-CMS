@@ -633,6 +633,7 @@ display:
       display_description: ''
       rendering_language: '***LANGUAGE_language_interface***'
       display_extenders: {  }
+      block_description: 'Media Image Details API'
     cache_metadata:
       max-age: -1
       contexts:
@@ -965,6 +966,7 @@ display:
       display_description: ''
       rendering_language: '***LANGUAGE_language_interface***'
       display_extenders: {  }
+      block_description: 'Media Remote Video Details API'
     cache_metadata:
       max-age: -1
       contexts:
@@ -1059,7 +1061,7 @@ display:
           label: Thumbnail
           exclude: false
           alter:
-            alter_text: false
+            alter_text: true
             text: "{{ thumbnail__target_id|replace({'.jpg': '.webp', '.jpeg': '.webp', '.png': '.webp'}) }}"
             make_link: false
             path: ''
@@ -1254,6 +1256,7 @@ display:
       display_description: ''
       rendering_language: '***LANGUAGE_language_interface***'
       display_extenders: {  }
+      block_description: 'Media Remote Video Thumb API'
     cache_metadata:
       max-age: -1
       contexts:
