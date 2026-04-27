@@ -1,6 +1,0 @@
-adding:
-  langcode: en
-  weight: 12
-removing:
-  langcode: uz-uz
-  weight: 10

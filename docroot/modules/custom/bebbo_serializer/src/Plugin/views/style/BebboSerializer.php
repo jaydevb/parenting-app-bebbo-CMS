@@ -2238,21 +2238,22 @@ class BebboSerializer extends Serializer {
   }
 
   /**
-   * Rounds the given row fields to floats with a fixed number of decimals.
+   * Casts row fields to float (JSON number type).
    *
-   * Missing or empty values default to 0.0.
+   * Trailing zeros are dropped by json_encode per JSON spec (6.00 → 6,
+   * 6.50 → 6.5). Missing or empty values default to 0.
    *
    * @param array $row
    *   A single row (passed by reference).
    * @param array $fields
    *   Field names to cast.
    * @param int $decimals
-   *   Number of decimal places (default 2).
+   *   Maximum decimal places to retain (default 2).
    */
   private function castToFloat(array &$row, array $fields, int $decimals = 2): void {
     foreach ($fields as $field) {
       if (array_key_exists($field, $row)) {
-        $row[$field] = (float) number_format((float) ($row[$field] ?? 0), $decimals, '.', '');
+        $row[$field] = round((float) ($row[$field] ?? 0), $decimals);
       }
     }
   }

@@ -22,7 +22,6 @@ complete_list:
   - google_analytics.settings
   - language.entity.ec-es
   - language.entity.es
-  - core.extension
   - language/en/system.menu.footer
   - language/en/system.menu.main
   - language/es/block.block.claro_breadcrumbs
@@ -153,9 +152,7 @@ complete_list:
   - views.view.bebbo_v2_apis
 partial_list:
   - block.block.claro_help_search
-  - block.block.kosovologo
   - block.block.languagedropdownswitcher
-  - block.block.logo
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library
   - core.entity_form_display.media.video.default

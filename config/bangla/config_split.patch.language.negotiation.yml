@@ -10,9 +10,4 @@ adding:
       gr-fa: ''
       ar: ''
       bn: ''
-removing:
-  url:
-    prefixes:
-      uz-kaa: uz-kaa
-    domains:
-      uz-kaa: ''
+removing: {  }

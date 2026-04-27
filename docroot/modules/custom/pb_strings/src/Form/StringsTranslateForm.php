@@ -101,14 +101,17 @@ class StringsTranslateForm extends FormBase {
 
     $query = $this->database->select('taxonomy_term_field_data', 'td');
     $query->leftJoin('taxonomy_term__field_unique_name', 'un', 'td.tid = un.entity_id AND un.deleted = 0');
+    $query->leftJoin('taxonomy_term_field_data', 'td_trans', 'td.tid = td_trans.tid AND td_trans.langcode = :td_trans_lang AND td_trans.default_langcode = 0', [':td_trans_lang' => $langcode]);
     $query->fields('td', ['tid', 'name']);
     $query->addField('un', 'field_unique_name_value', 'unique_name');
     $query->condition('td.vid', 'strings');
     $query->condition('td.default_langcode', 1);
 
     if (!empty($search)) {
-      $query->where('BINARY td.name LIKE :pattern', [
-        ':pattern' => '%' . $this->database->escapeLike($search) . '%',
+      $pattern = '%' . $this->database->escapeLike($search) . '%';
+      $query->where('(BINARY td.name LIKE :src_pattern OR BINARY td_trans.name LIKE :trans_pattern)', [
+        ':src_pattern' => $pattern,
+        ':trans_pattern' => $pattern,
       ]);
     }
 
