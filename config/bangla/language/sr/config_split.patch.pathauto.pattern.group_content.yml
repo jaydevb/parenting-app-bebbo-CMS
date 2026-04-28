@@ -1,8 +1,0 @@
-adding:
-  relationships:
-    'group_content:langcode:language':
-      label: Језик
-removing:
-  relationships:
-    'group_content:langcode:language':
-      label: Language

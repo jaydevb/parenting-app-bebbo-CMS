@@ -16,7 +16,7 @@ id: node.guide.field_message
 field_name: field_message
 entity_type: node
 bundle: guide
-label: Message
+label: 'Positive message to parents for this age period'
 description: ''
 required: false
 translatable: true

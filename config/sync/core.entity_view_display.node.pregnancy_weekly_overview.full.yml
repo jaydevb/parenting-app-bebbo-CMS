@@ -21,6 +21,11 @@ targetEntityType: node
 bundle: pregnancy_weekly_overview
 mode: full
 content:
+  content_moderation_control:
+    settings: {  }
+    third_party_settings: {  }
+    weight: -20
+    region: content
   field_average_height:
     type: number_decimal
     label: above

@@ -15,9 +15,9 @@ id: node.pregnancy_weekly_overview.field_featured_image_1
 field_name: field_featured_image_1
 entity_type: node
 bundle: pregnancy_weekly_overview
-label: 'Featured Image 1'
+label: 'Fruit Image'
 description: ''
-required: false
+required: true
 translatable: true
 default_value: {  }
 default_value_callback: ''

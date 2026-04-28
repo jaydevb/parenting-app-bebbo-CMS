@@ -4,6 +4,6 @@ status: true
 dependencies: {  }
 name: 'Course Category'
 vid: course_category
-description: null
+description: 'Thematic categories related to all courses.'
 weight: 0
 new_revision: false

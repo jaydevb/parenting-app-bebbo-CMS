@@ -4,7 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.node.full
-    - field.field.node.guide.field_child_s_age
+    - field.field.node.guide.field_child_age_guide
     - field.field.node.guide.field_message
     - field.field.node.guide.field_related_articles
     - field.field.node.guide.field_related_games
@@ -17,13 +17,10 @@ targetEntityType: node
 bundle: guide
 mode: full
 content:
-  field_child_s_age:
-    type: entity_reference_label
-    label: above
-    settings:
-      link: true
+  content_moderation_control:
+    settings: {  }
     third_party_settings: {  }
-    weight: 1
+    weight: -20
     region: content
   field_message:
     type: text_default
@@ -54,4 +51,5 @@ content:
     weight: 0
     region: content
 hidden:
+  field_child_age_guide: true
   langcode: true
