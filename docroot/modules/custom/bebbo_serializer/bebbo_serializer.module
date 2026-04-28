@@ -79,6 +79,16 @@ function bebbo_serializer_node_presave(NodeInterface $node): void {
   _bebbo_serializer_populate_number_of_modules($node);
   _bebbo_serializer_populate_number_of_questions($node);
 
+  // Truncate height/weight decimals to max 2 places (no rounding).
+  if ($node->bundle() === 'pregnancy_weekly_overview') {
+    foreach (['field_average_height', 'field_average_weight'] as $field_name) {
+      if ($node->hasField($field_name) && !$node->get($field_name)->isEmpty()) {
+        $truncated = _bebbo_serializer_truncate_decimal($node->get($field_name)->value);
+        $node->set($field_name, $truncated);
+      }
+    }
+  }
+
   // Only process published nodes with a body field.
   if (!$node->isPublished() || !$node->hasField('body')) {
     return;
@@ -249,6 +259,12 @@ function bebbo_serializer_form_alter(array &$form, FormStateInterface $form_stat
     $form['#attached']['library'][] = 'bebbo_serializer/course_module_count';
   }
 
+  // Pregnancy weekly overview: restrict.
+  // height/weight to 2 decimal places in real-time.
+  if (in_array($form_id, ['node_pregnancy_weekly_overview_form', 'node_pregnancy_weekly_overview_edit_form'], TRUE)) {
+    $form['#attached']['library'][] = 'bebbo_serializer/decimal-restriction';
+  }
+
   // Quiz: auto-compute number of questions, validate passing score.
   if (in_array($form_id, ['node_quiz_form', 'node_quiz_edit_form'], TRUE)) {
     if (isset($form['field_number_of_questions'])) {
@@ -326,4 +342,21 @@ function _bebbo_serializer_quiz_question_count_validate(array &$form, FormStateI
       ])
     );
   }
+}
+
+/**
+ * Truncates a decimal value to at most 2 decimal places without rounding.
+ */
+function _bebbo_serializer_truncate_decimal($value): ?string {
+  if ($value === NULL || $value === '') {
+    return $value;
+  }
+
+  $str = (string) $value;
+  $dot = strpos($str, '.');
+  if ($dot === FALSE) {
+    return $str;
+  }
+
+  return substr($str, 0, $dot + 3);
 }

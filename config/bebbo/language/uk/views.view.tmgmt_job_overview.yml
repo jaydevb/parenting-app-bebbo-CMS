@@ -11,7 +11,12 @@ display:
         source_language_1:
           separator: ', '
         target_language:
+          label: To
           separator: ', '
+        translator:
+          label: Provider
+        tags_count:
+          label: Tags
         changed:
           label: Changed
         operations:
@@ -36,5 +41,8 @@ display:
         source_language:
           expose:
             label: 'Вихідна мова'
+        translator:
+          expose:
+            label: Provider
   page_1:
     display_title: Сторінка

@@ -39,6 +39,7 @@ display:
         source_language:
           separator: ', '
         target_language:
+          label: To
           separator: ', '
         operations:
           label: Операції
@@ -65,6 +66,7 @@ display:
         source_language:
           separator: ', '
         target_language:
+          label: To
           separator: ', '
         operations:
           label: Операції
@@ -89,6 +91,7 @@ display:
         source_language:
           separator: ', '
         target_language:
+          label: To
           separator: ', '
         operations:
           label: Операції
@@ -113,6 +116,7 @@ display:
         source_language:
           separator: ', '
         target_language:
+          label: To
           separator: ', '
         operations:
           label: Операції
@@ -138,6 +142,7 @@ display:
         source_language:
           separator: ', '
         target_language:
+          label: To
           separator: ', '
         operations:
           label: Операції
@@ -162,6 +167,7 @@ display:
         source_language:
           separator: ', '
         target_language:
+          label: To
           separator: ', '
         operations:
           label: Операції
@@ -186,6 +192,7 @@ display:
         source_language:
           separator: ', '
         target_language:
+          label: To
           separator: ', '
         operations:
           label: Операції
@@ -193,3 +200,5 @@ display:
         status:
           expose:
             label: Стан
+      tab_options:
+        title: Translate

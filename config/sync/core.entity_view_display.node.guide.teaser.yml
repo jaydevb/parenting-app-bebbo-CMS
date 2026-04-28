@@ -4,7 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.node.teaser
-    - field.field.node.guide.field_child_s_age
+    - field.field.node.guide.field_child_age_guide
     - field.field.node.guide.field_message
     - field.field.node.guide.field_related_articles
     - field.field.node.guide.field_related_games
@@ -16,13 +16,18 @@ targetEntityType: node
 bundle: guide
 mode: teaser
 content:
+  content_moderation_control:
+    settings: {  }
+    third_party_settings: {  }
+    weight: -20
+    region: content
   links:
     settings: {  }
     third_party_settings: {  }
     weight: 100
     region: content
 hidden:
-  field_child_s_age: true
+  field_child_age_guide: true
   field_message: true
   field_related_articles: true
   field_related_games: true

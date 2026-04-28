@@ -5,11 +5,13 @@ dependencies:
   config:
     - field.field.node.article.body
     - field.field.node.article.field_australian_article
+    - field.field.node.article.field_body_rendered
     - field.field.node.article.field_child_age
     - field.field.node.article.field_child_gender
     - field.field.node.article.field_content_category
     - field.field.node.article.field_cover_image
     - field.field.node.article.field_do_not_feature
+    - field.field.node.article.field_embedded_images
     - field.field.node.article.field_generic_content
     - field.field.node.article.field_keywords
     - field.field.node.article.field_licensed_content
@@ -108,7 +110,7 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 14
+    weight: 15
     region: content
   field_keywords:
     type: entity_reference_label
@@ -126,7 +128,7 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 15
+    weight: 16
     region: content
   field_mandatory_content:
     type: boolean
@@ -136,7 +138,7 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 17
+    weight: 18
     region: content
   field_meta_keywords:
     type: basic_string
@@ -161,14 +163,14 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 16
+    weight: 17
     region: content
   field_references_and_comments:
     type: text_default
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 11
+    weight: 12
     region: content
   field_related_articles:
     type: entity_reference_label
@@ -176,7 +178,7 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 12
+    weight: 13
     region: content
   field_related_video_articles:
     type: entity_reference_label
@@ -184,7 +186,7 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 13
+    weight: 14
     region: content
   field_subcategory:
     type: entity_reference_label
@@ -200,7 +202,7 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 22
+    weight: 11
     region: content
   field_type_of_article:
     type: entity_reference_label

@@ -12,6 +12,7 @@ dependencies:
     - field.storage.node.field_certificate
     - field.storage.node.field_chatbot_subcategory
     - field.storage.node.field_child_age
+    - field.storage.node.field_child_age_guide
     - field.storage.node.field_child_gender
     - field.storage.node.field_child_s_age
     - field.storage.node.field_content_category
@@ -12587,10 +12588,10 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_child_s_age:
-          id: field_child_s_age
-          table: node__field_child_s_age
-          field: field_child_s_age
+        field_child_age_guide:
+          id: field_child_age_guide
+          table: node__field_child_age_guide
+          field: field_child_age_guide
           relationship: none
           group_type: group
           admin_label: ''
@@ -12918,7 +12919,7 @@ display:
             changed:
               alias: updated_at
               raw_output: false
-            field_child_s_age:
+            field_child_age_guide:
               alias: child_age
               raw_output: false
             field_related_articles:
@@ -12950,7 +12951,7 @@ display:
         - 'user.node_grants:view'
         - user.permissions
       tags:
-        - 'config:field.storage.node.field_child_s_age'
+        - 'config:field.storage.node.field_child_age_guide'
         - 'config:field.storage.node.field_message'
         - 'config:field.storage.node.field_related_articles'
         - 'config:field.storage.node.field_related_games'

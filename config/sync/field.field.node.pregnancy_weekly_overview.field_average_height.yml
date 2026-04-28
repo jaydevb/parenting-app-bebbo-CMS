@@ -15,7 +15,7 @@ field_name: field_average_height
 entity_type: node
 bundle: pregnancy_weekly_overview
 label: 'Average Height'
-description: ''
+description: 'Please add value in "cm".'
 required: false
 translatable: true
 default_value: {  }

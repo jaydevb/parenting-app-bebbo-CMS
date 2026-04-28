@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.guide.field_child_s_age
+    - field.field.node.guide.field_child_age_guide
     - field.field.node.guide.field_message
     - field.field.node.guide.field_related_articles
     - field.field.node.guide.field_related_games
@@ -16,13 +16,18 @@ targetEntityType: node
 bundle: guide
 mode: default
 content:
-  field_child_s_age:
+  content_moderation_control:
+    settings: {  }
+    third_party_settings: {  }
+    weight: -20
+    region: content
+  field_child_age_guide:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 101
+    weight: 104
     region: content
   field_message:
     type: text_default

@@ -320,7 +320,7 @@ class BebboSerializer extends Serializer {
 
     foreach ($rows as &$row) {
       $this->castToInt($row, ['id', 'prental_age']);
-      $this->castToFloat($row, ['average_height', 'average_weight']);
+      $this->castToNumber($row, ['average_height', 'average_weight']);
       $this->toIntArray($row, ['related_articles']);
 
       // Parse view → featured_image_1 and view_1 → featured_image_2
@@ -351,8 +351,8 @@ class BebboSerializer extends Serializer {
     }
 
     foreach ($rows as &$row) {
-      $this->castToInt($row, ['id']);
-      $this->toIntArray($row, ['child_age', 'related_articles', 'related_games']);
+      $this->castToInt($row, ['id', 'child_age']);
+      $this->toIntArray($row, ['related_articles', 'related_games']);
 
       // Remove related_articles when empty (display-specific rule).
       if (empty($row['related_articles'])) {
@@ -1137,7 +1137,7 @@ class BebboSerializer extends Serializer {
   private function queryChatbotSubcategoryTerms(string $langcode): array {
     $query = $this->buildTermBaseQuery('chatbot_subcategory', $langcode);
     $query->leftJoin('taxonomy_term__field_chatbot_category', 'cc', 'cc.entity_id = td.tid');
-    $query->leftJoin('taxonomy_term__field_unique_name', 'un', 'un.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
     $query->addField('cc', 'field_chatbot_category_target_id', 'parent_category_id');
     $query->addField('un', 'field_unique_name_value', 'unique_name');
 
@@ -1176,7 +1176,7 @@ class BebboSerializer extends Serializer {
    */
   private function queryCategoryTerms(string $langcode): array {
     $query = $this->buildTermBaseQuery('category', $langcode);
-    $query->leftJoin('taxonomy_term__field_unique_name', 'un', 'un.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
     $query->leftJoin('taxonomy_term__field_type_of_article', 'toa', 'toa.entity_id = td.tid');
     // Resolve the entity reference to a label via two JOINs: first try the
     // requested language, then fall back to English. This matches V1's
@@ -1238,7 +1238,7 @@ class BebboSerializer extends Serializer {
     $query->condition('td.langcode', $langcode);
     $query->condition('td.status', 1);
     $query->fields('td', ['tid', 'name', 'vid']);
-    $query->leftJoin('taxonomy_term__field_unique_name', 'un', 'un.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
     $query->addField('un', 'field_unique_name_value', 'unique_name');
 
     $results = $query->execute()->fetchAll();
@@ -2238,22 +2238,17 @@ class BebboSerializer extends Serializer {
   }
 
   /**
-   * Casts row fields to float (JSON number type).
-   *
-   * Trailing zeros are dropped by json_encode per JSON spec (6.00 → 6,
-   * 6.50 → 6.5). Missing or empty values default to 0.
+   * Casts row fields to their natural numeric type without rounding.
    *
    * @param array $row
    *   A single row (passed by reference).
    * @param array $fields
    *   Field names to cast.
-   * @param int $decimals
-   *   Maximum decimal places to retain (default 2).
    */
-  private function castToFloat(array &$row, array $fields, int $decimals = 2): void {
+  private function castToNumber(array &$row, array $fields): void {
     foreach ($fields as $field) {
       if (array_key_exists($field, $row)) {
-        $row[$field] = round((float) ($row[$field] ?? 0), $decimals);
+        $row[$field] = ($row[$field] ?? 0) + 0;
       }
     }
   }

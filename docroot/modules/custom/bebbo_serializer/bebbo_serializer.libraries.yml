@@ -13,3 +13,11 @@ quiz_question_count:
     - core/drupal
     - core/once
     - core/drupalSettings
+
+decimal-restriction:
+  js:
+    js/decimal-input-restriction.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once

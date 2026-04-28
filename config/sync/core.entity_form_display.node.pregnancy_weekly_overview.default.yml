@@ -12,6 +12,7 @@ dependencies:
     - field.field.node.pregnancy_weekly_overview.field_parental_week
     - field.field.node.pregnancy_weekly_overview.field_related_articles
     - node.type.pregnancy_weekly_overview
+    - workflows.workflow.group_workflow
   module:
     - content_moderation
     - media_library

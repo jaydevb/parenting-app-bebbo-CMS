@@ -4,6 +4,6 @@ status: true
 dependencies: {  }
 name: 'Target Audience'
 vid: target_audience
-description: null
+description: 'User types and contexts targetted in some content.'
 weight: 0
 new_revision: false
