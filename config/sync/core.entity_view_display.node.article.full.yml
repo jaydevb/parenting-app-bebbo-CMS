@@ -5,20 +5,26 @@ dependencies:
   config:
     - core.entity_view_mode.node.full
     - field.field.node.article.body
+    - field.field.node.article.feeds_item
+    - field.field.node.article.field_analytics_updated
     - field.field.node.article.field_australian_article
+    - field.field.node.article.field_body_rendered
     - field.field.node.article.field_child_age
     - field.field.node.article.field_child_gender
     - field.field.node.article.field_content_category
     - field.field.node.article.field_cover_image
     - field.field.node.article.field_do_not_feature
+    - field.field.node.article.field_embedded_images
     - field.field.node.article.field_generic_content
     - field.field.node.article.field_keywords
     - field.field.node.article.field_licensed_content
+    - field.field.node.article.field_like_count
     - field.field.node.article.field_mandatory_content
     - field.field.node.article.field_meta_keywords
     - field.field.node.article.field_parent_gender
     - field.field.node.article.field_pre_populated
     - field.field.node.article.field_premature_content
+    - field.field.node.article.field_read_count
     - field.field.node.article.field_references_and_comments
     - field.field.node.article.field_related_articles
     - field.field.node.article.field_related_video_articles
@@ -176,11 +182,15 @@ content:
     weight: 2
     region: content
 hidden:
+  feeds_item: true
+  field_analytics_updated: true
   field_body_rendered: true
   field_do_not_feature: true
   field_embedded_images: true
+  field_like_count: true
   field_meta_keywords: true
   field_pre_populated: true
+  field_read_count: true
   field_subcategory: true
   field_target_audience: true
   field_type_of_article: true

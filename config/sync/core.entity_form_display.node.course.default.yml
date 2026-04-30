@@ -3,6 +3,8 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.course.feeds_item
+    - field.field.node.course.field_analytics_updated
     - field.field.node.course.field_certificate
     - field.field.node.course.field_child_age
     - field.field.node.course.field_course_category
@@ -14,10 +16,12 @@ dependencies:
     - field.field.node.course.field_feedback_question
     - field.field.node.course.field_feedback_required
     - field.field.node.course.field_final_assessment
+    - field.field.node.course.field_like_count
     - field.field.node.course.field_module
     - field.field.node.course.field_module_numbering_style
     - field.field.node.course.field_modules_unlock
     - field.field.node.course.field_number_of_modules
+    - field.field.node.course.field_read_count
     - field.field.node.course.field_reference
     - field.field.node.course.field_target_audience
     - node.type.course
@@ -36,6 +40,12 @@ content:
   created:
     type: datetime_timestamp
     weight: 10
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_analytics_updated:
+    type: datetime_timestamp
+    weight: 29
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -123,6 +133,13 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  field_like_count:
+    type: number
+    weight: 27
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
   field_module:
     type: paragraphs
     weight: 130
@@ -157,6 +174,13 @@ content:
   field_number_of_modules:
     type: number
     weight: 129
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_read_count:
+    type: number
+    weight: 28
     region: content
     settings:
       placeholder: ''
@@ -247,4 +271,5 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
-hidden: {  }
+hidden:
+  feeds_item: true
