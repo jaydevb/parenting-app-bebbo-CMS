@@ -211,7 +211,7 @@ display:
           type: user_name
         langcode:
           id: langcode
-          table: node
+          table: node_field_data
           field: langcode
           relationship: none
           group_type: group
@@ -219,7 +219,7 @@ display:
           entity_type: node
           entity_field: langcode
           plugin_id: field_language
-          label: language
+          label: Language
           exclude: false
           alter:
             alter_text: false
@@ -252,7 +252,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: false
+          element_label_colon: true
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -575,7 +575,8 @@ display:
           entity_field: langcode
           plugin_id: language
           operator: in
-          value: {  }
+          value:
+            en: en
           group: 1
           exposed: true
           expose:
@@ -593,6 +594,11 @@ display:
             remember_roles:
               authenticated: authenticated
               anonymous: '0'
+              global_admin: '0'
+              reviewer: '0'
+              editor: '0'
+              sme: '0'
+              se: '0'
               administrator: '0'
             reduce: false
           is_grouped: false
@@ -729,7 +735,7 @@ display:
     display_plugin: page
     position: 1
     display_options:
-      rendering_language: '***LANGUAGE_language_interface***'
+      rendering_language: '***LANGUAGE_entity_translation***'
       display_extenders: {  }
       path: admin/content/node
       menu:
@@ -748,6 +754,7 @@ display:
     cache_metadata:
       max-age: 0
       contexts:
+        - 'languages:language_content'
         - 'languages:language_interface'
         - url
         - url.query_args

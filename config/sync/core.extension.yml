@@ -10,6 +10,7 @@ module:
   automated_cron: 0
   basic_auth: 0
   bebbo_serializer: 0
+  better_exposed_filters: 0
   big_pipe: 0
   block: 0
   block_content: 0
@@ -89,6 +90,7 @@ module:
   options: 0
   path: 0
   path_alias: 0
+  pb_content_analytics: 0
   pb_custom_field: 0
   pb_custom_form: 0
   pb_custom_migrate: 0

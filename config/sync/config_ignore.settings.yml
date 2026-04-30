@@ -7,6 +7,7 @@ ignored_config_entities:
   - google_analytics.settings
   - mobile_app_links.android_packages
   - mobile_app_links.ios
+  - pb_content_analytics.settings
   - pb_custom_form.landing_pages
   - pb_custom_form.language_redirects
   - pb_custom_form.mobile_app_share_link_form
