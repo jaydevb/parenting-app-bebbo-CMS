@@ -22,7 +22,7 @@ class AnalyticsSyncService {
     'article' => 'article',
     'video_article' => 'video_article',
     'course' => 'course',
-    'game' => 'activities',
+    'activities' => 'activities',
   ];
 
   /**
