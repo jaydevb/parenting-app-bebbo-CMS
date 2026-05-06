@@ -12,13 +12,13 @@ dependencies:
     - field.field.node.course.field_course_duration
     - field.field.node.course.field_course_expiry
     - field.field.node.course.field_course_link
+    - field.field.node.course.field_course_modules
     - field.field.node.course.field_cover_image
     - field.field.node.course.field_description
     - field.field.node.course.field_feedback_question
     - field.field.node.course.field_feedback_required
     - field.field.node.course.field_final_assessment
     - field.field.node.course.field_like_count
-    - field.field.node.course.field_module
     - field.field.node.course.field_module_numbering_style
     - field.field.node.course.field_modules_unlock
     - field.field.node.course.field_number_of_modules
@@ -52,13 +52,13 @@ hidden:
   field_course_duration: true
   field_course_expiry: true
   field_course_link: true
+  field_course_modules: true
   field_cover_image: true
   field_description: true
   field_feedback_question: true
   field_feedback_required: true
   field_final_assessment: true
   field_like_count: true
-  field_module: true
   field_module_numbering_style: true
   field_modules_unlock: true
   field_number_of_modules: true

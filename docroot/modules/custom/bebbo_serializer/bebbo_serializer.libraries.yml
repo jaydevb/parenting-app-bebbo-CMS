@@ -14,6 +14,14 @@ quiz_question_count:
     - core/once
     - core/drupalSettings
 
+course_expiry:
+  js:
+    js/course_expiry.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+
 decimal-restriction:
   js:
     js/decimal-input-restriction.js: {}

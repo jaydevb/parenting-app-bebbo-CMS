@@ -150,6 +150,19 @@ class BebboSerializer extends Serializer {
     // helper->getCurrentTimestamp('Asia/Kolkata').
     $timestamp = (new DrupalDateTime('now', 'Asia/Kolkata'))->format('Y-m-d H:i');
 
+    // Validate language visibility (skip for country-groups listing).
+    $displayId = $this->view->current_display;
+    if ($displayId !== 'country_listing_export') {
+      $error = $this->checkLanguageVisibility();
+      if ($error) {
+        return $this->serializer->serialize(
+          $error + ['datetime' => $timestamp],
+          'json',
+          ['views_style_plugin' => $this],
+        );
+      }
+    }
+
     // Collect rows via the parent row plugin.
     $rows = [];
     foreach ($this->view->result as $rowIndex => $row) {
@@ -255,6 +268,34 @@ class BebboSerializer extends Serializer {
     }
 
     return $this->languageManager->getCurrentLanguage()->getId();
+  }
+
+  /**
+   * Validates that the requested language is visible in at least one group.
+   *
+   * @return array|null
+   *   Error array with 'status' and 'message' keys, or NULL if valid.
+   */
+  private function checkLanguageVisibility(): ?array {
+    $requested_language = $this->view->args[0] ?? $this->languageManager->getCurrentLanguage()->getId();
+
+    $languages = array_keys($this->languageManager->getLanguages());
+    if (!in_array($requested_language, $languages)) {
+      return ['status' => 400, 'message' => 'Request language is wrong'];
+    }
+
+    $groups = $this->entityTypeManager
+      ->getStorage('group')
+      ->loadByProperties(['type' => 'country']);
+
+    foreach ($groups as $group) {
+      $visible = $this->languageVisibilityService->getVisibleLanguages($group);
+      if (in_array($requested_language, $visible)) {
+        return NULL;
+      }
+    }
+
+    return ['status' => 403, 'message' => 'Language not available'];
   }
 
   /**
@@ -411,7 +452,7 @@ class BebboSerializer extends Serializer {
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'activity_category', 'equipment',
-        'type_of_support', 'mandatory',
+        'type_of_support', 'mandatory', 'read_count', 'like_count',
       ]);
       $this->toIntArray($row, ['child_age', 'related_milestone']);
       $this->toStringArray($row, ['embedded_images']);
@@ -450,10 +491,10 @@ class BebboSerializer extends Serializer {
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'field_type_of_article', 'category', 'subcategory',
-        'child_gender', 'parent_gender', 'premature',
+        'child_gender', 'parent_gender', 'premature', 'read_count', 'like_count',
       ]);
       $this->toIntArray($row, [
-        'child_age', 'keywords', 'related_articles', 'related_video_articles',
+        'child_age', 'keywords', 'related_articles', 'related_video_articles', 'target_audience',
       ]);
       $this->toStringArray($row, ['embedded_images']);
       $this->decodeHtmlEntities($row, ['title']);
@@ -489,10 +530,10 @@ class BebboSerializer extends Serializer {
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
-        'licensed', 'premature', 'mandatory',
+        'licensed', 'premature', 'mandatory', 'read_count', 'like_count',
       ]);
       $this->toIntArray($row, [
-        'child_age', 'keywords', 'related_articles', 'related_video_articles',
+        'child_age', 'keywords', 'related_articles', 'related_video_articles', 'target_audience',
       ]);
       $this->toStringArray($row, ['embedded_images']);
       $this->decodeHtmlEntities($row, ['title']);
@@ -1014,22 +1055,35 @@ class BebboSerializer extends Serializer {
    *   The language code.
    *
    * @return array
-   *   Array of [{id, name, vaccination_opens}].
+   *   Array of [{id, name, vaccination_opens, short_name, unique_name}].
    */
   private function queryGrowthPeriodTerms(string $langcode): array {
     $query = $this->buildTermBaseQuery('growth_period', $langcode);
     $query->leftJoin('taxonomy_term__field_vaccination_opens', 'vo', 'vo.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term__field_short_name', 'sn', 'sn.entity_id = td.tid AND sn.langcode = td.langcode');
+    $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
     $query->addField('vo', 'field_vaccination_opens_value', 'vaccination_opens');
+    $query->addField('sn', 'field_short_name_value', 'short_name');
+    $query->addField('un', 'field_unique_name_value', 'unique_name');
 
     $results = $query->execute()->fetchAll();
     $terms = [];
-    foreach ($results as $row) {
+    $needsMachineName = [];
+    foreach ($results as $idx => $row) {
       $terms[] = [
         'id' => (int) $row->tid,
         'name' => $row->name,
         'vaccination_opens' => (int) ($row->vaccination_opens ?? 0),
+        'short_name' => $row->short_name ?? '',
+        'unique_name' => $row->unique_name ?? '',
       ];
+      if (empty($row->unique_name)) {
+        $needsMachineName[$idx] = (int) $row->tid;
+      }
     }
+
+    $this->batchResolveMachineNames($terms, $needsMachineName);
+
     return $terms;
   }
 
@@ -1835,8 +1889,8 @@ class BebboSerializer extends Serializer {
   /**
    * Transforms rows for the course REST export display.
    *
-   * Casts numeric fields, resolves cover_image, and batch-loads paragraph
-   * modules from field_module without N+1 queries. Each course gets a
+   * Casts numeric fields, resolves cover_image, and batch-loads courses_module
+   * nodes from field_course_modules without N+1 queries. Each course gets a
    * "module" array with structured module data.
    *
    * @param array $rows
@@ -1856,11 +1910,11 @@ class BebboSerializer extends Serializer {
     $nids = array_filter(array_column($rows, 'id'), 'is_numeric');
     $nids = array_map('intval', $nids);
 
-    // Single DB query: nid → paragraph target_ids (avoids loading full nodes).
-    $nidToParaIds = [];
+    // Single DB query: course nid → courses_module node IDs.
+    $nidToModuleIds = [];
     if (!empty($nids)) {
-      $result = $this->database->select('node__field_module', 'fm')
-        ->fields('fm', ['entity_id', 'field_module_target_id'])
+      $result = $this->database->select('node__field_course_modules', 'fm')
+        ->fields('fm', ['entity_id', 'field_course_modules_target_id'])
         ->condition('fm.entity_id', $nids, 'IN')
         ->condition('fm.deleted', 0)
         ->condition('fm.langcode', $langcode)
@@ -1869,26 +1923,26 @@ class BebboSerializer extends Serializer {
         ->execute();
 
       foreach ($result as $record) {
-        $nidToParaIds[(int) $record->entity_id][] = (int) $record->field_module_target_id;
+        $nidToModuleIds[(int) $record->entity_id][] = (int) $record->field_course_modules_target_id;
       }
     }
 
-    // Batch-load all paragraphs in one query.
-    $allParaIds = array_merge(...array_values($nidToParaIds ?: [[]]));
-    $paragraphs = [];
-    if (!empty($allParaIds)) {
-      /** @var \Drupal\paragraphs\Entity\Paragraph[] $paragraphs */
-      $paragraphs = $this->entityTypeManager
-        ->getStorage('paragraph')
-        ->loadMultiple($allParaIds);
+    // Batch-load all courses_module nodes.
+    $allModuleIds = array_merge(...array_values($nidToModuleIds ?: [[]]));
+    $moduleNodes = [];
+    if (!empty($allModuleIds)) {
+      /** @var \Drupal\node\NodeInterface[] $moduleNodes */
+      $moduleNodes = $this->entityTypeManager
+        ->getStorage('node')
+        ->loadMultiple($allModuleIds);
     }
 
-    // Collect document media IDs from paragraphs for batch resolution.
+    // Collect document media IDs for batch resolution.
     $docMediaIds = [];
-    foreach ($paragraphs as $paragraph) {
-      $translated = $paragraph->hasTranslation($langcode)
-        ? $paragraph->getTranslation($langcode)
-        : $paragraph;
+    foreach ($moduleNodes as $moduleNode) {
+      $translated = $moduleNode->hasTranslation($langcode)
+        ? $moduleNode->getTranslation($langcode)
+        : $moduleNode;
       if ($translated->hasField('field_resource_file_internal') && !$translated->get('field_resource_file_internal')->isEmpty()) {
         $docMediaIds[] = (int) $translated->get('field_resource_file_internal')->target_id;
       }
@@ -1897,12 +1951,12 @@ class BebboSerializer extends Serializer {
     // Batch-load document media → {url, name}.
     $resolvedDocs = $this->resolveDocumentMediaIds(array_unique($docMediaIds));
 
-    // Build module arrays per paragraph.
-    $paraData = [];
-    foreach ($paragraphs as $pid => $paragraph) {
-      $translated = $paragraph->hasTranslation($langcode)
-        ? $paragraph->getTranslation($langcode)
-        : $paragraph;
+    // Build module arrays per courses_module node.
+    $moduleData = [];
+    foreach ($moduleNodes as $mid => $moduleNode) {
+      $translated = $moduleNode->hasTranslation($langcode)
+        ? $moduleNode->getTranslation($langcode)
+        : $moduleNode;
 
       $moduleTitle = '';
       if ($translated->hasField('field_module_title')) {
@@ -1919,7 +1973,7 @@ class BebboSerializer extends Serializer {
         $optionalModule = (bool) $translated->get('field_optional_module')->value;
       }
 
-      // Course content as int array (same pattern as related_articles).
+      // Course content as int array.
       $courseContent = [];
       if ($translated->hasField('field_course_content')) {
         foreach ($translated->get('field_course_content') as $item) {
@@ -1937,15 +1991,15 @@ class BebboSerializer extends Serializer {
       }
 
       $resourceFile = NULL;
-      if ($translated->hasField('field_resource_file') && !$translated->get('field_resource_file')->isEmpty()) {
-        $link = $translated->get('field_resource_file')->first();
+      if ($translated->hasField('field_resource_file_external') && !$translated->get('field_resource_file_external')->isEmpty()) {
+        $link = $translated->get('field_resource_file_external')->first();
         $resourceFile = [
           'url' => (string) ($link->uri ?? ''),
           'name' => (string) ($link->title ?? ''),
         ];
       }
 
-      $paraData[$pid] = [
+      $moduleData[$mid] = [
         'module_title' => $moduleTitle,
         'content_numbering' => $numberingStyle,
         'optional_module' => $optionalModule,
@@ -1960,7 +2014,7 @@ class BebboSerializer extends Serializer {
       $nid = (int) ($row['id'] ?? 0);
       $this->castToInt($row, [
         'id', 'course_duration',
-        'number_of_modules', 'final_assessment',
+        'number_of_modules', 'final_assessment', 'read_count', 'like_count',
       ]);
       $this->toIntArray($row, ['child_age', 'target_audience', 'course_category']);
       $this->castToBool($row, ['feedback_required', 'module_locked']);
@@ -1974,12 +2028,12 @@ class BebboSerializer extends Serializer {
         $row['certificate'] ?? NULL
       );
 
-      // Build modules array from pre-loaded paragraph data.
+      // Build modules array from pre-loaded courses_module node data.
       $modules = [];
-      if (!empty($nidToParaIds[$nid])) {
-        foreach ($nidToParaIds[$nid] as $pid) {
-          if (isset($paraData[$pid])) {
-            $modules[] = $paraData[$pid];
+      if (!empty($nidToModuleIds[$nid])) {
+        foreach ($nidToModuleIds[$nid] as $mid) {
+          if (isset($moduleData[$mid])) {
+            $modules[] = $moduleData[$mid];
           }
         }
       }
@@ -1993,7 +2047,7 @@ class BebboSerializer extends Serializer {
   /**
    * Transforms rows for the quiz REST export display.
    *
-   * Batch-loads quiz_questions paragraphs from field_question and nests
+   * Batch-loads quiz_questions nodes from field_quiz_questions and nests
    * them in each quiz row as a "questions" array. Resolves question images
    * via the existing resolveMediaIds() batch loader.
    *
@@ -2010,15 +2064,14 @@ class BebboSerializer extends Serializer {
 
     $langcode = $this->resolveLangcode();
 
-    // Collect all quiz nids from the view rows (aliased as "id").
     $nids = array_filter(array_column($rows, 'id'), 'is_numeric');
     $nids = array_map('intval', $nids);
 
-    // Single DB query: nid → paragraph target_ids.
-    $nidToParaIds = [];
+    // Single DB query: quiz nid → question node IDs.
+    $nidToQuestionIds = [];
     if (!empty($nids)) {
-      $result = $this->database->select('node__field_question', 'fq')
-        ->fields('fq', ['entity_id', 'field_question_target_id'])
+      $result = $this->database->select('node__field_quiz_questions', 'fq')
+        ->fields('fq', ['entity_id', 'field_quiz_questions_target_id'])
         ->condition('fq.entity_id', $nids, 'IN')
         ->condition('fq.deleted', 0)
         ->condition('fq.langcode', $langcode)
@@ -2027,28 +2080,28 @@ class BebboSerializer extends Serializer {
         ->execute();
 
       foreach ($result as $record) {
-        $nidToParaIds[(int) $record->entity_id][] = (int) $record->field_question_target_id;
+        $nidToQuestionIds[(int) $record->entity_id][] = (int) $record->field_quiz_questions_target_id;
       }
     }
 
-    // Batch-load all paragraphs in one query.
-    $allParaIds = array_merge(
-      ...array_values($nidToParaIds ?: [[]])
+    // Batch-load all question nodes.
+    $allQuestionIds = array_merge(
+      ...array_values($nidToQuestionIds ?: [[]])
     );
-    $paragraphs = [];
-    if (!empty($allParaIds)) {
-      /** @var \Drupal\paragraphs\Entity\Paragraph[] $paragraphs */
-      $paragraphs = $this->entityTypeManager
-        ->getStorage('paragraph')
-        ->loadMultiple($allParaIds);
+    $questionNodes = [];
+    if (!empty($allQuestionIds)) {
+      /** @var \Drupal\node\NodeInterface[] $questionNodes */
+      $questionNodes = $this->entityTypeManager
+        ->getStorage('node')
+        ->loadMultiple($allQuestionIds);
     }
 
-    // Collect image media IDs from paragraphs for batch resolution.
+    // Collect image media IDs for batch resolution.
     $imageMediaIds = [];
-    foreach ($paragraphs as $paragraph) {
-      $translated = $paragraph->hasTranslation($langcode)
-        ? $paragraph->getTranslation($langcode)
-        : $paragraph;
+    foreach ($questionNodes as $question) {
+      $translated = $question->hasTranslation($langcode)
+        ? $question->getTranslation($langcode)
+        : $question;
       if ($translated->hasField('field_question_image')
         && !$translated->get('field_question_image')->isEmpty()) {
         $imageMediaIds[] = (int) $translated
@@ -2056,18 +2109,17 @@ class BebboSerializer extends Serializer {
       }
     }
 
-    // Batch-load image media → {url, name, alt}.
     $resolvedImages = $this->resolveMediaIds(
       array_unique($imageMediaIds)
     );
     $emptyImage = ['url' => '', 'name' => '', 'alt' => ''];
 
-    // Build question arrays per paragraph.
-    $paraData = [];
-    foreach ($paragraphs as $pid => $paragraph) {
-      $translated = $paragraph->hasTranslation($langcode)
-        ? $paragraph->getTranslation($langcode)
-        : $paragraph;
+    // Build question data keyed by node ID.
+    $questionData = [];
+    foreach ($questionNodes as $qid => $question) {
+      $translated = $question->hasTranslation($langcode)
+        ? $question->getTranslation($langcode)
+        : $question;
 
       $questionType = '';
       if ($translated->hasField('field_question_type')) {
@@ -2081,7 +2133,6 @@ class BebboSerializer extends Serializer {
           ->get('field_question')->value ?? '');
       }
 
-      // Resolve question image.
       $image = $emptyImage;
       if ($translated->hasField('field_question_image')
         && !$translated->get('field_question_image')->isEmpty()) {
@@ -2090,7 +2141,6 @@ class BebboSerializer extends Serializer {
         $image = $resolvedImages[$mediaId] ?? $emptyImage;
       }
 
-      // Build answers array from custom quiz_answer field.
       $answers = [];
       if ($translated->hasField('field_answers')) {
         foreach ($translated->get('field_answers') as $answerItem) {
@@ -2112,7 +2162,7 @@ class BebboSerializer extends Serializer {
           ->get('field_explanation')->value ?? '');
       }
 
-      $paraData[$pid] = [
+      $questionData[$qid] = [
         'type' => $questionType,
         'question' => $questionText,
         'image' => $image,
@@ -2121,7 +2171,6 @@ class BebboSerializer extends Serializer {
       ];
     }
 
-    // Transform each row.
     foreach ($rows as &$row) {
       $nid = (int) ($row['id'] ?? 0);
       $this->castToInt($row, [
@@ -2130,12 +2179,11 @@ class BebboSerializer extends Serializer {
       ]);
       $this->decodeHtmlEntities($row, ['title']);
 
-      // Build questions array from pre-loaded paragraph data.
       $questions = [];
-      if (!empty($nidToParaIds[$nid])) {
-        foreach ($nidToParaIds[$nid] as $pid) {
-          if (isset($paraData[$pid])) {
-            $questions[] = $paraData[$pid];
+      if (!empty($nidToQuestionIds[$nid])) {
+        foreach ($nidToQuestionIds[$nid] as $qid) {
+          if (isset($questionData[$qid])) {
+            $questions[] = $questionData[$qid];
           }
         }
       }

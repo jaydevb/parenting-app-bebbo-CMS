@@ -109,7 +109,7 @@ class StringsTranslateForm extends FormBase {
 
     if (!empty($search)) {
       $pattern = '%' . $this->database->escapeLike($search) . '%';
-      $query->where('(BINARY td.name LIKE :src_pattern OR BINARY td_trans.name LIKE :trans_pattern)', [
+      $query->where('(td.name LIKE :src_pattern OR td_trans.name LIKE :trans_pattern)', [
         ':src_pattern' => $pattern,
         ':trans_pattern' => $pattern,
       ]);

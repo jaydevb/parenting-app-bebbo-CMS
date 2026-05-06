@@ -10,7 +10,7 @@ pb_custom_form.forcefull_update_check:
   path: '/admin/config/parent-buddy/forcefull-update-check'
   defaults:
     _form:  '\Drupal\pb_custom_form\Form\CustomForm'
-    _title: 'Force Full Update Check Form'
+    _title: 'Force Update Settings'
   requirements:
     _permission: 'forcefull update check'
   options:
@@ -64,7 +64,7 @@ pb_custom_form.ForceUpdateCheckForm:
   path: '/forcefull-update-check'
   defaults:
     _form:  '\Drupal\pb_custom_form\Form\ForceUpdateCheckForm'
-    _title: 'Force Full Update Check Form'
+    _title: 'Force Update Settings'
   requirements:
     _permission: 'forcefull update check'
 

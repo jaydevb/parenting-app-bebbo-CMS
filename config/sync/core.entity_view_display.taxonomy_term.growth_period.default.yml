@@ -6,6 +6,8 @@ dependencies:
     - field.field.taxonomy_term.growth_period.feeds_item
     - field.field.taxonomy_term.growth_period.field_days_from
     - field.field.taxonomy_term.growth_period.field_days_to
+    - field.field.taxonomy_term.growth_period.field_short_name
+    - field.field.taxonomy_term.growth_period.field_unique_name
     - field.field.taxonomy_term.growth_period.field_vaccination_opens
     - taxonomy.vocabulary.growth_period
   module:
@@ -39,6 +41,22 @@ content:
       prefix_suffix: true
     third_party_settings: {  }
     weight: 2
+    region: content
+  field_short_name:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 11
+    region: content
+  field_unique_name:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 12
     region: content
   field_vaccination_opens:
     type: number_integer

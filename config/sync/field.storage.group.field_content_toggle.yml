@@ -13,31 +13,31 @@ settings:
   allowed_values:
     -
       value: chatbot
-      label: Chatbot
-    -
-      value: childs_growth
-      label: "Child's Growth"
-    -
-      value: health_check_up
-      label: 'Health Check-up'
-    -
-      value: vaccination
-      label: Vaccination
-    -
-      value: pregnancy
-      label: Pregnancy
+      label: 'AI Chatbot'
     -
       value: baby_size
       label: 'Baby Size'
     -
+      value: childs_growth
+      label: "Child's Growth"
+    -
+      value: faqs
+      label: FAQs
+    -
       value: guide
       label: Guide
+    -
+      value: health_check_up
+      label: 'Health Check-up'
     -
       value: learning
       label: Learning
     -
-      value: ai_chatbot
-      label: 'AI Chatbot'
+      value: pregnancy
+      label: Pregnancy
+    -
+      value: vaccination
+      label: Vaccination
   allowed_values_function: ''
 module: options
 locked: false
