@@ -11,13 +11,13 @@ dependencies:
     - field.field.node.course.field_course_duration
     - field.field.node.course.field_course_expiry
     - field.field.node.course.field_course_link
+    - field.field.node.course.field_course_modules
     - field.field.node.course.field_cover_image
     - field.field.node.course.field_description
     - field.field.node.course.field_feedback_question
     - field.field.node.course.field_feedback_required
     - field.field.node.course.field_final_assessment
     - field.field.node.course.field_like_count
-    - field.field.node.course.field_module
     - field.field.node.course.field_module_numbering_style
     - field.field.node.course.field_modules_unlock
     - field.field.node.course.field_number_of_modules
@@ -27,7 +27,6 @@ dependencies:
     - node.type.course
   module:
     - datetime
-    - entity_reference_revisions
     - options
     - user
 id: node.course.default
@@ -110,6 +109,14 @@ content:
     third_party_settings: {  }
     weight: 106
     region: content
+  field_course_modules:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 120
+    region: content
   field_cover_image:
     type: entity_reference_entity_view
     label: above
@@ -160,15 +167,6 @@ content:
       prefix_suffix: true
     third_party_settings: {  }
     weight: 117
-    region: content
-  field_module:
-    type: entity_reference_revisions_entity_view
-    label: above
-    settings:
-      view_mode: default
-      link: ''
-    third_party_settings: {  }
-    weight: 110
     region: content
   field_module_numbering_style:
     type: list_default

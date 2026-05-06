@@ -1,15 +1,16 @@
 (function ($, Drupal) {
   'use strict';
 
-  function updateModuleCount() {
-    var $wrapper = $('[data-drupal-selector="edit-field-module-wrapper"]');
+  function getModuleCount() {
+    var $wrapper = $('[data-drupal-selector="edit-field-course-modules-wrapper"]');
     if (!$wrapper.length) {
-      return;
+      return 0;
     }
+    return $wrapper.find('.ief-entity-table tbody tr.ief-row-entity').length;
+  }
 
-    // Count only top-level paragraph rows (not nested field tables inside subforms).
-    var count = $wrapper.find('.field-multiple-table:first > tbody > tr.draggable').length;
-
+  function updateModuleCount() {
+    var count = getModuleCount();
     var $input = $('[data-drupal-selector="edit-field-number-of-modules-0-value"]');
     if ($input.length) {
       $input.val(count);

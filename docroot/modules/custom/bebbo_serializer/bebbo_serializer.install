@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for bebbo_serializer.
+ */
+
+/**
+ * Delete orphaned paragraph and consumer entities before config import.
+ *
+ * Config sync removes the Paragraphs and Consumers modules, but existing
+ * entities block uninstall validation. This update hook runs via drush updb
+ * BEFORE drush cim, ensuring entities are gone when validation runs.
+ */
+function bebbo_serializer_update_10001(): string {
+  $messages = [];
+
+  // Delete all paragraph entities.
+  if (\Drupal::moduleHandler()->moduleExists('paragraphs')) {
+    $storage = \Drupal::entityTypeManager()->getStorage('paragraph');
+    $entities = $storage->loadMultiple();
+    if ($entities) {
+      $storage->delete($entities);
+      $messages[] = 'Deleted ' . count($entities) . ' paragraph entities.';
+    }
+    else {
+      $messages[] = 'No paragraph entities found.';
+    }
+  }
+
+  // Delete all consumer entities.
+  if (\Drupal::moduleHandler()->moduleExists('consumers')) {
+    $storage = \Drupal::entityTypeManager()->getStorage('consumer');
+    $entities = $storage->loadMultiple();
+    if ($entities) {
+      $storage->delete($entities);
+      $messages[] = 'Deleted ' . count($entities) . ' consumer entities.';
+    }
+    else {
+      $messages[] = 'No consumer entities found.';
+    }
+  }
+
+  return implode(' ', $messages);
+}
+
+/**
+ * Migrate field_content_toggle 'ai_chatbot' values to 'chatbot'.
+ *
+ * Config sync changes the allowed_values keys for this Group list field.
+ * Existing data with the old 'ai_chatbot' key must be updated to 'chatbot'
+ * before config import, or Drupal blocks the key change.
+ */
+function bebbo_serializer_update_10002(): string {
+  $database = \Drupal::database();
+  $tables = [
+    'group__field_content_toggle',
+    'group_revision__field_content_toggle',
+  ];
+  $total = 0;
+
+  foreach ($tables as $table) {
+    if (!$database->schema()->tableExists($table)) {
+      continue;
+    }
+    $updated = $database->update($table)
+      ->fields(['field_content_toggle_value' => 'chatbot'])
+      ->condition('field_content_toggle_value', 'ai_chatbot')
+      ->execute();
+    $total += $updated;
+  }
+
+  return "Updated $total field_content_toggle rows from 'ai_chatbot' to 'chatbot'.";
+}

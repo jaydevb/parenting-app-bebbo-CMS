@@ -74,7 +74,7 @@ class StringsFilterForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('String contains'),
       '#default_value' => $filter['string'],
-      '#description' => $this->t('Leave blank to show all strings. The search is case sensitive.'),
+      '#description' => $this->t('Leave blank to show all strings. The search is case insensitive.'),
     ];
 
     $form['filters']['actions'] = [

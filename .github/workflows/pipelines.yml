@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - 'develop'
-      - 'main'
+      - 'stage'
   pull_request:
     branches:
       - 'feature/**'
       - 'bug/**'
       - 'hotfix/**'
       - 'develop'
-      - 'main'
+      - 'stage'
   workflow_dispatch:
 
 jobs:
@@ -100,12 +100,12 @@ jobs:
           acli push:artifact @parentbuddy2.dev --no-interaction -vvv
 
   # -------------------------------
-  # 3. Deploy to Acquia Stage (main)
+  # 3. Deploy to Acquia Stage
   # -------------------------------
   deploy-stage:
     needs: ci-checks
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
     steps:
       - uses: actions/checkout@v3
 

@@ -1,6 +1,7 @@
 _core:
   default_config_hash: R4IF-ClDHXxblLcG0L7MgsLvfBIMAvi_skumNFQwkDc
 module:
+  auto_entitylabel: -100
   acquia_purge: 0
   actions_permissions: 0
   admin_toolbar: 0
@@ -21,7 +22,6 @@ module:
   config_ignore: 0
   config_split: 0
   config_translation: 0
-  consumers: 0
   content_moderation: 0
   content_moderation_notifications: 0
   contextual: 0
@@ -34,6 +34,7 @@ module:
   editor: 0
   entity: 0
   entity_reference_revisions: 0
+  entity_reference_validators: 0
   entity_share: 0
   entity_share_async: 0
   entity_share_client: 0
@@ -57,6 +58,7 @@ module:
   imageapi_optimize: 0
   imageapi_optimize_binaries: 0
   imagemagick: 0
+  inline_entity_form: 0
   jsonapi: 0
   jsonapi_extras: 0
   lang_dropdown: 0
@@ -112,7 +114,6 @@ module:
   seckit: 0
   serialization: 0
   shortcut: 0
-  simple_oauth: 0
   smtp: 0
   sophron: 0
   structure_sync: 0
@@ -154,7 +155,6 @@ module:
   content_translation: 10
   views: 10
   contextual_range_filter: 11
-  paragraphs: 11
   standard: 1000
 theme:
   claro: 0

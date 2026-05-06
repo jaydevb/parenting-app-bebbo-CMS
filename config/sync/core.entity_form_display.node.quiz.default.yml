@@ -3,16 +3,17 @@ langcode: en
 status: true
 dependencies:
   config:
+    - core.entity_form_mode.node.ief
     - field.field.node.quiz.field_instructions
     - field.field.node.quiz.field_number_of_questions
     - field.field.node.quiz.field_passing_score
-    - field.field.node.quiz.field_question
+    - field.field.node.quiz.field_quiz_questions
     - field.field.node.quiz.field_quiz_type
     - node.type.quiz
     - workflows.workflow.group_workflow
   module:
     - content_moderation
-    - paragraphs
+    - inline_entity_form
     - path
 id: node.quiz.default
 targetEntityType: node
@@ -47,23 +48,23 @@ content:
     settings:
       placeholder: ''
     third_party_settings: {  }
-  field_question:
-    type: paragraphs
+  field_quiz_questions:
+    type: inline_entity_form_complex
     weight: 14
     region: content
     settings:
-      title: Paragraph
-      title_plural: Paragraphs
-      edit_mode: open
-      closed_mode: summary
-      autocollapse: none
-      closed_mode_threshold: 0
-      add_mode: dropdown
-      form_display_mode: default
-      default_paragraph_type: ''
-      features:
-        collapse_edit_all: collapse_edit_all
-        duplicate: duplicate
+      form_mode: ief
+      override_labels: true
+      label_singular: 'Quiz Question'
+      label_plural: 'Quiz Questions'
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: true
+      collapsed: true
+      revision: false
+      removed_reference: delete
     third_party_settings: {  }
   field_quiz_type:
     type: options_select

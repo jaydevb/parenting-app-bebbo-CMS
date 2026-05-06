@@ -6,6 +6,8 @@ dependencies:
     - field.field.taxonomy_term.growth_period.feeds_item
     - field.field.taxonomy_term.growth_period.field_days_from
     - field.field.taxonomy_term.growth_period.field_days_to
+    - field.field.taxonomy_term.growth_period.field_short_name
+    - field.field.taxonomy_term.growth_period.field_unique_name
     - field.field.taxonomy_term.growth_period.field_vaccination_opens
     - taxonomy.vocabulary.growth_period
   module:
@@ -15,9 +17,25 @@ targetEntityType: taxonomy_term
 bundle: growth_period
 mode: default
 content:
+  field_short_name:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_unique_name:
+    type: string_textfield
+    weight: 3
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   field_vaccination_opens:
     type: number
-    weight: 2
+    weight: 4
     region: content
     settings:
       placeholder: ''
@@ -39,16 +57,21 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 3
+    weight: 5
     region: content
     settings: {  }
     third_party_settings: {  }
   status:
     type: boolean_checkbox
-    weight: 4
+    weight: 6
     region: content
     settings:
       display_label: true
+    third_party_settings: {  }
+  translation:
+    weight: 7
+    region: content
+    settings: {  }
     third_party_settings: {  }
 hidden:
   description: true

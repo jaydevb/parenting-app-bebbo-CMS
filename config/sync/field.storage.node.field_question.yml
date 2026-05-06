@@ -1,20 +1,18 @@
-uuid: 3abf4752-4673-4883-bbc3-b83b984f432f
+uuid: 358c4c3f-78fe-4743-bd81-cd4aaf9f27a9
 langcode: en
 status: true
 dependencies:
   module:
-    - entity_reference_revisions
     - node
-    - paragraphs
 id: node.field_question
 field_name: field_question
 entity_type: node
-type: entity_reference_revisions
+type: string_long
 settings:
-  target_type: paragraph
-module: entity_reference_revisions
+  case_sensitive: false
+module: core
 locked: false
-cardinality: -1
+cardinality: 1
 translatable: true
 indexes: {  }
 persist_with_no_fields: false

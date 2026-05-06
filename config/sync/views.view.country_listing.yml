@@ -1674,7 +1674,7 @@ display:
               alias: country_email
               raw_output: false
             field_2_0_branding:
-              alias: ''
+              alias: all_logos
               raw_output: false
             field_language:
               alias: langcode

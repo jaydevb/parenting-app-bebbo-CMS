@@ -78,6 +78,10 @@ class CustomForm extends FormBase {
       '#required' => TRUE,
     ];
 
+    if (count($country_group) === 1) {
+      $form['country_select']['#default_value'] = key($country_group);
+    }
+
     // Replaces the old "Force Update Check" checkbox.
     $form['update_type'] = [
       '#type' => 'select',
@@ -99,26 +103,28 @@ class CustomForm extends FormBase {
       '#required' => TRUE,
     ];
 
-    // Google Play URL — only visible when Force App Update is selected.
     $form['google_play_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Google Play'),
+      '#description' => $this->t('Enter the new app store listing URL if a new app has been created.'),
       '#maxlength' => 512,
       '#states' => [
         'visible' => [
           ':input[name="update_type"]' => ['value' => 'app_update'],
+          ':input[name="flag"]' => ['value' => '1'],
         ],
       ],
     ];
 
-    // App Store URL — only visible when Force App Update is selected.
     $form['app_store_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('App Store'),
+      '#description' => $this->t('Enter the new app store listing URL if a new app has been created.'),
       '#maxlength' => 512,
       '#states' => [
         'visible' => [
           ':input[name="update_type"]' => ['value' => 'app_update'],
+          ':input[name="flag"]' => ['value' => '1'],
         ],
       ],
     ];

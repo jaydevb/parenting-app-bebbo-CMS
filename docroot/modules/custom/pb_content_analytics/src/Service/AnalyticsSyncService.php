@@ -154,12 +154,13 @@ class AnalyticsSyncService {
     $processed = 0;
     $updated = 0;
     $skipped = 0;
+    $updated_nids = [];
 
     foreach ($data as $nid_string => $item) {
       $nid = (int) $nid_string;
 
       // Map content type; skip unknown types.
-      $api_type = $item['content_type'] ?? '';
+      $api_type = $this->normalizeContentType($item['content_type'] ?? '');
       if (!isset(self::CONTENT_TYPE_MAP[$api_type])) {
         $skipped++;
         $processed++;
@@ -209,12 +210,19 @@ class AnalyticsSyncService {
       $this->updateNodeFieldTables($nid, (int) ($item['total_likes'] ?? 0), (int) ($item['total_reads'] ?? 0), $bq_updated);
 
       Cache::invalidateTags(['node:' . $nid]);
-
+      $updated_nids[] = $nid;
       $updated++;
       $processed++;
       if ($progressCallback) {
         ($progressCallback)([$processed, $total, $updated, $skipped]);
       }
+    }
+
+    // Invalidate Views listing caches and clear entity static cache so
+    // admin UI reflects updated values without a manual cache rebuild.
+    if ($updated_nids) {
+      Cache::invalidateTags(['node_list']);
+      $this->entityTypeManager->getStorage('node')->resetCache($updated_nids);
     }
 
     return [
@@ -291,6 +299,16 @@ class AnalyticsSyncService {
           ->execute();
       }
     }
+  }
+
+  /**
+   * Normalizes a content type string to lowercase machine name format.
+   */
+  private function normalizeContentType(string $value): string {
+    $value = trim($value);
+    $value = mb_strtolower($value);
+    $value = preg_replace('/\s+/', '_', $value);
+    return preg_replace('/[^a-z0-9_]/', '', $value);
   }
 
   /**
