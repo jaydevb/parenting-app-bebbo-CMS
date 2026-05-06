@@ -1,0 +1,31 @@
+uuid: 9e5d476c-a0e0-4573-ae0d-797d7c04947d
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.quiz_questions.field_answers
+    - field.field.node.quiz_questions.field_explanation
+    - field.field.node.quiz_questions.field_question
+    - field.field.node.quiz_questions.field_question_image
+    - field.field.node.quiz_questions.field_question_type
+    - node.type.quiz_questions
+  module:
+    - user
+id: node.quiz_questions.teaser
+targetEntityType: node
+bundle: quiz_questions
+mode: teaser
+content:
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_answers: true
+  field_explanation: true
+  field_question: true
+  field_question_image: true
+  field_question_type: true
+  langcode: true
