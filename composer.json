@@ -73,6 +73,7 @@
         "drupal/migrate_tools": "^6.1",
         "drupal/migrate_upgrade": "^4.0",
         "drupal/mobile_app_links": "^2.0",
+        "drupal/paragraphs": "^1.20",
         "drupal/pathauto": "^1.13",
         "drupal/quickedit": "^1.0",
         "drupal/rdf": "^2.1",
