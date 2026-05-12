@@ -100,7 +100,14 @@ class AnalyticsSyncController extends ControllerBase {
    */
   public static function batchProcessChunk(array $chunk, int $total, array &$context): void {
     if (empty($context['results'])) {
-      $context['results'] = ['processed' => 0, 'updated' => 0, 'skipped' => 0];
+      $context['results'] = [
+        'processed' => 0,
+        'updated' => 0,
+        'skipped' => 0,
+        'skipped_unknown_type' => 0,
+        'skipped_not_found' => 0,
+        'skipped_up_to_date' => 0,
+      ];
     }
 
     $sync_service = \Drupal::service('pb_content_analytics.sync_service');
@@ -109,6 +116,9 @@ class AnalyticsSyncController extends ControllerBase {
     $context['results']['processed'] += $stats['processed'];
     $context['results']['updated'] += $stats['updated'];
     $context['results']['skipped'] += $stats['skipped'];
+    $context['results']['skipped_unknown_type'] += $stats['skipped_unknown_type'];
+    $context['results']['skipped_not_found'] += $stats['skipped_not_found'];
+    $context['results']['skipped_up_to_date'] += $stats['skipped_up_to_date'];
 
     $context['message'] = t('Processing nodes… @processed / @total — updated: @updated, skipped: @skipped', [
       '@processed' => $context['results']['processed'],
@@ -133,10 +143,13 @@ class AnalyticsSyncController extends ControllerBase {
 
     if ($success) {
       $sync_service->logSyncResult($results, 'manual');
-      \Drupal::messenger()->addStatus(t('Sync complete. Processed: @p, Updated: @u, Skipped: @s.', [
+      \Drupal::messenger()->addStatus(t('Sync complete. Processed: @p, Updated: @u, Skipped: @s (unknown type: @ut, not found: @nf, up to date: @ud).', [
         '@p' => $results['processed'] ?? 0,
         '@u' => $results['updated'] ?? 0,
         '@s' => $results['skipped'] ?? 0,
+        '@ut' => $results['skipped_unknown_type'] ?? 0,
+        '@nf' => $results['skipped_not_found'] ?? 0,
+        '@ud' => $results['skipped_up_to_date'] ?? 0,
       ]));
     }
     else {
