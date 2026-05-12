@@ -12,7 +12,7 @@ type: list_string
 settings:
   allowed_values:
     -
-      value: chatbot
+      value: ai_chatbot
       label: 'AI Chatbot'
     -
       value: baby_size

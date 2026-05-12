@@ -360,7 +360,7 @@ class BebboSerializer extends Serializer {
     }
 
     foreach ($rows as &$row) {
-      $this->castToInt($row, ['id', 'prental_age']);
+      $this->castToInt($row, ['id', 'prental_age', 'licensed']);
       $this->castToNumber($row, ['average_height', 'average_weight']);
       $this->toIntArray($row, ['related_articles']);
 
@@ -392,7 +392,7 @@ class BebboSerializer extends Serializer {
     }
 
     foreach ($rows as &$row) {
-      $this->castToInt($row, ['id', 'child_age']);
+      $this->castToInt($row, ['id', 'child_age', 'licensed']);
       $this->toIntArray($row, ['related_articles', 'related_games']);
 
       // Remove related_articles when empty (display-specific rule).
@@ -452,7 +452,7 @@ class BebboSerializer extends Serializer {
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'activity_category', 'equipment',
-        'type_of_support', 'mandatory', 'read_count', 'like_count',
+        'type_of_support', 'mandatory', 'read_count', 'love_count',
       ]);
       $this->toIntArray($row, ['child_age', 'related_milestone']);
       $this->toStringArray($row, ['embedded_images']);
@@ -491,7 +491,7 @@ class BebboSerializer extends Serializer {
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'field_type_of_article', 'category', 'subcategory',
-        'child_gender', 'parent_gender', 'premature', 'read_count', 'like_count',
+        'child_gender', 'parent_gender', 'premature', 'read_count', 'love_count',
       ]);
       $this->toIntArray($row, [
         'child_age', 'keywords', 'related_articles', 'related_video_articles', 'target_audience',
@@ -530,7 +530,7 @@ class BebboSerializer extends Serializer {
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
-        'licensed', 'premature', 'mandatory', 'read_count', 'like_count',
+        'licensed', 'premature', 'mandatory', 'read_count', 'love_count',
       ]);
       $this->toIntArray($row, [
         'child_age', 'keywords', 'related_articles', 'related_video_articles', 'target_audience',
@@ -2014,7 +2014,7 @@ class BebboSerializer extends Serializer {
       $nid = (int) ($row['id'] ?? 0);
       $this->castToInt($row, [
         'id', 'course_duration',
-        'number_of_modules', 'final_assessment', 'read_count', 'like_count',
+        'number_of_modules', 'final_assessment', 'read_count', 'love_count', 'licensed',
       ]);
       $this->toIntArray($row, ['child_age', 'target_audience', 'course_category']);
       $this->castToBool($row, ['feedback_required', 'module_locked']);
@@ -2176,6 +2176,7 @@ class BebboSerializer extends Serializer {
       $this->castToInt($row, [
         'id', 'passing_score',
         'number_of_questions',
+        'licensed',
       ]);
       $this->decodeHtmlEntities($row, ['title']);
 

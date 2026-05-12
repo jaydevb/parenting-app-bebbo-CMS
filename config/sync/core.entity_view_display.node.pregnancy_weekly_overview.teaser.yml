@@ -10,6 +10,7 @@ dependencies:
     - field.field.node.pregnancy_weekly_overview.field_featured_image_2
     - field.field.node.pregnancy_weekly_overview.field_fruit
     - field.field.node.pregnancy_weekly_overview.field_fun_fact
+    - field.field.node.pregnancy_weekly_overview.field_licensed_content
     - field.field.node.pregnancy_weekly_overview.field_parental_week
     - field.field.node.pregnancy_weekly_overview.field_related_articles
     - node.type.pregnancy_weekly_overview
@@ -37,6 +38,7 @@ hidden:
   field_featured_image_2: true
   field_fruit: true
   field_fun_fact: true
+  field_licensed_content: true
   field_parental_week: true
   field_related_articles: true
   langcode: true

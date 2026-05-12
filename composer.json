@@ -238,6 +238,9 @@
             },
             "drupal/config_split": {
                 "Fix collection complete_list matching during export (language overrides going to config/sync instead of split dir)": "patches/config_split/fix-collection-complete-list-matching.patch"
+            },
+            "drupal/inline_entity_form": {
+                "Allow modules to override translation restriction on IEF add new": "patches/inline_entity_form/allow-new-on-translation.patch"
             }
         }
     },

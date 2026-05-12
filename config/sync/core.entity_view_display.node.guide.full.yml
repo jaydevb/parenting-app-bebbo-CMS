@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.full
     - field.field.node.guide.field_child_age_guide
+    - field.field.node.guide.field_licensed_content
     - field.field.node.guide.field_message
     - field.field.node.guide.field_related_articles
     - field.field.node.guide.field_related_games
@@ -21,6 +22,16 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: -20
+    region: content
+  field_licensed_content:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 112
     region: content
   field_message:
     type: text_default
