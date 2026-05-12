@@ -22,7 +22,7 @@ display:
     display_plugin: default
     position: 0
     display_options:
-      title: force-update-check
+      title: 'Force Update List'
       fields:
         id:
           id: id

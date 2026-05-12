@@ -7,11 +7,17 @@ dependencies:
     - node.type.article
     - node.type.child_development
     - node.type.child_growth
+    - node.type.course
+    - node.type.courses_module
     - node.type.daily_homescreen_messages
     - node.type.faq
+    - node.type.guide
     - node.type.health_check_ups
     - node.type.milestone
     - node.type.page
+    - node.type.pregnancy_weekly_overview
+    - node.type.quiz
+    - node.type.quiz_questions
     - node.type.survey
     - node.type.vaccinations
     - node.type.video_article
@@ -1464,16 +1470,20 @@ display:
           operator: in
           value:
             all: all
-            activities: activities
             article: article
             page: page
             child_development: child_development
             child_growth: child_growth
+            course: course
             daily_homescreen_messages: daily_homescreen_messages
             faq: faq
+            activities: activities
+            guide: guide
             health_check_ups: health_check_ups
-            milestone: milestone
             survey: survey
+            milestone: milestone
+            pregnancy_weekly_overview: pregnancy_weekly_overview
+            quiz: quiz
             vaccinations: vaccinations
             video_article: video_article
           group: 1
@@ -1499,6 +1509,7 @@ display:
               sme: '0'
               se: '0'
               administrator: '0'
+              translator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -2104,6 +2115,49 @@ display:
               sme: '0'
               se: '0'
               administrator: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        type_1:
+          id: type_1
+          table: node_field_data
+          field: type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          operator: 'not in'
+          value:
+            courses_module: courses_module
+            quiz_questions: quiz_questions
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
             reduce: false
           is_grouped: false
           group_info:
@@ -2717,16 +2771,20 @@ display:
           operator: in
           value:
             all: all
-            activities: activities
             article: article
             page: page
             child_development: child_development
             child_growth: child_growth
+            course: course
             daily_homescreen_messages: daily_homescreen_messages
             faq: faq
+            activities: activities
+            guide: guide
             health_check_ups: health_check_ups
-            milestone: milestone
             survey: survey
+            milestone: milestone
+            pregnancy_weekly_overview: pregnancy_weekly_overview
+            quiz: quiz
             vaccinations: vaccinations
             video_article: video_article
           group: 1
@@ -2752,6 +2810,7 @@ display:
               sme: '0'
               se: '0'
               administrator: '0'
+              translator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -3239,44 +3298,6 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
-        field_licensed_content_value:
-          id: field_licensed_content_value
-          table: node__field_licensed_content
-          field: field_licensed_content_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: boolean
-          operator: '!='
-          value: '1'
-          group: 1
-          exposed: false
-          expose:
-            operator_id: ''
-            label: ''
-            description: ''
-            use_operator: false
-            operator: ''
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: ''
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
         field_premature_content_value:
           id: field_premature_content_value
           table: node__field_premature_content
@@ -3357,6 +3378,95 @@ display:
               sme: '0'
               se: '0'
               administrator: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        field_licensed_content_value:
+          id: field_licensed_content_value
+          table: node__field_licensed_content
+          field: field_licensed_content_value
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: boolean
+          operator: '!='
+          value: All
+          group: 1
+          exposed: true
+          expose:
+            operator_id: ''
+            label: 'Licensed Content'
+            description: ''
+            use_operator: false
+            operator: field_licensed_content_value_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: field_licensed_content_value
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              global_admin: '0'
+              reviewer: '0'
+              editor: '0'
+              sme: '0'
+              se: '0'
+              administrator: '0'
+              translator: '0'
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        type_1:
+          id: type_1
+          table: node_field_data
+          field: type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          operator: 'not in'
+          value:
+            courses_module: courses_module
+            quiz_questions: quiz_questions
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
             reduce: false
           is_grouped: false
           group_info:

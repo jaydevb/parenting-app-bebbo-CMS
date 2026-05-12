@@ -1,11 +1,13 @@
-uuid: f1f7aee1-7f18-45fc-a0cd-251058f392fb
-langcode: en
+uuid: 725f98cb-81d7-49bd-b390-20efe3dfca67
+langcode: by-ru
 status: true
 dependencies:
   config:
     - field.storage.node.field_description
+    - filter.format.full_html
     - node.type.course
   module:
+    - text
     - tmgmt_content
 third_party_settings:
   tmgmt_content:
@@ -20,5 +22,7 @@ required: false
 translatable: true
 default_value: {  }
 default_value_callback: ''
-settings: {  }
-field_type: string_long
+settings:
+  allowed_formats:
+    - full_html
+field_type: text_long

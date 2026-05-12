@@ -8,6 +8,7 @@ dependencies:
     - field.field.node.course.field_analytics_updated
     - field.field.node.course.field_certificate
     - field.field.node.course.field_child_age
+    - field.field.node.course.field_commentsand_references
     - field.field.node.course.field_course_category
     - field.field.node.course.field_course_duration
     - field.field.node.course.field_course_expiry
@@ -18,12 +19,12 @@ dependencies:
     - field.field.node.course.field_feedback_question
     - field.field.node.course.field_feedback_required
     - field.field.node.course.field_final_assessment
+    - field.field.node.course.field_licensed_content
     - field.field.node.course.field_like_count
     - field.field.node.course.field_module_numbering_style
     - field.field.node.course.field_modules_unlock
     - field.field.node.course.field_number_of_modules
     - field.field.node.course.field_read_count
-    - field.field.node.course.field_reference
     - field.field.node.course.field_target_audience
     - node.type.course
   module:
@@ -107,13 +108,6 @@ content:
     third_party_settings: {  }
     weight: 2
     region: content
-  field_description:
-    type: basic_string
-    label: above
-    settings: {  }
-    third_party_settings: {  }
-    weight: 9
-    region: content
   field_feedback_question:
     type: string
     label: above
@@ -139,6 +133,16 @@ content:
       link: true
     third_party_settings: {  }
     weight: 13
+    region: content
+  field_licensed_content:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 112
     region: content
   field_module_numbering_style:
     type: list_default
@@ -166,14 +170,6 @@ content:
     third_party_settings: {  }
     weight: 16
     region: content
-  field_reference:
-    type: string
-    label: above
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    weight: 17
-    region: content
   field_target_audience:
     type: entity_reference_label
     label: above
@@ -190,6 +186,8 @@ content:
 hidden:
   feeds_item: true
   field_analytics_updated: true
+  field_commentsand_references: true
+  field_description: true
   field_like_count: true
   field_read_count: true
   langcode: true

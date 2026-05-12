@@ -9,6 +9,7 @@ dependencies:
     - field.field.node.pregnancy_weekly_overview.field_featured_image_2
     - field.field.node.pregnancy_weekly_overview.field_fruit
     - field.field.node.pregnancy_weekly_overview.field_fun_fact
+    - field.field.node.pregnancy_weekly_overview.field_licensed_content
     - field.field.node.pregnancy_weekly_overview.field_parental_week
     - field.field.node.pregnancy_weekly_overview.field_related_articles
     - node.type.pregnancy_weekly_overview
@@ -80,6 +81,16 @@ content:
       link_to_entity: false
     third_party_settings: {  }
     weight: 106
+    region: content
+  field_licensed_content:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 10
     region: content
   field_parental_week:
     type: list_default

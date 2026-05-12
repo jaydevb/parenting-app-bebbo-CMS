@@ -8,7 +8,7 @@ dependencies:
     - node.type.article
   module:
     - node
-label: 'Content Analytics Import'
+label: 'Content Analytics Import - Articles'
 id: content_analytics_import
 description: 'Import like and read counts for content nodes via CSV upload.'
 help: 'Upload a CSV with columns: node_id, like_count, read_count'

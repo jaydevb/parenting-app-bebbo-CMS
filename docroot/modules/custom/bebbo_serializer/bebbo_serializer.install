@@ -72,3 +72,77 @@ function bebbo_serializer_update_10002(): string {
 
   return "Updated $total field_content_toggle rows from 'ai_chatbot' to 'chatbot'.";
 }
+
+/**
+ * Set definitive content_toggle allowed values and migrate DB data.
+ */
+function bebbo_serializer_update_10003(): string {
+  $database = \Drupal::database();
+  $messages = [];
+
+  // Old value => new value. Only entries that changed.
+  $key_map = [
+    'chatbot' => 'ai_chatbot',
+    'Chatbot' => 'ai_chatbot',
+    "Child's Growth" => 'childs_growth',
+    'Health Check-up' => 'health_check_up',
+    'Vaccination' => 'vaccination',
+    'Pregnancy' => 'pregnancy',
+    'Baby Size' => 'baby_size',
+    'Guide' => 'guide',
+    'Learning' => 'learning',
+    'FAQs' => 'faqs',
+  ];
+
+  $tables = [
+    'group__field_content_toggle',
+    'group_revision__field_content_toggle',
+  ];
+
+  foreach ($tables as $table) {
+    if (!$database->schema()->tableExists($table)) {
+      continue;
+    }
+    foreach ($key_map as $old_value => $new_value) {
+      $updated = $database->update($table)
+        ->fields(['field_content_toggle_value' => $new_value])
+        ->condition('field_content_toggle_value', $old_value)
+        ->execute();
+      if ($updated > 0) {
+        $messages[] = "$table: '$old_value' -> '$new_value' ($updated rows)";
+      }
+    }
+
+    // Remove any values not in the canonical list.
+    $valid_values = [
+      'ai_chatbot', 'childs_growth', 'health_check_up', 'vaccination',
+      'pregnancy', 'baby_size', 'guide', 'learning', 'faqs',
+    ];
+    $deleted = $database->delete($table)
+      ->condition('field_content_toggle_value', $valid_values, 'NOT IN')
+      ->execute();
+    if ($deleted > 0) {
+      $messages[] = "$table: removed $deleted rows with invalid values";
+    }
+  }
+
+  // Set the canonical allowed values on the field storage config.
+  $allowed_values = [
+    ['value' => 'ai_chatbot', 'label' => 'AI Chatbot'],
+    ['value' => 'baby_size', 'label' => 'Baby Size'],
+    ['value' => 'childs_growth', 'label' => "Child's Growth"],
+    ['value' => 'faqs', 'label' => 'FAQs'],
+    ['value' => 'guide', 'label' => 'Guide'],
+    ['value' => 'health_check_up', 'label' => 'Health Check-up'],
+    ['value' => 'learning', 'label' => 'Learning'],
+    ['value' => 'pregnancy', 'label' => 'Pregnancy'],
+    ['value' => 'vaccination', 'label' => 'Vaccination'],
+  ];
+
+  $config = \Drupal::configFactory()->getEditable('field.storage.group.field_content_toggle');
+  $config->set('settings.allowed_values', $allowed_values);
+  $config->save();
+  $messages[] = 'Set canonical allowed_values on field.storage.group.field_content_toggle';
+
+  return implode('; ', $messages) ?: 'No changes needed.';
+}
