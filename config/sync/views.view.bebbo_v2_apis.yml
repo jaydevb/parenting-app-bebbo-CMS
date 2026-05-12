@@ -22,6 +22,7 @@ dependencies:
     - field.storage.node.field_course_link
     - field.storage.node.field_cover_image
     - field.storage.node.field_cover_video
+    - field.storage.node.field_description
     - field.storage.node.field_do_not_feature
     - field.storage.node.field_embedded_images
     - field.storage.node.field_equipment
@@ -2422,7 +2423,7 @@ display:
               alias: cover_image
               raw_output: false
             field_like_count:
-              alias: like_count
+              alias: love_count
               raw_output: false
             field_read_count:
               alias: read_count
@@ -3867,7 +3868,7 @@ display:
           admin_label: ''
           plugin_id: field
           label: ''
-          exclude: false
+          exclude: true
           alter:
             alter_text: false
             text: ''
@@ -3920,6 +3921,58 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        view:
+          id: view
+          table: views
+          field: view
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: view
+          label: 'Cover Image'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: '0'
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: '0'
+          element_wrapper_class: ''
+          element_default_classes: false
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          view: media_details
+          display: block_1
+          arguments: '{{ raw_fields.field_cover_image }}'
         field_related_articles:
           id: field_related_articles
           table: node__field_related_articles
@@ -4892,8 +4945,8 @@ display:
             field_meta_keywords:
               alias: meta_keywords
               raw_output: false
-            field_cover_image:
-              alias: cover_image_mid
+            view:
+              alias: cover_image
               raw_output: false
             field_related_articles:
               alias: related_articles
@@ -4911,7 +4964,7 @@ display:
               alias: embedded_images
               raw_output: false
             field_like_count:
-              alias: like_count
+              alias: love_count
               raw_output: false
             field_read_count:
               alias: read_count
@@ -10537,6 +10590,68 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        field_description:
+          id: field_description
+          table: node__field_description
+          field: field_description
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: ''
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: text_default
+          settings: {  }
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         field_course_category:
           id: field_course_category
           table: node__field_course_category
@@ -11800,6 +11915,9 @@ display:
             changed:
               alias: updated_at
               raw_output: false
+            field_description:
+              alias: course_description
+              raw_output: false
             field_course_category:
               alias: course_category
               raw_output: false
@@ -11843,7 +11961,7 @@ display:
               alias: feedback_question
               raw_output: true
             field_like_count:
-              alias: like_count
+              alias: love_count
               raw_output: false
             field_read_count:
               alias: read_count
@@ -11889,6 +12007,7 @@ display:
         - 'config:field.storage.node.field_course_expiry'
         - 'config:field.storage.node.field_course_link'
         - 'config:field.storage.node.field_cover_image'
+        - 'config:field.storage.node.field_description'
         - 'config:field.storage.node.field_feedback_question'
         - 'config:field.storage.node.field_feedback_required'
         - 'config:field.storage.node.field_final_assessment'
@@ -20258,7 +20377,7 @@ display:
               alias: cover_image
               raw_output: false
             field_like_count:
-              alias: like_count
+              alias: love_count
               raw_output: false
             field_read_count:
               alias: read_count

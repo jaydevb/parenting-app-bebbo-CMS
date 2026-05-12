@@ -27,7 +27,7 @@ processor_configuration:
     vid: strings
   langcode: ru
   insert_new: 1
-  update_existing: 0
+  update_existing: 2
   update_non_existent: _keep
   skip_hash_check: false
   skip_validation: false
@@ -55,7 +55,8 @@ mappings:
       value: unique_name
     settings:
       language: en
-    unique: {  }
+    unique:
+      value: 1
   -
     target: name
     map:

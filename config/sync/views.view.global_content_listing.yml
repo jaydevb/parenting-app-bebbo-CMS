@@ -3425,18 +3425,26 @@ display:
               se: '0'
               administrator: '0'
               translator: '0'
-          is_grouped: false
+          is_grouped: true
           group_info:
-            label: ''
+            label: 'Licensed Content (field_licensed_content)'
             description: ''
-            identifier: ''
+            identifier: field_licensed_content_value
             optional: true
             widget: select
             multiple: false
             remember: false
             default_group: All
             default_group_multiple: {  }
-            group_items: {  }
+            group_items:
+              1:
+                title: 'On'
+                operator: '='
+                value: '1'
+              2:
+                title: 'Off'
+                operator: '='
+                value: '0'
         type_1:
           id: type_1
           table: node_field_data

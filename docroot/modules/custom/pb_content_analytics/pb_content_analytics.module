@@ -54,10 +54,13 @@ function pb_content_analytics_cron(): void {
     $logger->info('Cron: fetched @count records from BigQuery.', ['@count' => count($data)]);
     $stats = $sync_service->processBatch($data);
     $sync_service->logSyncResult($stats, 'cron');
-    $logger->info('Cron: sync complete — @processed processed, @updated updated, @skipped skipped.', [
+    $logger->info('Cron: sync complete — processed: @processed, updated: @updated, skipped: @skipped (unknown type: @ut, not found: @nf, up to date: @ud).', [
       '@processed' => $stats['processed'],
       '@updated' => $stats['updated'],
       '@skipped' => $stats['skipped'],
+      '@ut' => $stats['skipped_unknown_type'],
+      '@nf' => $stats['skipped_not_found'],
+      '@ud' => $stats['skipped_up_to_date'],
     ]);
   }
   catch (\RuntimeException $e) {
