@@ -470,12 +470,11 @@ class BebboSerializer extends Serializer {
   /**
    * Transforms rows for the articles REST export display.
    *
-   * Batch-loads cover_image media to {url, name, alt} with the
-   * content_1200xh_ image style and WebP conversion. Casts numeric fields,
-   * converts multi-value references to int arrays, normalizes
-   * field_embedded_images (pre-computed by the view) to a string array, and
-   * cleans body/summary HTML (absolutises src paths, strips presentation
-   * markup, decodes entities) without DOMDocument parsing.
+   * Collects cover_image media IDs from all rows and batch-resolves them
+   * via resolveMediaIds() (single loadMultiple + image style URL generation)
+   * instead of per-row sub-view execution. Casts numeric fields, converts
+   * multi-value references to int arrays, normalizes field_embedded_images
+   * to a string array, and decodes HTML entities in titles.
    *
    * @param array $rows
    *   Raw rows from the view.
@@ -488,6 +487,16 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
+    $mediaIds = [];
+    foreach ($rows as $row) {
+      $mid = (int) ($row['cover_image_mid'] ?? 0);
+      if ($mid > 0) {
+        $mediaIds[] = $mid;
+      }
+    }
+    $resolvedMedia = $this->resolveMediaIds($mediaIds);
+    $emptyMedia = ['url' => '', 'name' => '', 'alt' => ''];
+
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'field_type_of_article', 'category', 'subcategory',
@@ -499,9 +508,9 @@ class BebboSerializer extends Serializer {
       $this->toStringArray($row, ['embedded_images']);
       $this->decodeHtmlEntities($row, ['title']);
 
-      // Parse view → cover_image ({url, name, alt}) from the embedded
-      // media_details view (media_image_rest_export display) JSON output.
-      $row['cover_image'] = $this->parseViewCoverImage($row['cover_image'] ?? NULL);
+      $mid = (int) ($row['cover_image_mid'] ?? 0);
+      $row['cover_image'] = $resolvedMedia[$mid] ?? $emptyMedia;
+      unset($row['cover_image_mid']);
     }
     unset($row);
 

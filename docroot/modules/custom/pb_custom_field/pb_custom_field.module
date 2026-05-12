@@ -26,6 +26,7 @@ use Drupal\Core\Database\Database;
 use Drupal\media\Entity\Media;
 use Drupal\file\Entity\File;
 use Drupal\Core\Access\AccessResult;
+use Drupal\taxonomy\TermForm;
 
 /**
  * Get target roles for cross-country editing.
@@ -792,6 +793,14 @@ function pb_custom_field_form_alter(array &$form, FormStateInterface $form_state
           $form['submit']['#access'] = FALSE;
         }
       }
+    }
+  }
+
+  $form_object = $form_state->getFormObject();
+  if ($form_object instanceof TermForm) {
+    $langcode = $form_state->get('langcode');
+    if ($langcode !== 'en' && isset($form['field_unique_name'])) {
+      $form['field_unique_name']['#disabled'] = TRUE;
     }
   }
 }
