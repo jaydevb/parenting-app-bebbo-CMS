@@ -88,14 +88,29 @@ class ContentAnalyticsSyncForm extends FormBase {
         ];
       }
 
+      $counts_markup = $this->t('Processed: @processed, Updated: @updated, Skipped: @skipped', [
+        '@processed' => $last['nodes_processed'],
+        '@updated' => $last['nodes_updated'],
+        '@skipped' => $last['nodes_skipped'],
+      ]);
+
+      $skipped_total = (int) $last['nodes_skipped'];
+      if ($skipped_total > 0) {
+        $counts_markup .= '<br/>&nbsp;&nbsp;— ' . $this->t('Unknown content type: @ut', [
+          '@ut' => $last['skipped_unknown_type'] ?? 0,
+        ]);
+        $counts_markup .= '<br/>&nbsp;&nbsp;— ' . $this->t('Node not found / bundle mismatch: @nf', [
+          '@nf' => $last['skipped_not_found'] ?? 0,
+        ]);
+        $counts_markup .= '<br/>&nbsp;&nbsp;— ' . $this->t('Already up to date: @ud', [
+          '@ud' => $last['skipped_up_to_date'] ?? 0,
+        ]);
+      }
+
       $form['last_sync_counts'] = [
         '#type' => 'item',
-        '#title' => $this->t('Nodes processed / updated / skipped'),
-        '#markup' => $this->t('@processed / @updated / @skipped', [
-          '@processed' => $last['nodes_processed'],
-          '@updated' => $last['nodes_updated'],
-          '@skipped' => $last['nodes_skipped'],
-        ]),
+        '#title' => $this->t('Sync summary'),
+        '#markup' => $counts_markup,
       ];
     }
     else {

@@ -154,15 +154,23 @@ class AnalyticsSyncService {
     $processed = 0;
     $updated = 0;
     $skipped = 0;
+    $skipped_unknown_type = 0;
+    $skipped_not_found = 0;
+    $skipped_up_to_date = 0;
     $updated_nids = [];
 
     foreach ($data as $nid_string => $item) {
       $nid = (int) $nid_string;
+      $raw_type = $item['content_type'] ?? '';
 
-      // Map content type; skip unknown types.
-      $api_type = $this->normalizeContentType($item['content_type'] ?? '');
+      $api_type = $this->normalizeContentType($raw_type);
       if (!isset(self::CONTENT_TYPE_MAP[$api_type])) {
+        $this->logger->warning('Node @nid skipped: unknown content type "@type".', [
+          '@nid' => $nid,
+          '@type' => $raw_type,
+        ]);
         $skipped++;
+        $skipped_unknown_type++;
         $processed++;
         if ($progressCallback) {
           ($progressCallback)([$processed, $total, $updated, $skipped]);
@@ -171,7 +179,6 @@ class AnalyticsSyncService {
       }
       $bundle = self::CONTENT_TYPE_MAP[$api_type];
 
-      // Verify nid exists with the expected bundle.
       $exists = $this->database->select('node', 'n')
         ->fields('n', ['nid'])
         ->condition('n.nid', $nid)
@@ -180,7 +187,12 @@ class AnalyticsSyncService {
         ->fetchField();
 
       if (!$exists) {
+        $this->logger->warning('Node @nid skipped: not found in Drupal or bundle mismatch (expected "@bundle").', [
+          '@nid' => $nid,
+          '@bundle' => $bundle,
+        ]);
         $skipped++;
+        $skipped_not_found++;
         $processed++;
         if ($progressCallback) {
           ($progressCallback)([$processed, $total, $updated, $skipped]);
@@ -188,7 +200,6 @@ class AnalyticsSyncService {
         continue;
       }
 
-      // Skip if BigQuery data is not newer than stored value.
       $stored_updated = $this->database->select('node__field_analytics_updated', 'au')
         ->fields('au', ['field_analytics_updated_value'])
         ->condition('au.entity_id', $nid)
@@ -198,7 +209,11 @@ class AnalyticsSyncService {
       $bq_updated = $item['last_updated'] ?? '';
       $bq_ts = $bq_updated ? (int) strtotime($bq_updated) : 0;
       if ($stored_updated && $bq_ts <= (int) $stored_updated) {
+        $this->logger->info('Node @nid skipped: already up to date.', [
+          '@nid' => $nid,
+        ]);
         $skipped++;
+        $skipped_up_to_date++;
         $processed++;
         if ($progressCallback) {
           ($progressCallback)([$processed, $total, $updated, $skipped]);
@@ -206,8 +221,15 @@ class AnalyticsSyncService {
         continue;
       }
 
-      // Direct DB update on field tables.
-      $this->updateNodeFieldTables($nid, (int) ($item['total_likes'] ?? 0), (int) ($item['total_reads'] ?? 0), $bq_updated);
+      $likes = (int) ($item['total_likes'] ?? 0);
+      $reads = (int) ($item['total_reads'] ?? 0);
+      $this->updateNodeFieldTables($nid, $likes, $reads, $bq_updated);
+
+      $this->logger->info('Node @nid updated: likes=@likes, reads=@reads.', [
+        '@nid' => $nid,
+        '@likes' => $likes,
+        '@reads' => $reads,
+      ]);
 
       Cache::invalidateTags(['node:' . $nid]);
       $updated_nids[] = $nid;
@@ -218,8 +240,6 @@ class AnalyticsSyncService {
       }
     }
 
-    // Invalidate Views listing caches and clear entity static cache so
-    // admin UI reflects updated values without a manual cache rebuild.
     if ($updated_nids) {
       Cache::invalidateTags(['node_list']);
       $this->entityTypeManager->getStorage('node')->resetCache($updated_nids);
@@ -229,6 +249,9 @@ class AnalyticsSyncService {
       'processed' => $processed,
       'updated' => $updated,
       'skipped' => $skipped,
+      'skipped_unknown_type' => $skipped_unknown_type,
+      'skipped_not_found' => $skipped_not_found,
+      'skipped_up_to_date' => $skipped_up_to_date,
     ];
   }
 
@@ -323,6 +346,62 @@ class AnalyticsSyncService {
   }
 
   /**
+   * Builds a human-readable summary of a sync run.
+   *
+   * @param array<string, int> $stats
+   *   Sync counts.
+   * @param string|null $error
+   *   Error message if sync failed.
+   *
+   * @return string
+   *   Summary message.
+   */
+  private function buildSyncMessage(array $stats, ?string $error): string {
+    if ($error) {
+      return 'Sync failed: ' . $error;
+    }
+
+    $processed = $stats['processed'] ?? 0;
+    $updated = $stats['updated'] ?? 0;
+    $skipped = $stats['skipped'] ?? 0;
+
+    if ($processed === 0) {
+      return 'No records received from BigQuery.';
+    }
+
+    $parts = [];
+    $parts[] = sprintf('Processed %d nodes.', $processed);
+
+    if ($updated > 0) {
+      $parts[] = sprintf('Updated %d (likes and reads synced).', $updated);
+    }
+    else {
+      $parts[] = 'No nodes updated.';
+    }
+
+    if ($skipped > 0) {
+      $reasons = [];
+      $ut = $stats['skipped_unknown_type'] ?? 0;
+      $nf = $stats['skipped_not_found'] ?? 0;
+      $ud = $stats['skipped_up_to_date'] ?? 0;
+
+      if ($ut > 0) {
+        $reasons[] = sprintf('%d unknown content type', $ut);
+      }
+      if ($nf > 0) {
+        $reasons[] = sprintf('%d not found or bundle mismatch', $nf);
+      }
+      if ($ud > 0) {
+        $reasons[] = sprintf('%d already up to date', $ud);
+      }
+
+      $parts[] = sprintf('Skipped %d: %s.', $skipped, implode(', ', $reasons) ?: 'no breakdown available');
+    }
+
+    return implode(' ', $parts);
+  }
+
+  /**
    * Logs a sync result row and prunes to the 30 most recent rows.
    *
    * @param array{processed: int, updated: int, skipped: int} $stats
@@ -333,6 +412,8 @@ class AnalyticsSyncService {
    *   Error message if sync failed.
    */
   public function logSyncResult(array $stats, string $triggered_by, ?string $error = NULL): void {
+    $message = $this->buildSyncMessage($stats, $error);
+
     $this->database->insert('pb_analytics_sync_log')
       ->fields([
         'sync_time' => date('c'),
@@ -342,6 +423,10 @@ class AnalyticsSyncService {
         'nodes_skipped' => $stats['skipped'] ?? 0,
         'error_message' => $error,
         'triggered_by' => $triggered_by,
+        'skipped_unknown_type' => $stats['skipped_unknown_type'] ?? 0,
+        'skipped_not_found' => $stats['skipped_not_found'] ?? 0,
+        'skipped_up_to_date' => $stats['skipped_up_to_date'] ?? 0,
+        'message' => $message,
       ])
       ->execute();
 

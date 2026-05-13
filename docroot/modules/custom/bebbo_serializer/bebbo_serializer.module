@@ -9,6 +9,7 @@ use Drupal\node\NodeInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Datetime\DrupalDateTime;
@@ -60,14 +61,21 @@ function bebbo_serializer_views_query_alter(ViewExecutable $view, QueryPluginBas
     return;
   }
 
-  $terms = \Drupal::entityTypeManager()
-    ->getStorage('taxonomy_term')
-    ->loadByProperties(['name' => 'Pregnancy', 'vid' => 'child_age']);
-  if (empty($terms)) {
-    return;
+  $cid = 'bebbo_serializer:pregnancy_tid';
+  $cache = \Drupal::cache()->get($cid);
+  if ($cache) {
+    $pregnancy_tid = (string) $cache->data;
   }
-
-  $pregnancy_tid = (string) reset($terms)->id();
+  else {
+    $terms = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadByProperties(['name' => 'Pregnancy', 'vid' => 'child_age']);
+    if (empty($terms)) {
+      return;
+    }
+    $pregnancy_tid = (string) reset($terms)->id();
+    \Drupal::cache()->set($cid, $pregnancy_tid, -1, ['taxonomy_term_list']);
+  }
 
   // Traverse the query's WHERE conditions to find the child_age filter
   // and add the Pregnancy TID to its IN() list.
@@ -318,7 +326,44 @@ function bebbo_serializer_form_alter(array &$form, FormStateInterface $form_stat
     $form['#attached']['drupalSettings']['bebboQuizType'] = [
       'singleQuestionValue' => 'single_question_quiz',
     ];
-    _bebbo_serializer_rename_ief_buttons($form, 'field_quiz_questions', t('Question'));
+    _bebbo_serializer_rename_ief_buttons($form, 'field_quiz_questions', t('quiz question'));
+  }
+}
+
+/**
+ * Implements hook_inline_entity_form_translation_restrict_alter().
+ *
+ * Allows adding new course modules on translation forms.
+ */
+function bebbo_serializer_inline_entity_form_translation_restrict_alter(bool &$restrict, array $element, FieldDefinitionInterface $field_definition): void {
+  if ($field_definition->getName() === 'field_course_modules') {
+    $restrict = FALSE;
+  }
+}
+
+/**
+ * Implements hook_inline_entity_form_entity_form_alter().
+ *
+ * Renames "Add another item" to "Add another answer" on quiz question forms.
+ */
+function bebbo_serializer_inline_entity_form_entity_form_alter(array &$entity_form, FormStateInterface &$form_state): void {
+  if (($entity_form['#bundle'] ?? '') !== 'quiz_questions') {
+    return;
+  }
+  if (!isset($entity_form['field_answers']['widget']['add_more'])) {
+    return;
+  }
+  $add_more = &$entity_form['field_answers']['widget']['add_more'];
+  // Simple button.
+  if (isset($add_more['#value'])) {
+    $add_more['#value'] = t('Add another answer');
+    return;
+  }
+  // Drupal 10.2+ wraps add_more in a container.
+  foreach (Element::children($add_more) as $key) {
+    if (isset($add_more[$key]['#value'])) {
+      $add_more[$key]['#value'] = t('Add another answer');
+    }
   }
 }
 
@@ -338,20 +383,18 @@ function _bebbo_serializer_rename_ief_buttons(array &$form, string $field_name, 
   }
   $widget = &$form[$field_name]['widget'];
 
-  // Rename "Add new node" → "Add new {label}".
   foreach (Element::children($widget) as $key) {
     if (isset($widget[$key]['actions']['ief_add'])) {
-      $widget[$key]['actions']['ief_add']['#value'] = t('Add new @label', ['@label' => $label]);
+      $widget[$key]['actions']['ief_add']['#value'] = t('Add @label', ['@label' => $label]);
     }
-    // Rename "Create node" → "Create @label" in open add forms.
     if (isset($widget[$key]['form']['inline_entity_form']['actions']['ief_add_save'])) {
-      $widget[$key]['form']['inline_entity_form']['actions']['ief_add_save']['#value'] = t('Create @label', ['@label' => $label]);
+      $widget[$key]['form']['inline_entity_form']['actions']['ief_add_save']['#value'] = t('Add @label', ['@label' => $label]);
     }
   }
 
   // Also check top-level actions (varies by IEF version).
   if (isset($widget['actions']['ief_add'])) {
-    $widget['actions']['ief_add']['#value'] = t('Add new @label', ['@label' => $label]);
+    $widget['actions']['ief_add']['#value'] = t('Add @label', ['@label' => $label]);
   }
 }
 

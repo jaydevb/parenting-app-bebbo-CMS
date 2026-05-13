@@ -2,6 +2,7 @@
 
 namespace Drupal\bebbo_serializer\Plugin\views\style;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\file\FileInterface;
 use Drupal\Core\Database\Query\SelectInterface;
@@ -163,13 +164,18 @@ class BebboSerializer extends Serializer {
       }
     }
 
+    // ETag pre-check: skip expensive rendering when data is unchanged.
+    $etagResponse = $this->checkEtag($displayId);
+    if ($etagResponse !== NULL) {
+      return $etagResponse;
+    }
+
     // Collect rows via the parent row plugin.
     $rows = [];
     foreach ($this->view->result as $rowIndex => $row) {
       $this->view->row_index = $rowIndex;
       $rendered = $this->view->rowPlugin->render($row);
-      // Normalise Drupal Markup objects → plain PHP values.
-      $rows[] = json_decode(json_encode($rendered), TRUE);
+      $rows[] = $this->normalizeMarkup($rendered);
     }
     unset($this->view->row_index);
 
@@ -360,7 +366,7 @@ class BebboSerializer extends Serializer {
     }
 
     foreach ($rows as &$row) {
-      $this->castToInt($row, ['id', 'prental_age']);
+      $this->castToInt($row, ['id', 'prental_age', 'licensed']);
       $this->castToNumber($row, ['average_height', 'average_weight']);
       $this->toIntArray($row, ['related_articles']);
 
@@ -392,7 +398,7 @@ class BebboSerializer extends Serializer {
     }
 
     foreach ($rows as &$row) {
-      $this->castToInt($row, ['id', 'child_age']);
+      $this->castToInt($row, ['id', 'child_age', 'licensed']);
       $this->toIntArray($row, ['related_articles', 'related_games']);
 
       // Remove related_articles when empty (display-specific rule).
@@ -452,7 +458,7 @@ class BebboSerializer extends Serializer {
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'activity_category', 'equipment',
-        'type_of_support', 'mandatory', 'read_count', 'like_count',
+        'type_of_support', 'mandatory', 'read_count', 'love_count',
       ]);
       $this->toIntArray($row, ['child_age', 'related_milestone']);
       $this->toStringArray($row, ['embedded_images']);
@@ -470,12 +476,11 @@ class BebboSerializer extends Serializer {
   /**
    * Transforms rows for the articles REST export display.
    *
-   * Batch-loads cover_image media to {url, name, alt} with the
-   * content_1200xh_ image style and WebP conversion. Casts numeric fields,
-   * converts multi-value references to int arrays, normalizes
-   * field_embedded_images (pre-computed by the view) to a string array, and
-   * cleans body/summary HTML (absolutises src paths, strips presentation
-   * markup, decodes entities) without DOMDocument parsing.
+   * Collects cover_image media IDs from all rows and batch-resolves them
+   * via resolveMediaIds() (single loadMultiple + image style URL generation)
+   * instead of per-row sub-view execution. Casts numeric fields, converts
+   * multi-value references to int arrays, normalizes field_embedded_images
+   * to a string array, and decodes HTML entities in titles.
    *
    * @param array $rows
    *   Raw rows from the view.
@@ -488,10 +493,13 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
+    $request = $this->requestStack->getCurrentRequest();
+    $emptyMedia = ['url' => '', 'name' => '', 'alt' => ''];
+
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'field_type_of_article', 'category', 'subcategory',
-        'child_gender', 'parent_gender', 'premature', 'read_count', 'like_count',
+        'child_gender', 'parent_gender', 'premature', 'read_count', 'love_count',
       ]);
       $this->toIntArray($row, [
         'child_age', 'keywords', 'related_articles', 'related_video_articles', 'target_audience',
@@ -499,9 +507,25 @@ class BebboSerializer extends Serializer {
       $this->toStringArray($row, ['embedded_images']);
       $this->decodeHtmlEntities($row, ['title']);
 
-      // Parse view → cover_image ({url, name, alt}) from the embedded
-      // media_details view (media_image_rest_export display) JSON output.
-      $row['cover_image'] = $this->parseViewCoverImage($row['cover_image'] ?? NULL);
+      $mid = (int) ($row['cover_image_mid'] ?? 0);
+      $url = (string) ($row['cover_image_url'] ?? '');
+
+      if ($url !== '') {
+        $url = preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp$2', $url) ?? $url;
+        if (!str_starts_with($url, 'http') && $request !== NULL) {
+          $url = $request->getSchemeAndHttpHost() . $url;
+        }
+      }
+
+      $row['cover_image'] = $mid > 0
+        ? [
+          'url' => $url,
+          'name' => (string) ($row['cover_image_name'] ?? ''),
+          'alt' => (string) ($row['cover_image_alt'] ?? ''),
+        ]
+        : $emptyMedia;
+
+      unset($row['cover_image_mid'], $row['cover_image_url'], $row['cover_image_name'], $row['cover_image_alt']);
     }
     unset($row);
 
@@ -530,7 +554,7 @@ class BebboSerializer extends Serializer {
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
-        'licensed', 'premature', 'mandatory', 'read_count', 'like_count',
+        'licensed', 'premature', 'mandatory', 'read_count', 'love_count',
       ]);
       $this->toIntArray($row, [
         'child_age', 'keywords', 'related_articles', 'related_video_articles', 'target_audience',
@@ -2014,7 +2038,7 @@ class BebboSerializer extends Serializer {
       $nid = (int) ($row['id'] ?? 0);
       $this->castToInt($row, [
         'id', 'course_duration',
-        'number_of_modules', 'final_assessment', 'read_count', 'like_count',
+        'number_of_modules', 'final_assessment', 'read_count', 'love_count', 'licensed',
       ]);
       $this->toIntArray($row, ['child_age', 'target_audience', 'course_category']);
       $this->castToBool($row, ['feedback_required', 'module_locked']);
@@ -2176,6 +2200,7 @@ class BebboSerializer extends Serializer {
       $this->castToInt($row, [
         'id', 'passing_score',
         'number_of_questions',
+        'licensed',
       ]);
       $this->decodeHtmlEntities($row, ['title']);
 
@@ -2565,6 +2590,78 @@ class BebboSerializer extends Serializer {
       return $this->displayHandler->getContentType();
     }
     return !empty($this->options['formats']) ? reset($this->options['formats']) : 'json';
+  }
+
+  /**
+   * Converts MarkupInterface objects to plain strings recursively.
+   *
+   * @param mixed $value
+   *   A value, array, or MarkupInterface object.
+   *
+   * @return mixed
+   *   The value with all MarkupInterface objects cast to strings.
+   */
+  private function normalizeMarkup(mixed $value): mixed {
+    if ($value instanceof MarkupInterface) {
+      return (string) $value;
+    }
+    if (is_array($value)) {
+      return array_map([$this, 'normalizeMarkup'], $value);
+    }
+    return $value;
+  }
+
+  /**
+   * Checks ETag and returns early if data is unchanged.
+   *
+   * Runs a lightweight SQL query (MAX changed + COUNT) to build a data
+   * fingerprint. If the client sends a matching If-None-Match header,
+   * stores a flag on the request for the response subscriber to convert
+   * to 304. Returns a minimal empty string to skip all rendering.
+   *
+   * @param string $displayId
+   *   The active view display ID.
+   *
+   * @return string|null
+   *   Empty string if ETag matches (304 will be sent), NULL to proceed.
+   */
+  private function checkEtag(string $displayId): ?string {
+    $bundleMap = [
+      'articles_rest_export' => 'article',
+      'video_article_rest_export' => 'video_article',
+      'activities_rest_export' => 'activity',
+      'faq_rest_export' => 'faq',
+      'basic_page_rest_export' => 'basic_page',
+    ];
+
+    $bundle = $bundleMap[$displayId] ?? NULL;
+    if ($bundle === NULL) {
+      return NULL;
+    }
+
+    $request = $this->requestStack->getCurrentRequest();
+    if ($request === NULL) {
+      return NULL;
+    }
+
+    $langcode = $this->view->args[0]
+      ?? $this->languageManager->getCurrentLanguage()->getId();
+
+    $signature = $this->database->query(
+      "SELECT CONCAT(MAX(changed), ':', COUNT(*)) FROM {node_field_data} WHERE type = :type AND status = 1 AND langcode = :lang",
+      [':type' => $bundle, ':lang' => $langcode]
+    )->fetchField();
+
+    $etag = '"' . md5($bundle . ':' . $signature . ':' . $request->getQueryString()) . '"';
+    $request->attributes->set('bebbo_etag', $etag);
+
+    $ifNoneMatch = $request->headers->get('If-None-Match');
+    if ($ifNoneMatch === $etag) {
+      $request->attributes->set('bebbo_etag_match', TRUE);
+      return '';
+    }
+
+    return NULL;
   }
 
 }

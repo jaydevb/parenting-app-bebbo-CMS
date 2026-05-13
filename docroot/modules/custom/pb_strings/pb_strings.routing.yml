@@ -2,7 +2,7 @@ pb_strings.strings_list:
   path: '/admin/structure/taxonomy/manage/{taxonomy_vocabulary}/strings-list'
   defaults:
     _controller: '\Drupal\pb_strings\Controller\StringsListController::listPage'
-    _title: 'Strings'
+    _title: 'All String Translations'
   requirements:
     _custom_access: '\Drupal\pb_strings\Controller\StringsListController::access'
   options:

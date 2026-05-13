@@ -62,6 +62,29 @@ function pb_content_analytics_schema() {
         'not null' => TRUE,
         'description' => 'cron or manual.',
       ],
+      'skipped_unknown_type' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Nodes skipped: content type not in supported map.',
+      ],
+      'skipped_not_found' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Nodes skipped: nid not found or bundle mismatch.',
+      ],
+      'skipped_up_to_date' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Nodes skipped: BigQuery data not newer than stored.',
+      ],
+      'message' => [
+        'type' => 'text',
+        'not null' => FALSE,
+        'description' => 'Human-readable summary of the sync run.',
+      ],
     ],
     'primary key' => ['id'],
   ];
@@ -110,6 +133,62 @@ function pb_content_analytics_install() {
         ])->save();
       }
     }
+  }
+}
+
+/**
+ * Add skip-reason breakdown columns to pb_analytics_sync_log.
+ */
+function pb_content_analytics_update_9001(): void {
+  $schema = \Drupal::database()->schema();
+  $table = 'pb_analytics_sync_log';
+
+  $columns = [
+    'skipped_unknown_type' => [
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Nodes skipped: content type not in supported map.',
+    ],
+    'skipped_not_found' => [
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Nodes skipped: nid not found or bundle mismatch.',
+    ],
+    'skipped_up_to_date' => [
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Nodes skipped: BigQuery data not newer than stored.',
+    ],
+    'message' => [
+      'type' => 'text',
+      'not null' => FALSE,
+      'description' => 'Human-readable summary of the sync run.',
+    ],
+  ];
+
+  foreach ($columns as $name => $spec) {
+    if (!$schema->fieldExists($table, $name)) {
+      $schema->addField($table, $name, $spec);
+    }
+  }
+}
+
+/**
+ * Add message column to pb_analytics_sync_log.
+ */
+function pb_content_analytics_update_9002(): void {
+  $schema = \Drupal::database()->schema();
+  $table = 'pb_analytics_sync_log';
+
+  if (!$schema->fieldExists($table, 'message')) {
+    $schema->addField($table, 'message', [
+      'type' => 'text',
+      'not null' => FALSE,
+      'description' => 'Human-readable summary of the sync run.',
+    ]);
   }
 }
 
