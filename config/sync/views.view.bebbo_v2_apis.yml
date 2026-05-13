@@ -3868,7 +3868,7 @@ display:
           admin_label: ''
           plugin_id: field
           label: ''
-          exclude: true
+          exclude: false
           alter:
             alter_text: false
             text: ''
@@ -3921,15 +3921,82 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        view:
-          id: view
-          table: views
-          field: view
-          relationship: none
+        name:
+          id: name
+          table: media_field_data
+          field: name
+          relationship: field_cover_image
           group_type: group
           admin_label: ''
-          plugin_id: view
-          label: 'Cover Image'
+          entity_type: media
+          entity_field: name
+          plugin_id: field
+          label: ''
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: false
+            ellipsis: false
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: string
+          settings:
+            link_to_entity: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        thumbnail__target_id:
+          id: thumbnail__target_id
+          table: media_field_data
+          field: thumbnail__target_id
+          relationship: field_cover_image
+          group_type: group
+          admin_label: ''
+          entity_type: media
+          entity_field: thumbnail
+          plugin_id: field
+          label: ''
           exclude: false
           alter:
             alter_text: false
@@ -3958,21 +4025,97 @@ display:
             trim: false
             preserve_tags: ''
             html: false
-          element_type: '0'
+          element_type: ''
           element_class: ''
           element_label_type: ''
           element_label_class: ''
           element_label_colon: false
-          element_wrapper_type: '0'
+          element_wrapper_type: ''
           element_wrapper_class: ''
-          element_default_classes: false
+          element_default_classes: true
           empty: ''
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          view: media_details
-          display: block_1
-          arguments: '{{ raw_fields.field_cover_image }}'
+          click_sort_column: target_id
+          type: image_url
+          settings:
+            image_style: content_1200xh_
+          group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        thumbnail__alt:
+          id: thumbnail__alt
+          table: media_field_data
+          field: thumbnail__alt
+          relationship: field_cover_image
+          group_type: group
+          admin_label: ''
+          entity_type: media
+          entity_field: thumbnail
+          plugin_id: field
+          label: ''
+          exclude: false
+          alter:
+            alter_text: true
+            text: '{{ thumbnail__alt__alt }}'
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: target_id
+          type: image_url
+          settings:
+            image_style: content_1200xh_
+          group_column: ''
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         field_related_articles:
           id: field_related_articles
           table: node__field_related_articles
@@ -4902,13 +5045,13 @@ display:
           field_options:
             nid:
               alias: id
-              raw_output: false
+              raw_output: true
             type:
               alias: type
               raw_output: false
             title:
               alias: title
-              raw_output: false
+              raw_output: true
             created:
               alias: created_at
               raw_output: false
@@ -4920,58 +5063,67 @@ display:
               raw_output: false
             field_body_rendered:
               alias: body
-              raw_output: false
+              raw_output: true
             field_type_of_article:
               alias: field_type_of_article
-              raw_output: false
+              raw_output: true
             field_content_category:
               alias: category
-              raw_output: false
+              raw_output: true
             field_subcategory:
               alias: subcategory
-              raw_output: false
+              raw_output: true
             field_child_age:
               alias: child_age
-              raw_output: false
+              raw_output: true
             field_child_gender:
               alias: child_gender
-              raw_output: false
+              raw_output: true
             field_parent_gender:
               alias: parent_gender
-              raw_output: false
+              raw_output: true
             field_keywords:
               alias: keywords
-              raw_output: false
+              raw_output: true
             field_meta_keywords:
               alias: meta_keywords
+              raw_output: true
+            field_cover_image:
+              alias: cover_image_mid
+              raw_output: true
+            name:
+              alias: cover_image_name
+              raw_output: true
+            thumbnail__target_id:
+              alias: cover_image_url
               raw_output: false
-            view:
-              alias: cover_image
+            thumbnail__alt:
+              alias: cover_image_alt
               raw_output: false
             field_related_articles:
               alias: related_articles
-              raw_output: false
+              raw_output: true
             field_related_video_articles:
               alias: related_video_articles
-              raw_output: false
+              raw_output: true
             field_premature_content:
               alias: premature
-              raw_output: false
+              raw_output: true
             field_do_not_feature:
               alias: do_not_feature
-              raw_output: false
+              raw_output: true
             field_embedded_images:
               alias: embedded_images
-              raw_output: false
+              raw_output: true
             field_like_count:
               alias: love_count
-              raw_output: false
+              raw_output: true
             field_read_count:
               alias: read_count
-              raw_output: false
+              raw_output: true
             field_target_audience:
               alias: target_audience
-              raw_output: false
+              raw_output: true
       query:
         type: views_query
         options:
@@ -4988,7 +5140,16 @@ display:
         arguments: false
         filters: false
         filter_groups: false
-      relationships: {  }
+      relationships:
+        field_cover_image:
+          id: field_cover_image
+          table: node__field_cover_image
+          field: field_cover_image
+          relationship: none
+          group_type: group
+          admin_label: 'Cover Image Media'
+          plugin_id: standard
+          required: false
       display_description: ''
       display_extenders: {  }
       path: v2/api/articles/%

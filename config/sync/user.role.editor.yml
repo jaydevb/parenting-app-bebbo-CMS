@@ -63,7 +63,6 @@ permissions:
   - 'create survey content'
   - 'create video media'
   - 'create video_article content'
-  - 'delete any pregnancy_weekly_overview content'
   - 'delete own files'
   - 'edit any activities content'
   - 'edit any article content'

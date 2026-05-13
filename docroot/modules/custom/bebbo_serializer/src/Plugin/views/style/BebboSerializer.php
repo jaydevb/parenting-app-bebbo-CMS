@@ -2,6 +2,7 @@
 
 namespace Drupal\bebbo_serializer\Plugin\views\style;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\file\FileInterface;
 use Drupal\Core\Database\Query\SelectInterface;
@@ -163,13 +164,18 @@ class BebboSerializer extends Serializer {
       }
     }
 
+    // ETag pre-check: skip expensive rendering when data is unchanged.
+    $etagResponse = $this->checkEtag($displayId);
+    if ($etagResponse !== NULL) {
+      return $etagResponse;
+    }
+
     // Collect rows via the parent row plugin.
     $rows = [];
     foreach ($this->view->result as $rowIndex => $row) {
       $this->view->row_index = $rowIndex;
       $rendered = $this->view->rowPlugin->render($row);
-      // Normalise Drupal Markup objects → plain PHP values.
-      $rows[] = json_decode(json_encode($rendered), TRUE);
+      $rows[] = $this->normalizeMarkup($rendered);
     }
     unset($this->view->row_index);
 
@@ -487,14 +493,7 @@ class BebboSerializer extends Serializer {
       return $rows;
     }
 
-    $mediaIds = [];
-    foreach ($rows as $row) {
-      $mid = (int) ($row['cover_image_mid'] ?? 0);
-      if ($mid > 0) {
-        $mediaIds[] = $mid;
-      }
-    }
-    $resolvedMedia = $this->resolveMediaIds($mediaIds);
+    $request = $this->requestStack->getCurrentRequest();
     $emptyMedia = ['url' => '', 'name' => '', 'alt' => ''];
 
     foreach ($rows as &$row) {
@@ -509,8 +508,24 @@ class BebboSerializer extends Serializer {
       $this->decodeHtmlEntities($row, ['title']);
 
       $mid = (int) ($row['cover_image_mid'] ?? 0);
-      $row['cover_image'] = $resolvedMedia[$mid] ?? $emptyMedia;
-      unset($row['cover_image_mid']);
+      $url = (string) ($row['cover_image_url'] ?? '');
+
+      if ($url !== '') {
+        $url = preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp$2', $url) ?? $url;
+        if (!str_starts_with($url, 'http') && $request !== NULL) {
+          $url = $request->getSchemeAndHttpHost() . $url;
+        }
+      }
+
+      $row['cover_image'] = $mid > 0
+        ? [
+          'url' => $url,
+          'name' => (string) ($row['cover_image_name'] ?? ''),
+          'alt' => (string) ($row['cover_image_alt'] ?? ''),
+        ]
+        : $emptyMedia;
+
+      unset($row['cover_image_mid'], $row['cover_image_url'], $row['cover_image_name'], $row['cover_image_alt']);
     }
     unset($row);
 
@@ -2575,6 +2590,78 @@ class BebboSerializer extends Serializer {
       return $this->displayHandler->getContentType();
     }
     return !empty($this->options['formats']) ? reset($this->options['formats']) : 'json';
+  }
+
+  /**
+   * Converts MarkupInterface objects to plain strings recursively.
+   *
+   * @param mixed $value
+   *   A value, array, or MarkupInterface object.
+   *
+   * @return mixed
+   *   The value with all MarkupInterface objects cast to strings.
+   */
+  private function normalizeMarkup(mixed $value): mixed {
+    if ($value instanceof MarkupInterface) {
+      return (string) $value;
+    }
+    if (is_array($value)) {
+      return array_map([$this, 'normalizeMarkup'], $value);
+    }
+    return $value;
+  }
+
+  /**
+   * Checks ETag and returns early if data is unchanged.
+   *
+   * Runs a lightweight SQL query (MAX changed + COUNT) to build a data
+   * fingerprint. If the client sends a matching If-None-Match header,
+   * stores a flag on the request for the response subscriber to convert
+   * to 304. Returns a minimal empty string to skip all rendering.
+   *
+   * @param string $displayId
+   *   The active view display ID.
+   *
+   * @return string|null
+   *   Empty string if ETag matches (304 will be sent), NULL to proceed.
+   */
+  private function checkEtag(string $displayId): ?string {
+    $bundleMap = [
+      'articles_rest_export' => 'article',
+      'video_article_rest_export' => 'video_article',
+      'activities_rest_export' => 'activity',
+      'faq_rest_export' => 'faq',
+      'basic_page_rest_export' => 'basic_page',
+    ];
+
+    $bundle = $bundleMap[$displayId] ?? NULL;
+    if ($bundle === NULL) {
+      return NULL;
+    }
+
+    $request = $this->requestStack->getCurrentRequest();
+    if ($request === NULL) {
+      return NULL;
+    }
+
+    $langcode = $this->view->args[0]
+      ?? $this->languageManager->getCurrentLanguage()->getId();
+
+    $signature = $this->database->query(
+      "SELECT CONCAT(MAX(changed), ':', COUNT(*)) FROM {node_field_data} WHERE type = :type AND status = 1 AND langcode = :lang",
+      [':type' => $bundle, ':lang' => $langcode]
+    )->fetchField();
+
+    $etag = '"' . md5($bundle . ':' . $signature . ':' . $request->getQueryString()) . '"';
+    $request->attributes->set('bebbo_etag', $etag);
+
+    $ifNoneMatch = $request->headers->get('If-None-Match');
+    if ($ifNoneMatch === $etag) {
+      $request->attributes->set('bebbo_etag_match', TRUE);
+      return '';
+    }
+
+    return NULL;
   }
 
 }

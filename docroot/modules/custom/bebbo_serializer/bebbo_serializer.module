@@ -61,14 +61,21 @@ function bebbo_serializer_views_query_alter(ViewExecutable $view, QueryPluginBas
     return;
   }
 
-  $terms = \Drupal::entityTypeManager()
-    ->getStorage('taxonomy_term')
-    ->loadByProperties(['name' => 'Pregnancy', 'vid' => 'child_age']);
-  if (empty($terms)) {
-    return;
+  $cid = 'bebbo_serializer:pregnancy_tid';
+  $cache = \Drupal::cache()->get($cid);
+  if ($cache) {
+    $pregnancy_tid = (string) $cache->data;
   }
-
-  $pregnancy_tid = (string) reset($terms)->id();
+  else {
+    $terms = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadByProperties(['name' => 'Pregnancy', 'vid' => 'child_age']);
+    if (empty($terms)) {
+      return;
+    }
+    $pregnancy_tid = (string) reset($terms)->id();
+    \Drupal::cache()->set($cid, $pregnancy_tid, -1, ['taxonomy_term_list']);
+  }
 
   // Traverse the query's WHERE conditions to find the child_age filter
   // and add the Pregnancy TID to its IN() list.
