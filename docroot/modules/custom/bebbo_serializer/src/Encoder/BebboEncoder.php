@@ -19,7 +19,7 @@ class BebboEncoder implements EncoderInterface {
    * {@inheritdoc}
    */
   public function encode($data, string $format, array $context = []): string {
-    return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    return json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
   }
 
   /**
