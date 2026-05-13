@@ -54,6 +54,25 @@ content:
     third_party_settings: {  }
     weight: 0
     region: content
+  field_analytics_updated:
+    type: timestamp
+    label: above
+    settings:
+      date_format: medium
+      custom_date_format: ''
+      timezone: ''
+      tooltip:
+        date_format: long
+        custom_date_format: ''
+      time_diff:
+        enabled: false
+        future_format: '@interval hence'
+        past_format: '@interval ago'
+        granularity: 2
+        refresh: 60
+    third_party_settings: {  }
+    weight: 18
+    region: content
   field_australian_article:
     type: boolean
     label: above
@@ -125,6 +144,15 @@ content:
     third_party_settings: {  }
     weight: 15
     region: content
+  field_like_count:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 19
+    region: content
   field_mandatory_content:
     type: boolean
     label: above
@@ -153,6 +181,15 @@ content:
     third_party_settings: {  }
     weight: 16
     region: content
+  field_read_count:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 20
+    region: content
   field_references_and_comments:
     type: text_default
     label: above
@@ -176,6 +213,14 @@ content:
     third_party_settings: {  }
     weight: 13
     region: content
+  field_subcategory:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 21
+    region: content
   field_target_audience:
     type: entity_reference_label
     label: above
@@ -184,6 +229,14 @@ content:
     third_party_settings: {  }
     weight: 12
     region: content
+  field_type_of_article:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 22
+    region: content
   links:
     settings: {  }
     third_party_settings: {  }
@@ -191,14 +244,9 @@ content:
     region: content
 hidden:
   feeds_item: true
-  field_analytics_updated: true
   field_body_rendered: true
   field_do_not_feature: true
   field_embedded_images: true
-  field_like_count: true
   field_meta_keywords: true
   field_pre_populated: true
-  field_read_count: true
-  field_subcategory: true
-  field_type_of_article: true
   langcode: true
