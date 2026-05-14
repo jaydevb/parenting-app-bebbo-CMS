@@ -12,16 +12,19 @@ dependencies:
     - field.field.node.quiz.field_quiz_type
     - node.type.quiz
   module:
+    - options
     - user
 id: node.quiz.full
 targetEntityType: node
 bundle: quiz
 mode: full
 content:
-  content_moderation_control:
+  field_instructions:
+    type: basic_string
+    label: above
     settings: {  }
     third_party_settings: {  }
-    weight: -20
+    weight: 0
     region: content
   field_licensed_content:
     type: boolean
@@ -31,17 +34,43 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 112
+    weight: 5
     region: content
-  links:
+  field_number_of_questions:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_passing_score:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_quiz_questions:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: teaser
+      link: false
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_quiz_type:
+    type: list_default
+    label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 100
+    weight: 1
     region: content
 hidden:
-  field_instructions: true
-  field_number_of_questions: true
-  field_passing_score: true
-  field_quiz_questions: true
-  field_quiz_type: true
+  content_moderation_control: true
   langcode: true
+  links: true
