@@ -1,3 +1,43 @@
+# Moderated Group Content View — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Fix the broken "Moderated group content" View at `/group/{gid}/moderated` so it shows content revisions filtered by the group's languages, with all moderation states and an "Updated by" filter.
+
+**Architecture:** Rebuild the View config to remove the broken `group_content_to_entity_reverse` relationship and add new columns/filters. Implement `hook_views_query_alter` and `hook_form_views_exposed_form_alter` in `group_country_field.module` to filter nodes by the group's languages, enforce latest-revision-per-node-per-language, and populate the "Updated by" dropdown with group members.
+
+**Tech Stack:** Drupal 10, Views API, Group 1.x, Content Moderation, YAML config
+
+---
+
+## File Map
+
+| Action | File | Responsibility |
+|--------|------|----------------|
+| Modify | `config/sync/views.view.duplicate_of_moderated_group_content.yml` | View config: fields, filters, relationships, argument, display |
+| Modify | `docroot/modules/custom/group_country_field/group_country_field.module` | Query alter (language filter, latest revision, Updated by) + form alter (Updated by dropdown) |
+
+---
+
+### Task 1: Rebuild the View Config YAML
+
+**Files:**
+- Modify: `config/sync/views.view.duplicate_of_moderated_group_content.yml`
+
+This is the largest task. We rebuild the entire View config to:
+- Remove broken `group_content` relationship, broken `gid` argument, broken `latest_translation_affected_revision` filter
+- Keep `nid` relationship (node_field_revision → node_field_data) and `uid` relationship (revision author)
+- Add `revision_uid` relationship for "Updated by" column
+- Add Language column, Updated by column
+- Add `published` to moderation state filter values
+- Add `revision_uid` exposed filter (textfield in config, converted to select by form alter hook)
+- Use a raw numeric argument from URL position 1 for group ID (0-indexed: `/group/{1}/moderated`)
+
+- [ ] **Step 1: Replace the entire View config YAML**
+
+Replace the full contents of `config/sync/views.view.duplicate_of_moderated_group_content.yml` with:
+
+```yaml
 uuid: c3eee3e3-019b-4fc1-9d10-6e0a96ddc896
 langcode: en
 status: true
@@ -665,7 +705,7 @@ display:
         group_id:
           id: group_id
           table: views
-          field: 'null'
+          field: null_argument
           relationship: none
           group_type: group
           admin_label: 'Group ID from URL'
@@ -882,16 +922,16 @@ display:
               3: {  }
         revision_uid:
           id: revision_uid
-          table: node_revision
+          table: node_field_revision
           field: revision_uid
           relationship: none
           group_type: group
           admin_label: ''
           entity_type: node
           entity_field: revision_uid
-          plugin_id: user_name
-          operator: in
-          value: {  }
+          plugin_id: standard
+          operator: '='
+          value: ''
           group: 1
           exposed: true
           expose:
@@ -1040,7 +1080,7 @@ display:
           required: false
         revision_uid:
           id: revision_uid
-          table: node_revision
+          table: node_field_revision
           field: revision_uid
           relationship: none
           group_type: group
@@ -1092,3 +1132,291 @@ display:
         - 'user.node_grants:view'
       tags:
         - 'config:workflow_list'
+```
+
+Key changes from the original:
+- **Removed**: `group_content` relationship, `gid` argument, `latest_translation_affected_revision` filter
+- **Added**: `revision_uid` relationship, `langcode` field (visible column), `revision_uid_name` field (Updated by column), `revision_uid` exposed filter, `group_workflow-published` in moderation state filter values
+- **Modified**: `nid` relationship simplified (removed group_content dependency), table style columns updated, argument replaced with null_argument placeholder
+- **Removed** from cache_metadata contexts: `route.group` (no longer using group_content relationship)
+
+- [ ] **Step 2: Clear caches and verify View loads**
+
+Run:
+```bash
+ddev drush cr
+```
+
+Visit `/group/6/moderated` in browser (Albania group). Expect: page loads with empty table (no results yet since query alter hook not implemented). The filters should appear: Title, Content type, Language, Moderation state, Updated by.
+
+- [ ] **Step 3: Commit the View config**
+
+```bash
+git add config/sync/views.view.duplicate_of_moderated_group_content.yml
+git commit -m "refactor: rebuild moderated group content View config
+
+Remove broken group_content relationship (no group_node content exists).
+Add Language and Updated by columns, revision_uid relationship,
+Published state to moderation filter, and Updated by exposed filter.
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 2: Implement `hook_views_query_alter` for Language Filtering and Latest Revision
+
+**Files:**
+- Modify: `docroot/modules/custom/group_country_field/group_country_field.module`
+
+This hook does the heavy lifting: filters nodes by the group's languages and ensures only the latest revision per node per language is shown.
+
+- [ ] **Step 1: Add the views_query_alter implementation**
+
+Add this function to the end of `group_country_field.module` (before the closing `?>` if one exists, or at the end of the file):
+
+```php
+/**
+ * Implements hook_views_query_alter() for moderated group content.
+ *
+ * Filters content by the group's languages and ensures latest revision
+ * per node per language since nodes relate to groups via language, not
+ * group_content.
+ */
+function group_country_field_views_query_alter_moderated_group(ViewExecutable $view, QueryPluginBase $query) {
+  $route_match = \Drupal::routeMatch();
+  $group = $route_match->getParameter('group');
+  if (!$group) {
+    return;
+  }
+
+  if (is_numeric($group)) {
+    $group = \Drupal\group\Entity\Group::load($group);
+  }
+  if (!$group || !$group->hasField('field_language')) {
+    return;
+  }
+
+  $languages = array_column($group->get('field_language')->getValue(), 'value');
+  if (empty($languages)) {
+    return;
+  }
+
+  // Filter by group's languages.
+  $query->addWhere(1, 'node_field_revision.langcode', $languages, 'IN');
+
+  // Latest revision per node per language: subquery for max vid.
+  $database = \Drupal::database();
+  $subquery = $database->select('node_field_revision', 'nfr2');
+  $subquery->addExpression('MAX(nfr2.vid)', 'max_vid');
+  $subquery->where('nfr2.nid = node_field_revision.nid');
+  $subquery->where('nfr2.langcode = node_field_revision.langcode');
+  $query->addWhere(1, 'node_field_revision.vid', $subquery, 'IN');
+}
+```
+
+Then modify the **existing** `group_country_field_views_query_alter()` function to dispatch to the new function. The existing function at line 53 currently only handles `recent_logged_in_users`. Add a call at the top:
+
+```php
+function group_country_field_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
+  // Moderated group content: filter by group languages, latest revision.
+  if ($view->id() == 'duplicate_of_moderated_group_content') {
+    group_country_field_views_query_alter_moderated_group($view, $query);
+    return;
+  }
+
+  if ($view->id() == "recent_logged_in_users") {
+    // ... existing code unchanged ...
+```
+
+- [ ] **Step 2: Clear caches and test query**
+
+Run:
+```bash
+ddev drush cr
+```
+
+Visit `/group/6/moderated` (Albania — language `al-sq`). Expect: content in Albanian language appears. No content from other languages.
+
+Visit `/group/21/moderated` (Kosovo — languages `xk-sq`, `xk-rs`). Expect: content in both Kosovo-Albanian and Kosovo-Serbian.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add docroot/modules/custom/group_country_field/group_country_field.module
+git commit -m "feat: add views_query_alter for language-based group content filtering
+
+Filter moderated group content View by group's field_language values.
+Ensure only latest revision per node per language is shown using
+MAX(vid) subquery.
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 3: Implement `hook_form_views_exposed_form_alter` for Updated by Dropdown
+
+**Files:**
+- Modify: `docroot/modules/custom/group_country_field/group_country_field.module`
+
+Populates the "Updated by" exposed filter dropdown with group members.
+
+- [ ] **Step 1: Add the form alter implementation**
+
+Add this function to `group_country_field.module`. Place it after the existing `group_country_field_form_views_exposed_form_alter()` function (which currently handles tmgmt and reports forms):
+
+Actually, modify the **existing** `group_country_field_form_views_exposed_form_alter()` function to add a new condition block. Currently it's at line 83 and handles two form IDs. Add a block at the top of the function:
+
+```php
+function group_country_field_form_views_exposed_form_alter(&$form, $form_state) {
+  // Moderated group content: populate "Updated by" with group members.
+  if (isset($form['#id']) && strpos($form['#id'], 'duplicate-of-moderated-group-content') !== FALSE) {
+    $route_match = \Drupal::routeMatch();
+    $group = $route_match->getParameter('group');
+    if ($group) {
+      if (is_numeric($group)) {
+        $group = \Drupal\group\Entity\Group::load($group);
+      }
+      if ($group) {
+        $membership_loader = \Drupal::service('group.membership_loader');
+        $memberships = $membership_loader->loadByGroup($group);
+        $options = ['' => t('- Any -')];
+        foreach ($memberships as $membership) {
+          $user = $membership->getUser();
+          $options[$user->id()] = $user->getDisplayName();
+        }
+        asort($options);
+        // Keep "- Any -" at top after sort.
+        $any = ['' => $options['']];
+        unset($options['']);
+        $options = $any + $options;
+
+        $form['revision_uid'] = [
+          '#type' => 'select',
+          '#title' => t('Updated by'),
+          '#options' => $options,
+          '#default_value' => '',
+        ];
+      }
+    }
+  }
+
+  // Existing form alter code below (unchanged).
+  if ($form['#id'] == 'views-exposed-form-tmgmt-translation-all-job-items-page-1') {
+```
+
+- [ ] **Step 2: Clear caches and test the dropdown**
+
+Run:
+```bash
+ddev drush cr
+```
+
+Visit `/group/126/moderated` (Global - English group). Expect: "Updated by" dropdown shows "- Any -" plus all member usernames of the Global English group. Select a user and click Filter. Results should filter to show only revisions by that user.
+
+- [ ] **Step 3: Test filter combinations**
+
+On `/group/6/moderated` (Albania):
+1. Filter by Title "vitamin" → only content with "vitamin" in title
+2. Filter by Content type "article" → only articles
+3. Filter by Language → should show only group's languages in dropdown
+4. Filter by Moderation state "Published" → published content appears
+5. Filter by Updated by → revisions by that user
+6. Combine: Content type "article" + Moderation state "Draft" + Updated by "username" → intersection of all
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add docroot/modules/custom/group_country_field/group_country_field.module
+git commit -m "feat: populate Updated by dropdown with group members
+
+Add form_views_exposed_form_alter to convert the Updated by textfield
+into a select dropdown populated with the current group's members.
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 4: Run Code Quality Checks
+
+**Files:**
+- Check: `docroot/modules/custom/group_country_field/group_country_field.module`
+
+- [ ] **Step 1: Run PHPCS**
+
+```bash
+vendor/bin/phpcs docroot/modules/custom/group_country_field/group_country_field.module --standard=Drupal,DrupalPractice
+```
+
+Expected: 0 errors, 0 warnings. Fix any issues found.
+
+- [ ] **Step 2: Run drupal-check**
+
+```bash
+vendor/bin/drupal-check -d docroot/modules/custom/group_country_field/group_country_field.module
+```
+
+Expected: no deprecation errors.
+
+- [ ] **Step 3: Run phplint**
+
+```bash
+vendor/bin/phplint docroot/modules/custom/group_country_field/group_country_field.module
+```
+
+Expected: no syntax errors.
+
+- [ ] **Step 4: Fix and commit if needed**
+
+If any issues found, fix them and commit:
+```bash
+git add docroot/modules/custom/group_country_field/group_country_field.module
+git commit -m "fix: code quality fixes for group_country_field module
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 5: Final Verification Against Acceptance Criteria
+
+- [ ] **Step 1: Verify all acceptance criteria**
+
+Test each criterion on `/group/6/moderated` (Albania, language `al-sq`):
+
+| # | Criteria | How to verify |
+|---|----------|---------------|
+| 1 | Shows revisions in all languages linked to group | Unfiltered view shows content in `al-sq` only |
+| 2 | Filter by Title | Enter text, click Filter, results filtered |
+| 3 | Filter by Content type | Select type, click Filter |
+| 4 | Filter by Language | Select language from dropdown |
+| 5 | Filter by Moderation state (all states) | Verify "Published" appears in dropdown. Filter by each state. |
+| 6 | Filter by Updated by (username) | Select user from dropdown, see their revisions |
+| 7 | Combination of filters | Apply 2+ filters simultaneously |
+| 8 | Results sorted most recent first | Check "Updated" column is DESC by default |
+
+Also test on `/group/21/moderated` (Kosovo) to verify multi-language group shows content in both `xk-sq` and `xk-rs`.
+
+- [ ] **Step 2: Verify tab visibility**
+
+Log in as a user with `reviewer` role. Navigate to a group page. Verify the "Moderated content" tab is NOT visible (hidden per existing code in `pb_custom_field.module:997`).
+
+Log in as `global_admin` or `editor`. Verify the tab IS visible.
+
+- [ ] **Step 3: Export config if any View changes were made via UI**
+
+If you adjusted anything via the Drupal admin UI during testing:
+```bash
+ddev drush cex -y
+git diff config/sync/views.view.duplicate_of_moderated_group_content.yml
+```
+
+Review changes. If legitimate, commit:
+```bash
+git add config/sync/views.view.duplicate_of_moderated_group_content.yml
+git commit -m "fix: update View config from UI adjustments
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+```
