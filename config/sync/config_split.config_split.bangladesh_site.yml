@@ -89,6 +89,7 @@ complete_list:
   - pb_custom_form.language_redirects
   - views.view.duplicate_of_tax_test
 partial_list:
+  - ai_translate.settings
   - block.block.claro_help_search
   - block.block.languagedropdownswitcher
   - block.block.mainnavigation

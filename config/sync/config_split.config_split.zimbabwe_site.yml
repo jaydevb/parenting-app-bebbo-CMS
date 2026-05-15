@@ -55,6 +55,7 @@ complete_list:
   - pb_custom_form.language_redirects
   - workflows.workflow.group_workflow
 partial_list:
+  - ai_translate.settings
   - block.block.claro_help_search
   - core.entity_form_display.block_content.basic.default
   - core.entity_form_display.media.image.default

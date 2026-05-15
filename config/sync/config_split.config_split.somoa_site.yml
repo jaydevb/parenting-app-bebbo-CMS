@@ -68,6 +68,7 @@ complete_list:
   - taxonomy.vocabulary.type_of_article
   - workflows.workflow.group_workflow
 partial_list:
+  - ai_translate.settings
   - core.entity_form_display.block_content.basic.default
   - core.entity_form_display.group.country.default
   - core.entity_form_display.media.image.default

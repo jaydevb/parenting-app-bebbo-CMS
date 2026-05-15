@@ -58,6 +58,7 @@ complete_list:
   - pb_custom_form.language_redirects
   - views.view.tax_test_v2
 partial_list:
+  - ai_translate.settings
   - block.block.claro_help_search
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library

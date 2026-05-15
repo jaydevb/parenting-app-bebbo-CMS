@@ -159,6 +159,7 @@ complete_list:
   - core.entity_view_display.taxonomy_term.subcategory.default
   - workflows.workflow.group_workflow
 partial_list:
+  - ai_translate.settings
   - block.block.claro_help_search
   - block.block.languagedropdownswitcher
   - core.entity_form_display.media.image.default

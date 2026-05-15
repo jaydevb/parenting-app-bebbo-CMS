@@ -151,6 +151,7 @@ complete_list:
   - smtp.settings
   - views.view.bebbo_v2_apis
 partial_list:
+  - ai_translate.settings
   - block.block.claro_help_search
   - block.block.languagedropdownswitcher
   - core.entity_form_display.media.image.default
