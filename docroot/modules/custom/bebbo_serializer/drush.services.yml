@@ -23,3 +23,11 @@ services:
       - '@file_system'
     tags:
       - { name: drush.command }
+
+  bebbo_serializer.remove_tr_translations:
+    class: Drupal\bebbo_serializer\Commands\RemoveTrTranslationsCommands
+    arguments:
+      - '@entity_type.manager'
+      - '@database'
+    tags:
+      - { name: drush.command }
