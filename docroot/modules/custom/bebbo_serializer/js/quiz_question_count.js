@@ -4,9 +4,9 @@
   var SINGLE_QUESTION = (drupalSettings.bebboQuizType && drupalSettings.bebboQuizType.singleQuestionValue) || 'single_question_quiz';
 
   // Tracks whether an auto-removal AJAX cycle is in progress.
-  var removing = FALSE;
+  var removing = false;
   // Tracks whether we're waiting for the IEF confirm dialog to appear.
-  var pendingConfirm = FALSE;
+  var pendingConfirm = false;
 
   function getWrapper() {
     return $('[data-drupal-selector="edit-field-quiz-questions-wrapper"]');
@@ -64,8 +64,8 @@
       return;
     }
 
-    removing = TRUE;
-    pendingConfirm = TRUE;
+    removing = true;
+    pendingConfirm = true;
     $removeButtons.last().trigger('mousedown');
   }
 
@@ -75,12 +75,12 @@
   function handlePendingConfirm($wrapper) {
     var $confirmBtn = $wrapper.find('input[name*="ief-remove-confirm"]');
     if ($confirmBtn.length) {
-      pendingConfirm = FALSE;
-      removing = TRUE;
+      pendingConfirm = false;
+      removing = true;
       $confirmBtn.first().trigger('mousedown');
-      return TRUE;
+      return true;
     }
-    return FALSE;
+    return false;
   }
 
   function updateQuestionCount() {
@@ -129,7 +129,7 @@
   Drupal.behaviors.bebboSerializerQuestionCount = {
     attach: function (context) {
       // Reset removal flag on every attach (AJAX rebuild completed).
-      removing = FALSE;
+      removing = false;
 
       var $wrapper = getWrapper();
 
@@ -182,7 +182,7 @@
             }
             var $typeSelect = $iefForm.find('select[name*="field_question_type"]');
             if ($typeSelect.val() === 'true_or_false') {
-              $iefForm.find('input[name*="field_answers"][name*="is_correct"]').not($cb).prop('checked', FALSE);
+              $iefForm.find('input[name*="field_answers"][name*="is_correct"]').not($cb).prop('checked', false);
             }
           });
         });
@@ -199,7 +199,7 @@
     }
     var $checked = $iefForm.find('input[name*="field_answers"][name*="is_correct"]:checked');
     if ($checked.length > 1) {
-      $checked.slice(1).prop('checked', FALSE);
+      $checked.slice(1).prop('checked', false);
     }
   }
 
