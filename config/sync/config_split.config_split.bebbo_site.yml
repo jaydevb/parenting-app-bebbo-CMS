@@ -434,4 +434,5 @@ complete_list:
   - pb_custom_form.language_redirects
   - system.site
 partial_list:
+  - ai_translate.settings
   - language.negotiation
