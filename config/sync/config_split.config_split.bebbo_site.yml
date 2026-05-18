@@ -105,7 +105,6 @@ complete_list:
   - language/ro/language.entity.en
   - language/ro/language.entity.ro
   - language/ro/language.entity.ru
-  - language/ro/language.entity.tr
   - language/ro/language.entity.und
   - language/ro/language.entity.zxx
   - language/ro/media.type.image
@@ -176,7 +175,6 @@ complete_list:
   - language/ru/language.entity.en
   - language/ru/language.entity.ro
   - language/ru/language.entity.ru
-  - language/ru/language.entity.tr
   - language/ru/media.type.image
   - language/ru/media.type.video
   - language/ru/metatag.metatag_defaults.front
@@ -245,7 +243,6 @@ complete_list:
   - language/sk/language.entity.en
   - language/sk/language.entity.ro
   - language/sk/language.entity.ru
-  - language/sk/language.entity.tr
   - language/sk/language.entity.und
   - language/sk/language.entity.zxx
   - language/sk/media.type.image
@@ -311,7 +308,6 @@ complete_list:
   - language/sq/language.entity.en
   - language/sq/language.entity.ro
   - language/sq/language.entity.ru
-  - language/sq/language.entity.tr
   - language/sq/metatag.metatag_defaults.node
   - language/sq/metatag.metatag_defaults.taxonomy_term
   - language/sq/metatag.metatag_defaults.user
@@ -348,7 +344,6 @@ complete_list:
   - language/sr/language.entity.en
   - language/sr/language.entity.ro
   - language/sr/language.entity.ru
-  - language/sr/language.entity.tr
   - language/sr/metatag.metatag_defaults.front
   - language/sr/metatag.metatag_defaults.node
   - language/sr/metatag.metatag_defaults.user
@@ -387,7 +382,6 @@ complete_list:
   - language/uk/language.entity.en
   - language/uk/language.entity.ro
   - language/uk/language.entity.ru
-  - language/uk/language.entity.tr
   - language/uk/media.type.image
   - language/uk/metatag.metatag_defaults.front
   - language/uk/metatag.metatag_defaults.node
