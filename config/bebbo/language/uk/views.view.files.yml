@@ -5,7 +5,6 @@ display:
       fields:
         filename:
           label: "Назва (ім'я)"
-          separator: ', '
         filemime:
           label: 'MIME type'
         status:

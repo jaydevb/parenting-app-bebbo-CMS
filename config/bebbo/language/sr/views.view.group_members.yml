@@ -4,10 +4,6 @@ display:
       exposed_form:
         options:
           exposed_sorts_label: 'Sort by'
-      pager:
-        options:
-          tags:
-            previous: ‹‹
       fields:
         name:
           label: User

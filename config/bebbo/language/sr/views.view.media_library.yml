@@ -5,10 +5,6 @@ display:
       fields:
         media_bulk_form:
           action_title: Action
-      pager:
-        options:
-          tags:
-            previous: ‹‹
       exposed_form:
         options:
           exposed_sorts_label: 'Sort by'

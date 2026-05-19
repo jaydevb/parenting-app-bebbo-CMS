@@ -245,9 +245,6 @@ partial_list:
   - taxonomy.vocabulary.type_of_article
   - tmgmt.settings
   - tmgmt_memsource.settings
-  - user.role.authenticated
-  - user.role.global_admin
-  - user.role.reviewer
   - views.view.archive
   - views.view.articles
   - views.view.block_content

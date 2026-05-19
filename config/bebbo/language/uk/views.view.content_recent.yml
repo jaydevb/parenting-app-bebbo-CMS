@@ -2,9 +2,6 @@ display:
   default:
     display_title: Базово
     display_options:
-      fields:
-        changed:
-          separator: ', '
       exposed_form:
         options:
           submit_button: Застосувати
