@@ -11,8 +11,6 @@ display:
           label: Label
         type:
           label: Type
-        changed:
-          label: Changed
         operations:
           label: Operations
       filters:

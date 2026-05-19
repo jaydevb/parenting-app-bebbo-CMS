@@ -110,14 +110,40 @@ function group_country_field_views_query_alter_moderated_group(ViewExecutable $v
   // Filter by group's languages.
   $query->addWhere(1, 'node_field_revision.langcode', $languages, 'IN');
 
-  // Latest revision per node per language via subquery.
-  $database = \Drupal::database();
-  $subquery = $database->select('node_field_revision', 'nfr2');
-  $subquery->addExpression('MAX(nfr2.vid)', 'max_vid');
-  $subquery->condition('nfr2.langcode', $languages, 'IN');
-  $subquery->groupBy('nfr2.nid');
-  $subquery->groupBy('nfr2.langcode');
-  $query->addWhere(1, 'node_field_revision.vid', $subquery, 'IN');
+  $input = $view->getExposedInput();
+  $filtering_by_user = !empty($input['revision_uid']);
+
+  if ($filtering_by_user) {
+    // Show all revisions by this user (not just latest per node).
+    $query->addWhere(1, 'node_revision.revision_uid', (int) $input['revision_uid'], '=');
+  }
+  else {
+    // Default: latest revision per node per language.
+    $database = \Drupal::database();
+    $subquery = $database->select('node_field_revision', 'nfr2');
+    $subquery->addExpression('MAX(nfr2.vid)', 'max_vid');
+    $subquery->condition('nfr2.langcode', $languages, 'IN');
+    $subquery->groupBy('nfr2.nid');
+    $subquery->groupBy('nfr2.langcode');
+    $query->addWhere(1, 'node_field_revision.vid', $subquery, 'IN');
+  }
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function group_country_field_views_pre_render(ViewExecutable $view): void {
+  if ($view->id() === 'duplicate_of_moderated_group_content') {
+    $group = \Drupal::routeMatch()->getParameter('group');
+    if ($group) {
+      if (is_numeric($group)) {
+        $group = Group::load($group);
+      }
+      if ($group) {
+        $view->setTitle($group->label() . ' moderated content');
+      }
+    }
+  }
 }
 
 /**
@@ -136,19 +162,31 @@ function group_country_field_form_views_exposed_form_alter(&$form, $form_state) 
       if (is_numeric($group)) {
         $group = Group::load($group);
       }
-      if ($group) {
-        $membership_loader = \Drupal::service('group.membership_loader');
-        $memberships = $membership_loader->loadByGroup($group);
+      if ($group && $group->hasField('field_language')) {
+        $languages = array_column($group->get('field_language')->getValue(), 'value');
         $options = ['' => t('- Any -')];
-        foreach ($memberships as $membership) {
-          $user = $membership->getUser();
-          $options[$user->id()] = $user->getDisplayName();
+        if (!empty($languages)) {
+          $database = \Drupal::database();
+          // Latest revision per node per language (matches View query).
+          $sub = $database->select('node_field_revision', 'nfr2');
+          $sub->addExpression('MAX(nfr2.vid)', 'max_vid');
+          $sub->condition('nfr2.langcode', $languages, 'IN');
+          $sub->groupBy('nfr2.nid');
+          $sub->groupBy('nfr2.langcode');
+
+          $query = $database->select('node_field_revision', 'nfr');
+          $query->join('node_revision', 'nr', 'nfr.vid = nr.vid');
+          $query->join('users_field_data', 'ufd', 'nr.revision_uid = ufd.uid');
+          $query->fields('ufd', ['uid', 'name']);
+          $query->condition('nfr.langcode', $languages, 'IN');
+          $query->condition('nfr.vid', $sub, 'IN');
+          $query->distinct();
+          $authors = $query->execute()->fetchAllKeyed();
+          asort($authors);
+          foreach ($authors as $uid => $name) {
+            $options[$uid] = $name;
+          }
         }
-        asort($options);
-        // Keep "- Any -" at top after sort.
-        $any = ['' => $options['']];
-        unset($options['']);
-        $options = $any + $options;
 
         $form['revision_uid'] = [
           '#type' => 'select',

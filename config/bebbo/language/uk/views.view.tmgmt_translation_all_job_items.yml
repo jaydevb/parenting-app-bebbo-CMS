@@ -27,19 +27,6 @@ display:
           label: Мітка
         type:
           label: Тип
-        source_language:
-          separator: ', '
-        target_language:
-          label: To
-          separator: ', '
-        word_count:
-          separator: ', '
-        tags_count:
-          label: Tags
-          separator: ', '
-        changed:
-          label: Changed
-          separator: ', '
         operations:
           label: Операції
       filters:

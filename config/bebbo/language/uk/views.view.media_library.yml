@@ -8,9 +8,6 @@ display:
           action_title: Дія
       pager:
         options:
-          tags:
-            next: ››
-            previous: ‹‹
           expose:
             items_per_page_label: 'Елементів на сторінку'
             items_per_page_options_all_label: '- Усе -'
@@ -23,8 +20,6 @@ display:
           sort_desc_label: Спад
       filters:
         status:
-          expose:
-            label: 'Publishing status'
           group_info:
             label: Опубліковано
             group_items:
@@ -44,8 +39,6 @@ display:
       fields:
         media_bulk_form:
           action_title: Дія
-        name:
-          separator: ', '
         edit_media:
           text: Редагувати
         delete_media:
