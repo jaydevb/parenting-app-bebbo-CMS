@@ -7,6 +7,9 @@ bangla:
 ec:
   root: /var/www/html/docroot
   uri: http://ec.bebbo.app.ddev.site
+pakistan:
+  root: /var/www/html/docroot
+  uri: http://pk.bebbo.app.ddev.site
 pc:
   root: /var/www/html/docroot
   uri: http://pc.bebbo.app.ddev.site

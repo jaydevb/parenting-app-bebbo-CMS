@@ -1,0 +1,11 @@
+use_ai_translate: true
+language_settings:
+  en:
+    model: ''
+    prompt: ai_translate__ai_translate_default
+  pk-en:
+    model: ''
+    prompt: ai_translate__ai_translate_default
+  ur:
+    model: ''
+    prompt: ai_translate__ai_translate_default
