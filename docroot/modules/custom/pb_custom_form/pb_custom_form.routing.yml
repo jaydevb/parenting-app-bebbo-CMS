@@ -89,6 +89,25 @@ pb_custom_form.redirect_management:
   options:
     _admin_route: TRUE
 
+pb_custom_form.app_store_redirect:
+  path: '/admin/config/parent-buddy/app-store-redirect'
+  defaults:
+    _form: '\Drupal\pb_custom_form\Form\AppStoreRedirectForm'
+    _title: 'App Store Redirect Settings'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+pb_custom_form.app_store_redirect_page:
+  path: '/downloadapp.html'
+  defaults:
+    _controller: '\Drupal\pb_custom_form\Controller\AppStoreRedirectController::render'
+    _title: 'Download App'
+  requirements:
+    # Public access: QR code landing page for anonymous app users.
+    _access: 'TRUE'
+
 pb_custom_form.csv_export:
   path: '/admin/content/entity_share/pull/export/csv'
   defaults:
