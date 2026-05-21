@@ -57,6 +57,7 @@ complete_list:
 partial_list:
   - ai_translate.settings
   - block.block.claro_help_search
+  - block.block.logo
   - core.entity_form_display.block_content.basic.default
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library

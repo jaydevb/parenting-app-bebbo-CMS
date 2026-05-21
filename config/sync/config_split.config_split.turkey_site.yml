@@ -162,6 +162,7 @@ partial_list:
   - ai_translate.settings
   - block.block.claro_help_search
   - block.block.languagedropdownswitcher
+  - block.block.logo
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library
   - core.entity_form_display.media.video.default
