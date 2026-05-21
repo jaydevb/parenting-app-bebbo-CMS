@@ -33,3 +33,9 @@ pb_custom_form.redirect_management:
   parent: pb_custom_form.admin_config_parent_buddy
   description: 'Manage language redirects and landing pages'
   weight: 105
+pb_custom_form.app_store_redirect:
+  title: 'App Store Redirect Settings'
+  route_name: pb_custom_form.app_store_redirect
+  parent: pb_custom_form.admin_config_parent_buddy
+  description: 'Configure app store URLs for QR code redirect page'
+  weight: 106
