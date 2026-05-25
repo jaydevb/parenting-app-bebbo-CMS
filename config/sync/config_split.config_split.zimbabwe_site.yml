@@ -51,7 +51,6 @@ complete_list:
   - language/en/system.menu.main
   - mobile_app_links.android_packages
   - mobile_app_links.ios
-  - pb_custom_form.app_store_redirect
   - pb_custom_form.landing_pages
   - pb_custom_form.language_redirects
   - workflows.workflow.group_workflow

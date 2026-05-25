@@ -11,6 +11,7 @@ dependencies:
     - taxonomy.vocabulary.chatbot_subcategory
     - taxonomy.vocabulary.child_age
     - taxonomy.vocabulary.child_gender
+    - taxonomy.vocabulary.course_category
     - taxonomy.vocabulary.daily_home_screen_message_catego
     - taxonomy.vocabulary.growth_introductory
     - taxonomy.vocabulary.growth_period
@@ -20,6 +21,7 @@ dependencies:
     - taxonomy.vocabulary.relationship_to_parent
     - taxonomy.vocabulary.standard_deviation_category
     - taxonomy.vocabulary.subcategory
+    - taxonomy.vocabulary.target_audience
     - taxonomy.vocabulary.type_of_article
     - taxonomy.vocabulary.type_of_support
   module:
@@ -303,6 +305,7 @@ display:
             chatbot_subcategory: chatbot_subcategory
             child_age: child_age
             child_gender: child_gender
+            course_category: course_category
             daily_home_screen_message_catego: daily_home_screen_message_catego
             activity_category: activity_category
             growth_introductory: growth_introductory
@@ -312,6 +315,7 @@ display:
             relationship_to_parent: relationship_to_parent
             standard_deviation_category: standard_deviation_category
             subcategory: subcategory
+            target_audience: target_audience
             type_of_article: type_of_article
             type_of_support: type_of_support
           group: 1
@@ -337,6 +341,7 @@ display:
               sme: '0'
               se: '0'
               administrator: '0'
+              translator: '0'
             reduce: true
           is_grouped: false
           group_info:
