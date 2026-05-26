@@ -117,6 +117,7 @@ permissions:
   - 'edit own page content'
   - 'edit own pregnancy_weekly_overview content'
   - 'edit own quiz content'
+  - 'edit own quiz_questions content'
   - 'edit own remote_video media'
   - 'edit own survey content'
   - 'edit own vaccinations content'
