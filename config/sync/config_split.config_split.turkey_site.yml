@@ -151,7 +151,6 @@ complete_list:
   - mobile_app_links.android_packages
   - mobile_app_links.ios
   - 'mobile_app_links.ios copy'
-  - pb_custom_form.app_store_redirect
   - pb_custom_form.landing_pages
   - pb_custom_form.language_redirects
   - pb_custom_form.mobile_app_share_link_form

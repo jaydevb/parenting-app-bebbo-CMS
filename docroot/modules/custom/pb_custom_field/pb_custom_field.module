@@ -1779,9 +1779,9 @@ function pb_custom_field_form_user_form_alter(&$form, FormStateInterface $form_s
     // dpm($form['account']['status']['#default_value']);.
     $current_path = \Drupal::service('path.current')->getPath();
     $node_path = explode('/', $current_path);
-    $user_id = $node_path[2];
+    $user_id = (int) $node_path[2];
     $conn = Database::getConnection();
-    $query = $conn->query("SELECT status FROM users_field_data where uid = '" . $user_id . "'");
+    $query = $conn->query("SELECT status FROM {users_field_data} WHERE uid = :uid", [':uid' => $user_id]);
     $result = $query->fetchObject();
     $form['account']['status']['#default_value'] = $result->status;
 
@@ -2089,11 +2089,11 @@ function pb_custom_field_views_pre_render(ViewExecutable $view) {
       $created_at = $result->forcefull_check_update_api_created_at;
       // Get user name from uuid.
       $database = \Drupal::database();
-      $query = $database->query("SELECT uid FROM {users} WHERE uuid = '" . $forcefull_check_update_api_uuid . "'");
+      $query = $database->query("SELECT uid FROM {users} WHERE uuid = :uuid", [':uuid' => $forcefull_check_update_api_uuid]);
       $user_uid = $query->fetchAll();
 
       if (!empty($user_uid)) {
-        $uid_query = $database->query("SELECT name FROM {users_field_data} WHERE uid = '" . $user_uid[0]->uid . "'");
+        $uid_query = $database->query("SELECT name FROM {users_field_data} WHERE uid = :uid", [':uid' => $user_uid[0]->uid]);
         $user_name = $uid_query->fetchAll();
         $user_name = $user_name[0]->name;
       }

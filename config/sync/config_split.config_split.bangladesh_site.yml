@@ -85,7 +85,6 @@ complete_list:
   - language/uk/filter.format.plain_text
   - mobile_app_links.android_packages
   - mobile_app_links.ios
-  - pb_custom_form.app_store_redirect
   - pb_custom_form.landing_pages
   - pb_custom_form.language_redirects
   - views.view.duplicate_of_tax_test

@@ -1,4 +1,6 @@
-adding: {  }
+adding:
+  translation_status: create_draft
 removing:
   _core:
     default_config_hash: IaNiyCLAJBz5QfQqeZ_MxVRVs4KYTOMlVpf9wFrIVKk
+  translation_status: keep_original

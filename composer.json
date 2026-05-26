@@ -207,7 +207,8 @@
             },
             "drupal/tmgmt": {
                 "Added custom filter in source page like node id and country": "patches/tmgmt/custom_filter_in_tmgmt_source_page.patch",
-                "Update the Entity Author Details": "patches/tmgmt/tmgmt_revision.patch"
+                "Update the Entity Author Details": "patches/tmgmt/tmgmt_revision.patch",
+                "Fix JobType grouped filter passing array to escapeLike": "patches/tmgmt/tmgmt_job_type_grouped_filter_fix.patch"
             },
             "drupal/group": {
                 "Allow group admins to create user account and add to group" : "https://www.drupal.org/files/issues/2023-10-09/group-manage-users-2949408-45.patch",
