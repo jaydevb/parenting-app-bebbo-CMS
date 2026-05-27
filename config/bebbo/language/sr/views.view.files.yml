@@ -1,7 +1,9 @@
+label: Files
 display:
   default:
     display_title: Default
     display_options:
+      title: Files
       fields:
         filename:
           label: Name
@@ -22,6 +24,10 @@ display:
         status:
           expose:
             label: Status
+  page_1:
+    display_options:
+      menu:
+        title: Files
   page_2:
     display_options:
       fields:

@@ -2,6 +2,11 @@ mylib:
   css:
     theme:
       css/admin.css: {}
- 
+
   js:
-     js/homepage.js: {}
+    js/homepage.js: {}
+
+admin_rtl:
+  css:
+    theme:
+      css/admin-rtl.css: {}

@@ -303,6 +303,9 @@ function pb_custom_field_allowed_languages_form_media_library_add_form_upload_al
  */
 function pb_custom_field_preprocess_page(&$variables) {
   $variables['#attached']['library'][] = 'pb_custom_field/mylib';
+  if (\Drupal::languageManager()->getCurrentLanguage()->getDirection() === 'rtl') {
+    $variables['#attached']['library'][] = 'pb_custom_field/admin_rtl';
+  }
 }
 
 /**
