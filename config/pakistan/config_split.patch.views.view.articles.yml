@@ -70,16 +70,18 @@ adding:
         filters:
           field_child_age_target_id:
             value:
-              - 16
+              - 20
               - 21
+              - 22
+              - 23
+              - 24
+              - 25
               - 26
+              - 27
+              - 28
+              - 29
+              - 30
               - 31
-              - 36
-              - 41
-              - 56
-              - 61
-              - 66
-              - 71
 removing:
   status: false
   display:
@@ -91,10 +93,12 @@ removing:
               - 43
               - 44
               - 45
+              - 46
               - 47
               - 48
               - 49
               - 50
+              - 51
               - 52
               - 57
               - 58
