@@ -9,9 +9,9 @@ dependencies:
     - user
     - views
   theme:
-    - claro
+    - gin
 id: views_block__tmgmt_job_overview_block_1
-theme: claro
+theme: gin
 region: content
 weight: -1
 provider: null
