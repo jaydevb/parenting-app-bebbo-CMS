@@ -79,6 +79,7 @@ partial_list:
   - tmgmt.translator.local
   - tmgmt_memsource.settings
   - views.view.articles
+  - views.view.bebbo_v2_apis
   - views.view.block_content
   - views.view.content_listing
   - views.view.country_content_listing
