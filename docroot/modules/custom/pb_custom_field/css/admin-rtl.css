@@ -80,15 +80,14 @@
   float: left;
 }
 
-/* Language dropdown: flip from right edge to left edge */
+/* Language dropdown: flip alignment for RTL */
 [dir="rtl"] .block-lang-dropdown {
-  right: auto;
-  left: 0;
+  text-align: left;
 }
 
 /* Language dropdown select: flip padding */
 [dir="rtl"] .block-lang-dropdown .lang-dropdown-select-element {
-  padding-right: 7px;
   padding-left: 40px;
+  padding-right: 7px;
 }
 
