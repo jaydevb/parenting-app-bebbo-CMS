@@ -13,7 +13,7 @@ dependencies:
 id: logo
 theme: claro
 region: header
-weight: -13
+weight: -8
 provider: null
 plugin: 'block_content:3e466a00-3228-4ee8-b5d3-40e30bb6fbd8'
 settings:

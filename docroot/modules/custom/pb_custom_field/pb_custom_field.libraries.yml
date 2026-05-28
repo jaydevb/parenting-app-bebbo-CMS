@@ -14,3 +14,18 @@ admin_rtl:
   css:
     theme:
       css/admin-rtl.css: {}
+
+toolbar_language_switcher:
+  css:
+    theme:
+      css/toolbar-language-switcher.css: {}
+  js:
+    js/toolbar-language-switcher.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+fpa_gin_style:
+  css:
+    theme:
+      css/fpa-gin-style.css: {}
