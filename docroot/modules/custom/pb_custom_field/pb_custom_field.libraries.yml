@@ -3,6 +3,10 @@ mylib:
     theme:
       css/admin.css: {}
 
+homepage:
+  css:
+    theme:
+      css/homepage.css: {}
   js:
     js/homepage.js: {}
 

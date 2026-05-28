@@ -80,8 +80,6 @@
   float: left;
 }
 
-/* --- Custom admin.css physical property overrides --- */
-
 /* Language dropdown: flip from right edge to left edge */
 [dir="rtl"] .block-lang-dropdown {
   right: auto;
@@ -94,7 +92,3 @@
   padding-left: 40px;
 }
 
-/* View header link: flip float */
-[dir="rtl"] .common-table .view-header a {
-  float: left;
-}
