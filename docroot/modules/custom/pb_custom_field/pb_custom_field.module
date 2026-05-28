@@ -1710,13 +1710,20 @@ function pb_custom_field_user_login_form_submit($form, FormStateInterface $form_
  */
 function pb_custom_field_preprocess_html(&$variables) {
   $logged_in = \Drupal::currentUser()->isAuthenticated();
-  if (!$logged_in) {
-    $current_path = \Drupal::service('path.current')->getPath();
-    $internal = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
-    if ($internal == "/homepage" || $internal == "/about-us" || $internal == "/terms-and-conditions" || $internal == "/privacy-policy" || $internal == "/foleja" || $internal == "/foleja-about-us" || $internal == "/foleja-privacy-policy") {
-      $variables['#attached']['library'][] = 'pb_custom_field/homepage';
+  $current_path = \Drupal::service('path.current')->getPath();
+  $internal = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
+  $homepage_paths = [
+    "/homepage", "/about-us", "/terms-and-conditions",
+    "/privacy-policy", "/foleja", "/foleja-about-us",
+    "/foleja-privacy-policy",
+  ];
+  if (in_array($internal, $homepage_paths)) {
+    $variables['#attached']['library'][] = 'pb_custom_field/homepage';
+    if (!$logged_in) {
       $variables['attributes']['class'][] = 'pb-main-homepage';
     }
+  }
+  if (!$logged_in) {
     if ($internal == "/foleja" || $internal == "/foleja-about-us" || $internal == "/foleja-privacy-policy") {
       $variables['head_title']['name'] = "Foleja";
       /* Load the favicon ico for kosovo landing pages */
@@ -2298,4 +2305,142 @@ function pb_custom_field_cross_country_validation(&$form, FormStateInterface $fo
   if (!in_array($form_language, $allowed_languages)) {
     $form_state->setErrorByName('', 'You do not have permission.');
   }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_admin_permissions.
+ *
+ * Attaches Gin-aligned styling overrides for the FPA (Fast Permissions
+ * Administration) page.
+ */
+function pb_custom_field_form_user_admin_permissions_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form['#attached']['library'][] = 'pb_custom_field/fpa_gin_style';
+  $form['#attributes']['class'][] = 'pb-fpa-gin';
+}
+
+/**
+ * Implements hook_toolbar().
+ *
+ * Adds an admin UI language switcher dropdown to the toolbar for all
+ * authenticated users. Hidden when the site has fewer than two
+ * configurable languages.
+ */
+function pb_custom_field_toolbar() {
+  $items = [];
+  $account = \Drupal::currentUser();
+
+  if (!$account->isAuthenticated()) {
+    return $items;
+  }
+
+  $language_manager = \Drupal::languageManager();
+  $languages = $language_manager->getLanguages(LanguageInterface::STATE_CONFIGURABLE);
+
+  if (count($languages) < 2) {
+    return $items;
+  }
+
+  $current_language = $language_manager->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE);
+  $native_languages = $language_manager->getNativeLanguages();
+  $standard_list = LanguageManager::getStandardLanguageList();
+
+  $current_path = '/';
+  try {
+    $current_path = \Drupal::service('path.current')->getPath();
+  }
+  catch (\Exception $e) {
+    // Fall back to front page.
+  }
+
+  $links = [];
+  foreach ($languages as $langcode => $language) {
+    if ($language->isLocked()) {
+      continue;
+    }
+    if (isset($standard_list[$langcode][1])) {
+      $native = $standard_list[$langcode][1];
+    }
+    elseif (isset($native_languages[$langcode])) {
+      $native = $native_languages[$langcode]->getName();
+    }
+    else {
+      $native = $language->getName();
+    }
+    try {
+      $link_url = Url::fromUserInput($current_path, ['language' => $language]);
+    }
+    catch (\Exception $e) {
+      $link_url = Url::fromRoute('<front>', [], ['language' => $language]);
+    }
+    $classes = ['pb-language-switcher__link'];
+    if ($langcode === $current_language->getId()) {
+      $classes[] = 'is-active';
+    }
+    $links[$langcode] = [
+      'title' => $native,
+      'url' => $link_url,
+      'attributes' => [
+        'class' => $classes,
+        'data-langcode' => $langcode,
+        'hreflang' => $langcode,
+      ],
+    ];
+  }
+
+  if (empty($links)) {
+    return $items;
+  }
+
+  $current_id = $current_language->getId();
+  if (isset($standard_list[$current_id][1])) {
+    $current_native = $standard_list[$current_id][1];
+  }
+  elseif (isset($native_languages[$current_id])) {
+    $current_native = $native_languages[$current_id]->getName();
+  }
+  else {
+    $current_native = $current_language->getName();
+  }
+
+  $items['pb_language_switcher'] = [
+    '#type' => 'toolbar_item',
+    '#wrapper_attributes' => [
+      'class' => ['pb-language-switcher-wrapper'],
+    ],
+    'tab' => [
+      '#type' => 'html_tag',
+      '#tag' => 'button',
+      '#value' => $current_native,
+      '#attributes' => [
+        'class' => ['toolbar-icon', 'pb-language-switcher__tab'],
+        'type' => 'button',
+        'aria-haspopup' => 'true',
+        'aria-expanded' => 'false',
+        'title' => t('Switch admin language'),
+      ],
+    ],
+    'tray' => [
+      '#heading' => t('Admin language'),
+      'links' => [
+        '#theme' => 'links',
+        '#links' => $links,
+        '#attributes' => [
+          'class' => ['toolbar-menu', 'pb-language-switcher__menu'],
+        ],
+      ],
+    ],
+    '#weight' => 1100,
+    '#attached' => [
+      'library' => ['pb_custom_field/toolbar_language_switcher'],
+    ],
+    '#cache' => [
+      'contexts' => [
+        'user.roles:authenticated',
+        'languages:language_interface',
+        'url.path',
+      ],
+    ],
+  ];
+
+  return $items;
 }
