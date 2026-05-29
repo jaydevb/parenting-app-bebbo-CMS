@@ -3,16 +3,8 @@ display:
     display_title: Базово
     display_options:
       fields:
-        name:
-          label: "Ім'я користувача"
-        status:
-          label: Стан
-          settings:
-            format_custom_true: Active
-        roles_target_id:
-          label: Ролі
-        operations:
-          label: Операції
+        created:
+          label: Created
       pager:
         options:
           tags:
@@ -26,26 +18,10 @@ display:
             offset_label: Зміщення
       exposed_form:
         options:
-          submit_button: Фільтр
+          submit_button: Застосувати
           reset_button_label: Скинути
           exposed_sorts_label: 'Впорядкувати за'
           sort_asc_label: Зрост
           sort_desc_label: Спад
-      filters:
-        status:
-          group_info:
-            label: Стан
-            group_items:
-              1:
-                title: Active
-        roles_target_id:
-          expose:
-            label: Роль
-        permission:
-          expose:
-            label: Permission
   page_1:
     display_title: Сторінка
-    display_options:
-      menu:
-        title: List

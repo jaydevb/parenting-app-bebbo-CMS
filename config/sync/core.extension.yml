@@ -14,6 +14,7 @@ module:
   autocomplete_id: 0
   automated_cron: 0
   basic_auth: 0
+  bebbo_api_security: 0
   bebbo_serializer: 0
   better_exposed_filters: 0
   big_pipe: 0
@@ -53,6 +54,7 @@ module:
   file_sanitizer: 0
   filelog: 0
   filter: 0
+  fpa: 0
   gin_toolbar: 0
   gnode: 0
   google_analytics: 0
@@ -64,6 +66,7 @@ module:
   imageapi_optimize_binaries: 0
   imagemagick: 0
   inline_entity_form: 0
+  js_cookie: 0
   jsonapi: 0
   jsonapi_extras: 0
   key: 0
