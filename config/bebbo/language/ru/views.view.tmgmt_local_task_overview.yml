@@ -202,5 +202,3 @@ display:
         status:
           expose:
             label: Status
-      tab_options:
-        title: Translate

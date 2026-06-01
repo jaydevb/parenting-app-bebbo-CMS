@@ -13,8 +13,6 @@ display:
           label: Ролі
         operations:
           label: Операції
-        mail:
-          separator: ', '
       pager:
         options:
           tags:

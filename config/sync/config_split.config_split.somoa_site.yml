@@ -14,6 +14,7 @@ module: {  }
 theme: {  }
 complete_list:
   - block.block.claro_help_search
+  - block.block.logo
   - field.field.group.country.field_language_name_in_local
   - field.field.group.country.field_language_visibility_in_app
   - field.field.node.article.field_type_of_article
@@ -68,6 +69,7 @@ complete_list:
   - taxonomy.vocabulary.type_of_article
   - workflows.workflow.group_workflow
 partial_list:
+  - ai_translate.settings
   - core.entity_form_display.block_content.basic.default
   - core.entity_form_display.group.country.default
   - core.entity_form_display.media.image.default
@@ -113,9 +115,6 @@ partial_list:
   - structure_sync.data
   - tmgmt.settings
   - tmgmt_memsource.settings
-  - user.role.authenticated
-  - user.role.global_admin
-  - user.role.reviewer
   - view_custom_table.tables
   - views.view.archive
   - views.view.articles

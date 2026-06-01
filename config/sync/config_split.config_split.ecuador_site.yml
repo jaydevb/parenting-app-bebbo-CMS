@@ -151,8 +151,10 @@ complete_list:
   - smtp.settings
   - views.view.bebbo_v2_apis
 partial_list:
+  - ai_translate.settings
   - block.block.claro_help_search
   - block.block.languagedropdownswitcher
+  - block.block.logo
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library
   - core.entity_form_display.media.video.default
@@ -232,11 +234,6 @@ partial_list:
   - taxonomy.vocabulary.type_of_article
   - tmgmt.settings
   - tmgmt_memsource.settings
-  - user.role.authenticated
-  - user.role.editor
-  - user.role.global_admin
-  - user.role.reviewer
-  - user.role.se
   - views.view.archive
   - views.view.articles
   - views.view.block_content

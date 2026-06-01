@@ -55,7 +55,9 @@ complete_list:
   - pb_custom_form.language_redirects
   - workflows.workflow.group_workflow
 partial_list:
+  - ai_translate.settings
   - block.block.claro_help_search
+  - block.block.logo
   - core.entity_form_display.block_content.basic.default
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library
@@ -99,12 +101,6 @@ partial_list:
   - metatag.metatag_defaults.global
   - structure_sync.data
   - system.menu.main
-  - user.role.authenticated
-  - user.role.editor
-  - user.role.global_admin
-  - user.role.reviewer
-  - user.role.se
-  - user.role.sme
   - views.view.articles
   - views.view.country_content_listing
   - views.view.keyword_term_count

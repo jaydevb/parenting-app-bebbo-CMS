@@ -65,6 +65,14 @@ complete_list:
   - language/ro/block.block.claro_page_title
   - language/ro/block.block.claro_primary_local_tasks
   - language/ro/block.block.claro_secondary_local_tasks
+  - language/ro/block.block.gin_breadcrumbs
+  - language/ro/block.block.gin_content
+  - language/ro/block.block.gin_help
+  - language/ro/block.block.gin_local_actions
+  - language/ro/block.block.gin_messages
+  - language/ro/block.block.gin_page_title
+  - language/ro/block.block.gin_primary_local_tasks
+  - language/ro/block.block.gin_secondary_local_tasks
   - language/ro/block_content.type.basic
   - language/ro/core.base_field_override.node.page.promote
   - language/ro/core.date_format.fallback
@@ -168,6 +176,8 @@ complete_list:
   - language/ro/views.view.who_s_online
   - language/rs-en/language.entity.rs-en
   - language/rs-sr/language.entity.rs-sr
+  - language/ru/core.entity_form_mode.media.media_library
+  - language/ru/core.entity_view_mode.media.media_library
   - language/ru/core.entity_view_mode.paragraph.preview
   - language/ru/field.field.media.image.field_media_image
   - language/ru/field.field.media.remote_video.field_media_oembed_video
@@ -188,6 +198,7 @@ complete_list:
   - language/ru/simple_oauth.oauth2_token.bundle.access_token
   - language/ru/system.action.pathauto_update_alias_node
   - language/ru/system.action.pathauto_update_alias_user
+  - language/ru/system.menu.admin
   - language/ru/user.settings
   - language/ru/views.view.archive
   - language/ru/views.view.block_content
@@ -217,6 +228,11 @@ complete_list:
   - language/sk/block.block.claro_page_title
   - language/sk/block.block.claro_primary_local_tasks
   - language/sk/block.block.claro_secondary_local_tasks
+  - language/sk/block.block.gin_content
+  - language/sk/block.block.gin_help
+  - language/sk/block.block.gin_page_title
+  - language/sk/block.block.gin_primary_local_tasks
+  - language/sk/block.block.gin_secondary_local_tasks
   - language/sk/core.base_field_override.node.page.promote
   - language/sk/core.date_format.html_datetime
   - language/sk/core.date_format.long
@@ -315,6 +331,7 @@ complete_list:
   - language/sq/search.page.node_search
   - language/sq/search.page.user_search
   - language/sq/shortcut.set.default
+  - language/sq/system.menu.admin
   - language/sq/user.settings
   - language/sq/views.view.archive
   - language/sq/views.view.block_content
@@ -376,6 +393,8 @@ complete_list:
   - language/sr/views.view.who_s_online
   - language/tj-ru/language.entity.tj-ru
   - language/tj-tg/language.entity.tj-tg
+  - language/uk/core.entity_form_mode.media.media_library
+  - language/uk/core.entity_view_mode.media.media_library
   - language/uk/core.entity_view_mode.paragraph.preview
   - language/uk/field.field.media.image.field_media_image
   - language/uk/filter.format.basic_html
@@ -393,6 +412,7 @@ complete_list:
   - language/uk/simple_oauth.oauth2_token.bundle.access_token
   - language/uk/system.action.pathauto_update_alias_node
   - language/uk/system.action.pathauto_update_alias_user
+  - language/uk/system.menu.admin
   - language/uk/user.settings
   - language/uk/views.view.archive
   - language/uk/views.view.block_content
@@ -428,4 +448,5 @@ complete_list:
   - pb_custom_form.language_redirects
   - system.site
 partial_list:
+  - ai_translate.settings
   - language.negotiation

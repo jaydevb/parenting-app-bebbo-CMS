@@ -12,8 +12,6 @@ display:
       pager:
         options:
           tags:
-            previous: ‹‹
-            next: ››
             first: '« Перша'
             last: 'Остання »'
           expose:
@@ -23,15 +21,10 @@ display:
       fields:
         name:
           label: User
-          separator: ', '
         group_roles:
           label: Ролі
-          separator: ', '
         changed:
           label: Оновлено
-          separator: ', '
-        created:
-          separator: ', '
         view_group_content:
           text: 'Manage member'
         edit_group_content:

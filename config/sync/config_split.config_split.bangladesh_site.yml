@@ -89,6 +89,7 @@ complete_list:
   - pb_custom_form.language_redirects
   - views.view.duplicate_of_tax_test
 partial_list:
+  - ai_translate.settings
   - block.block.claro_help_search
   - block.block.languagedropdownswitcher
   - block.block.mainnavigation
@@ -211,13 +212,6 @@ partial_list:
   - taxonomy.vocabulary.type_of_support
   - tmgmt.settings
   - tmgmt_memsource.settings
-  - user.role.anonymous
-  - user.role.authenticated
-  - user.role.editor
-  - user.role.global_admin
-  - user.role.reviewer
-  - user.role.se
-  - user.role.sme
   - views.view.articles
   - views.view.block_content
   - views.view.country_content_listing

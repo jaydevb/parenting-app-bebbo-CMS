@@ -1,0 +1,46 @@
+bebbo_api_security.settings:
+  type: config_object
+  label: 'Bebbo API Security Settings'
+  mapping:
+    enforcement_mode:
+      type: string
+      label: 'Enforcement mode (disabled, grace_period, enforced)'
+    dev_bypass_enabled:
+      type: boolean
+      label: 'Developer bypass enabled'
+    dev_bypass_ips:
+      type: string
+      label: 'Developer bypass IPs (newline-separated)'
+    google_package_name:
+      type: string
+      label: 'Google Play package name'
+    google_project_number:
+      type: string
+      label: 'Google Cloud project number'
+    google_verdict_freshness_seconds:
+      type: integer
+      label: 'Google verdict freshness window (seconds)'
+    apple_team_id:
+      type: string
+      label: 'Apple Team ID'
+    apple_bundle_id:
+      type: string
+      label: 'Apple Bundle ID'
+    apple_production_mode:
+      type: boolean
+      label: 'Apple production mode'
+    jwt_expiry_seconds:
+      type: integer
+      label: 'JWT expiry in seconds'
+    refresh_expiry_seconds:
+      type: integer
+      label: 'Refresh token expiry in seconds'
+    refresh_rotation_enabled:
+      type: boolean
+      label: 'Refresh token rotation enabled'
+    register_rate_limit:
+      type: integer
+      label: 'Registration rate limit per device per hour'
+    refresh_rate_limit:
+      type: integer
+      label: 'Refresh rate limit per device per hour'

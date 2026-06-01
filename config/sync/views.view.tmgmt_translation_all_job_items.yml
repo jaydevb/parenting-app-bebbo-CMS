@@ -3242,6 +3242,59 @@ display:
           content: 'No job items for the current selection.'
           tokenize: false
       filters:
+        tjid:
+          id: tjid
+          table: tmgmt_job
+          field: tjid
+          relationship: tjid
+          group_type: group
+          admin_label: ''
+          entity_type: tmgmt_job
+          entity_field: tjid
+          plugin_id: numeric
+          operator: '='
+          value:
+            min: ''
+            max: ''
+            value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: tjid_op
+            label: 'Job ID'
+            description: ''
+            use_operator: false
+            operator: tjid_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: tjid
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              global_admin: '0'
+              reviewer: '0'
+              editor: '0'
+              sme: '0'
+              se: '0'
+              administrator: '0'
+            min_placeholder: ''
+            max_placeholder: ''
+            placeholder: ''
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
         item_id:
           id: item_id
           table: tmgmt_job_item
@@ -3427,71 +3480,18 @@ display:
           entity_type: tmgmt_job
           plugin_id: tmgmt_job_type_filter
           operator: '='
+          value: ''
           group: 1
           exposed: true
           expose:
             operator_id: job_type_op
             label: 'Job Type (Custom)'
-            description: null
+            description: ''
             use_operator: false
             operator: job_type_op
             operator_limit_selection: false
             operator_list: {  }
             identifier: job_type
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-            hide_no_continuous: true
-          is_grouped: true
-          group_info:
-            label: 'Job type'
-            description: ''
-            identifier: job_type
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items:
-              1:
-                title: Normal
-                operator: '='
-                value:
-                  value: normal
-              2:
-                title: Continuous
-                operator: '='
-                value:
-                  value: continuous
-        tjid:
-          id: tjid
-          table: tmgmt_job
-          field: tjid
-          relationship: tjid
-          group_type: group
-          admin_label: ''
-          entity_type: tmgmt_job
-          entity_field: tjid
-          plugin_id: numeric
-          operator: '='
-          value:
-            min: ''
-            max: ''
-            value: ''
-          group: 1
-          exposed: true
-          expose:
-            operator_id: tjid_op
-            label: 'Job ID'
-            description: ''
-            use_operator: false
-            operator: tjid_op
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: tjid
             required: false
             remember: false
             multiple: false
@@ -3504,21 +3504,33 @@ display:
               sme: '0'
               se: '0'
               administrator: '0'
-            min_placeholder: ''
-            max_placeholder: ''
+              translator: '0'
+            hide_no_continuous: true
             placeholder: ''
-          is_grouped: false
+          is_grouped: true
           group_info:
-            label: ''
+            label: 'Job Type (Custom)'
             description: ''
-            identifier: ''
+            identifier: job_type
             optional: true
             widget: select
             multiple: false
             remember: false
             default_group: All
             default_group_multiple: {  }
-            group_items: {  }
+            group_items:
+              1:
+                title: Normal
+                operator: '='
+                value: normal
+              2:
+                title: Continuous
+                operator: '='
+                value: continuous
+              3:
+                title: ''
+                operator: '='
+                value: ''
       filter_groups:
         operator: AND
         groups:

@@ -1,11 +1,12 @@
+label: Files
 display:
   default:
     display_title: Базово
     display_options:
+      title: Files
       fields:
         filename:
           label: "Назва (ім'я)"
-          separator: ', '
         filemime:
           label: 'MIME type'
         status:
@@ -35,6 +36,10 @@ display:
         status:
           expose:
             label: Стан
+  page_1:
+    display_options:
+      menu:
+        title: Files
   page_2:
     display_options:
       fields:
