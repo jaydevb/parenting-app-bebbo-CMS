@@ -51,7 +51,7 @@
         "drupal/gin": "^4.1",
         "drupal/gin_toolbar": "^2.1",
         "drupal/google_analytics": "^4.0",
-        "drupal/group": "^2",
+        "drupal/group": "^3",
         "drupal/image_style_quality": "^1.7",
         "drupal/imageapi_optimize": "^4.1",
         "drupal/imageapi_optimize_avif_webp": "^1.3",

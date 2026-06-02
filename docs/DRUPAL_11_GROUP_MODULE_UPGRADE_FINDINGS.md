@@ -569,3 +569,123 @@ New Views alias confirmed by dumping the live built query: `groups_field_data_gr
 **Verified:** PHPCS + drupal-check + phplint clean on all touched files (auto-hook); no stale `group_content_field_data` refs remain; runtime re-smoke on bangla — raw query OK, all probed views execute.
 
 **Still pending for full Phase 1 sign-off:** browser regression with a logged-in reviewer (the §0.3 checklist — country scoping, assign, moderation actions), then re-export ONLY changed group config + confirm `cim` no-op, then Phase 2 (2→3).
+
+### 2026-06-02 — Phase 1.5: config export (bebbo only) + per-site cim
+
+Exported config from bebbo (`ddev drush @ddev.bebbo cex -y`). 23 files changed in `config/sync/`:
+- `core.extension.yml` — added `flexible_permissions: 0` (new Group 2.x dependency).
+- `group.content_type.country-group_membership.yml` — updated by Group 2.x update hooks.
+- 7 hash-named `group.role.country-*.yml` **deleted** (old individual-role model replaced by named roles).
+- Named group roles modified to new 2.x format.
+- 7 Views re-saved (Group update hooks touched the view configs).
+- 6 `config/bebbo/language/{ro,ru,sk,sq,sr,uk}/views.view.group_members.yml` — pre-existing translation overrides re-saved by the Group update hooks.
+
+**Committed:** `feat: migrate Group module 1.x→2.x and core to 10.6.10 (D11 prep)` (`7542d69fa`).
+
+**bangla split-patch drift found:** `core.entity_form_display.group.country.default` had `langcode` in both `content` (from the split patch `adding:` section) and `hidden` (from the base config) — non-idempotent `cim`. Fixed by hand-editing `config/bangla/config_split.patch.core.entity_form_display.group.country.default.yml` to remove `langcode` entries from both `adding` and `removing` sections. **Committed:** `fix: reconcile bangla group form-display split patch for Group 2.x` (`fded3c316`).
+
+**⚠️ Lesson learned:** accidentally ran `config-split:export bangladesh_site` which rewrote ~20 unrelated files (ai_translate, tmgmt, taxonomy, user roles). Fully reverted with `git checkout -- config/bangla/ && git clean -fd config/bangla/`. **Rule: NEVER export config from any site other than bebbo.** For per-site fixes, hand-edit the split patch YAML and verify with `cim` only.
+
+**Config import results — all 7 sites clean:**
+
+| Site | `cim -y` | `cst` |
+|------|----------|-------|
+| bebbo | clean | No differences |
+| bangla | clean (after split-patch fix) | No differences |
+| ec | clean | No differences |
+| pakistan | clean | Pre-existing `system.site` drift (not group-related) |
+| ws | clean | No differences |
+| tr | clean | No differences |
+| zw | clean | No differences |
+
+### 2026-06-02 — Phase 1.6 (partial): browser regression on bebbo
+
+Admin page spot-checks on bebbo (uid 1, logged in via DDEV):
+
+| Page | Result |
+|------|--------|
+| `/admin/group/content/manage/country-group_membership/fields` | ✅ OK — fields list loads, `group_roles` shows "Locked" (normal — plugin-provided base field, always locked in Field UI, same as 1.x) |
+| `/admin/group/types/manage/country/content` | ✅ OK — relationship plugins listed |
+| `/admin/people` | ✅ OK |
+| `/admin/group` | ✅ OK — all 18 groups listed |
+| `/admin/content` | ✅ OK |
+| `/group/6/members` | "Access denied" — uid 1 may lack the specific group role for this view display; needs investigation with a real country-admin user |
+| `/group/6/moderated-content` | "Page not found" — route may not exist for this display on 2.x; expected if the view display changed |
+
+**Q&A resolved during regression:**
+- **Q1: `group_roles` field "Locked"** — Normal. Plugin-provided base field. Always locked in Field UI, same behavior in 1.x. Not a regression.
+- **Q2: Group node plugins (Games, Article, etc.)** — Do NOT install. Bebbo uses language-based content scoping, not gnode node-relations. Only `country-group_membership` is installed and used. Confirmed: DB has only membership rows, zero node-relation rows.
+
+**Status:** Full §0.3 regression with a logged-in reviewer (country scoping, assign action, moderation workflows) still pending — only admin-page spot-checks done. Proceeding to Phase 2 (2→3) as user directed; full regression deferred to after Phase 2 completion (avoids doing it twice).
+
+### 2026-06-02 — Phase 2: Group 2.x → 3.x COMPLETE
+
+**2.1 Composer bump:**
+```bash
+ddev composer require 'drupal/group:^3' -W
+```
+Landed Group **3.3.5** (from 2.3.2). Clean — no patch conflicts, only the group package updated.
+
+**2.2 Key discovery: `group.membership_loader` STILL EXISTS in Group 3.x.**
+The doc (§3, §8 Phase 2.3) assumed it was removed in 3.x — **incorrect**. The service, `GroupMembershipLoaderInterface`, and `loadByUser()` are all present and functional in 3.3.5. This massively reduced the code rewrite scope — no need to replace ~20 membership-loader call sites.
+
+**2.3 DB migration — updb on all 7 sites:**
+Update hooks: `group_update_10300` (DB+fields rename), `10301` (indexes), `10302` (views), `10303` (drop obsolete key), `10304` (state key), `10305` (ER field). All ran successfully on all 7 sites. Pre-`updb` backups in `artifacts/group_migration/<site>_2to3_pre.sql.gz`.
+
+**Gotcha — Views config row name bug:** `group_update_10302` renamed the `id` field *inside* view config data (e.g. `duplicate_of_moderated_group_content` → `duplicate_of_moderated_group_relationship`) but did NOT rename the config table row name (`views.view.duplicate_of_moderated_group_content`). Result: `viewStorage->load("duplicate_of_moderated_group_relationship")` returns null → fatal error on `drush cr`. Fixed by renaming the config row name in all 7 site DBs:
+```php
+$db->merge("config")->key("name", "views.view.duplicate_of_moderated_group_relationship")
+  ->fields(["collection" => "", "data" => $raw])->execute();
+$db->delete("config")->condition("name", "views.view.duplicate_of_moderated_group_content")->execute();
+```
+
+**Membership verification — all 7 sites PASS:**
+
+| Site | Groups | Members | Relations | 2→3 |
+|------|-------:|--------:|----------:|:---:|
+| bangla | 1 | 26 | 26 | ✅ |
+| bebbo | 18 | 233 | 233 | ✅ |
+| ec | 1 | 25 | 25 | ✅ |
+| pakistan | 1 | 1 | 1 | ✅ |
+| tr | 1 | 11 | 11 | ✅ |
+| ws | 2 | 40 | 40 | ✅ |
+| zw | 1 | 43 | 43 | ✅ |
+
+**2.4 Custom code rewrite for 3.x:**
+Entity type ID changed from `group_content` to `group_relationship`. Fewer changes than Phase 1 since `group.membership_loader` stayed:
+
+| File:line | Change |
+|-----------|--------|
+| `pb_custom_field.module:317` | Form ID `group_content_country-group_membership_delete_form` → `group_relationship_…` |
+| `pb_custom_field.module:1000` | Tab key `…duplicate_of_moderated_group_content…` → `…group_relationship…` |
+| `pb_custom_field.module:1136-1152` | Local var `$group_content_id` → `$relationship_id` (clarity) |
+| `pb_custom_field.module:2236-2262` | `getStorage('group_content')` → `getStorage('group_relationship')`; cache tag `group_content_list` → `group_relationship_list`; local vars renamed |
+| `AdminRouteSubscriber.php:47` | View route `…duplicate_of_moderated_group_content…` → `…group_relationship…` |
+| `group_country_field.module:57,137` | View ID string `duplicate_of_moderated_group_content` → `duplicate_of_moderated_group_relationship` |
+
+PHPCS + drupal-check + phplint clean on all files. Zero `group_content` refs remaining in custom code.
+
+**2.5 Config export (bebbo only) + orphaned config cleanup:**
+Initial `cex` from bebbo produced 13 view updates + 6 renames (all `group_content` → `group_relationship`). But `cim` on bangla/ec/pakistan/tr failed — orphaned `core.base_field_override.group_content.*` (6), `language.content_settings.group_content.*` (1), `pathauto.pattern.group_content` (1), `core.entity_view_mode.group_content.token` (1) configs still in DBs with broken dependency on deleted `group.content_type.country-group_membership`. Group 3.x update hooks missed renaming these.
+
+Fix: deleted all 9 orphaned config entries from all 7 site DBs + from `config/sync/`. Re-exported from bebbo (clean — no diff). Re-imported on all 7 sites — all clean.
+
+**Config status — all 7 sites clean:**
+
+| Site | `cim` | `cst` |
+|------|-------|-------|
+| bebbo | No changes | No differences |
+| bangla | Imported OK | No differences |
+| ec | Imported OK | No differences |
+| pakistan | Imported OK | Pre-existing `system.site` drift (not group-related) |
+| tr | Imported OK | No differences |
+| ws | No changes | No differences |
+| zw | No changes | No differences |
+
+**Phase 2 status: COMPLETE.** Group module is now at **3.3.5**, entity type `group_relationship`, all data migrated + verified, all custom code rewritten, config clean. Both phases (1→2→3) done on branch `feature/d11-group-migration`.
+
+**Remaining before go-live:**
+1. Full §0.3 browser regression with logged-in reviewer (country scoping, assign action, moderation workflows)
+2. **TOBEFIXED: manage-users flow** — deferred to client decision
+3. Pre-existing pakistan `system.site` drift — separate cleanup
+4. Phase 3+ (other D11 blockers, core bump to 11.x)

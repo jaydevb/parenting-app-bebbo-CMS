@@ -314,7 +314,7 @@ function pb_custom_field_preprocess_page(&$variables) {
 function pb_custom_field_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
 
   /* To modify label changes in member remove*/
-  if ($form_id == "group_content_country-group_membership_delete_form") {
+  if ($form_id == "group_relationship_country-group_membership_delete_form") {
     $form['#title'] = strip_tags(str_replace("delete", "remove", $form['#title']));
     $form['actions']['submit']['#value'] = "Remove";
     $form['actions']['submit']['#submit'][] = 'pb_custom_field_form_submit';
@@ -997,7 +997,7 @@ function pb_custom_field_menu_local_tasks_alter(&$data, $route_name) {
     unset($data['tabs'][0]['group.delete_form']);
     unset($data['tabs'][0]['group.content']);
     unset($data['tabs'][0]['views_view:view.group_nodes.page_1']);
-    unset($data['tabs'][0]['views_view:view.duplicate_of_moderated_group_content.moderated_content']);
+    unset($data['tabs'][0]['views_view:view.duplicate_of_moderated_group_relationship.moderated_content']);
     unset($data['tabs'][0]['content_translation.local_tasks:entity.group.content_translation_overview']);
   }
 
@@ -1133,23 +1133,23 @@ function pb_custom_field_redirect_to_add_member_page($form, FormStateInterface $
   $query->fields('group_relationship_field_data');
   $result = $query->execute()->fetchAll();
   if (!empty($result)) {
-    $group_content_id = $result[0]->id;
+    $relationship_id = $result[0]->id;
   }
   else {
-    $group_content_id = NULL;
+    $relationship_id = NULL;
   }
 
-  if (!empty($groups) && isset($groups[0]) && $groups[0]->bundle() == "country" && in_array('reviewer', $user_roles) && $group_content_id) {
-    $url = url::fromUserInput('/group/' . $groups[0]->id() . '/content/' . $group_content_id . '/edit');
+  if (!empty($groups) && isset($groups[0]) && $groups[0]->bundle() == "country" && in_array('reviewer', $user_roles) && $relationship_id) {
+    $url = url::fromUserInput('/group/' . $groups[0]->id() . '/content/' . $relationship_id . '/edit');
     $form_state->setRedirectUrl($url);
   }
 
-  if (in_array("global_admin", $user_roles) && $group_content_id) {
+  if (in_array("global_admin", $user_roles) && $relationship_id) {
     if (\Drupal::service('path.current')->getPath() != "/admin/people/create") {
       $request_uri = \Drupal::service('path.current')->getPath();
       $request = explode('/', $request_uri);
       if (isset($request[2])) {
-        $url = url::fromUserInput('/group/' . $request[2] . '/content/' . $group_content_id . '/edit');
+        $url = url::fromUserInput('/group/' . $request[2] . '/content/' . $relationship_id . '/edit');
         $form_state->setRedirectUrl($url);
       }
     }
@@ -2233,33 +2233,33 @@ function _pb_custom_field_check_country_access(NodeInterface $node, AccountInter
 
     // Check if node belongs to any of user's groups.
     $entity_type_manager = \Drupal::entityTypeManager();
-    $group_content_storage = $entity_type_manager->getStorage('group_content');
-    $group_contents = $group_content_storage->loadByProperties([
+    $relationship_storage = $entity_type_manager->getStorage('group_relationship');
+    $relationships = $relationship_storage->loadByProperties([
       'entity_id' => $node->id(),
     ]);
 
-    if (empty($group_contents)) {
+    if (empty($relationships)) {
       return AccessResult::forbidden()->cachePerUser();
     }
 
-    foreach ($group_contents as $group_content) {
+    foreach ($relationships as $relationship) {
       // Try different ways to get the group ID.
       $node_group_id = NULL;
-      if (method_exists($group_content, 'getGroup')) {
-        $group = $group_content->getGroup();
+      if (method_exists($relationship, 'getGroup')) {
+        $group = $relationship->getGroup();
         if ($group) {
           $node_group_id = $group->id();
         }
       }
 
       // Fallback to direct field access.
-      if (!$node_group_id && $group_content instanceof FieldableEntityInterface && $group_content->hasField('gid')) {
-        $node_group_id = $group_content->get('gid')->value;
+      if (!$node_group_id && $relationship instanceof FieldableEntityInterface && $relationship->hasField('gid')) {
+        $node_group_id = $relationship->get('gid')->value;
       }
 
       if ($node_group_id && in_array($node_group_id, $user_group_ids)) {
         // User is assigned to the node's country - allow access.
-        return AccessResult::allowed()->cachePerUser()->addCacheTags(['group_list', 'group_content_list']);
+        return AccessResult::allowed()->cachePerUser()->addCacheTags(['group_list', 'group_relationship_list']);
       }
     }
 

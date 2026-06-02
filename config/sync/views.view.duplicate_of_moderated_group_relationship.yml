@@ -12,7 +12,7 @@ dependencies:
     - user
 _core:
   default_config_hash: meD9AMTsOqOQ86qYobfOYg-RiIlqtvZkmW791P-G3Bw
-id: duplicate_of_moderated_group_content
+id: duplicate_of_moderated_group_relationship
 label: 'Moderated group content'
 module: views
 description: 'Find and moderate group content.'
