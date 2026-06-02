@@ -689,3 +689,43 @@ Fix: deleted all 9 orphaned config entries from all 7 site DBs + from `config/sy
 2. **TOBEFIXED: manage-users flow** — deferred to client decision
 3. Pre-existing pakistan `system.site` drift — separate cleanup
 4. Phase 3+ (other D11 blockers, core bump to 11.x)
+
+### 2026-06-02 — Browser regression on Group 3.x + admin access fix
+
+**Admin group access issue found and fixed:**
+
+Group 1.x/2.x had a `bypass group access` Drupal permission that gave administrators full access to all groups regardless of membership. **Group 3.x removed this permission entirely.** Admins (including uid 1) were now treated as "outsiders" with only view access — could not edit/delete groups or access members page.
+
+**Root cause:** In Group 3.x, access is purely group-role-based. The `country-admin` group role has `admin: true` but it's `individual` scope — only applies to explicit per-group members. The `country-outsider` role (which all non-members including uid 1 get) only has `view group` permission. No synchronized group role existed for the Drupal `administrator` role.
+
+**Fix:** Created `group.role.country-administrator` — a synchronized group role:
+- **scope:** `outsider` (applies to non-members)
+- **global_role:** `administrator` (maps to Drupal administrator role)
+- **admin:** `true` (grants all group permissions)
+
+This replaces the old `bypass group access` behavior. Any user with the Drupal `administrator` role now automatically gets full admin access to all groups. Config exported from bebbo, imported on all 7 sites.
+
+**Note:** the `allowed_languages` contrib module has a bug in `AllowedLanguagesManager::hasPermissionForLanguage()` — line 88 ignores the `$account` parameter and always uses `$this->currentUser` instead. This causes false negatives in drush/CLI contexts but works correctly in browser (where `$this->currentUser` matches the logged-in user). Not a Group upgrade issue.
+
+**Browser regression results (bebbo, uid 1, Group 3.3.5):**
+
+| Page | Result |
+|------|--------|
+| `/admin/group` | ✅ All 18 groups listed, Edit/operations available |
+| `/admin/group/types/manage/country/permissions` | ✅ Permission grid loads |
+| `/admin/group/content/manage/country-group_membership/fields` | ✅ Fields listed |
+| `/admin/content` | ✅ Content listing loads |
+| `/admin/people` | ✅ People listing loads |
+| `/group/6` (Albania) | ✅ Group view page loads |
+| `/group/6/edit` | ✅ Edit form loads with all fields |
+| `/group/6/members` | ✅ Members page loads, Add member available |
+| `/group/6/moderated` | ✅ Moderated content view loads |
+| `/group/6/content` | ✅ All entity relations page loads |
+
+**§0.3 regression items still pending:** country scoping test with a non-admin reviewer (requires a test account that's a member of a specific group), assign content bulk action, moderation workflow actions. These are functional tests beyond page-load checks.
+
+**Commits on `feature/d11-group-migration`:**
+1. `7542d69fa` — feat: migrate Group module 1.x→2.x and core to 10.6.10 (D11 prep)
+2. `fded3c316` — fix: reconcile bangla group form-display split patch for Group 2.x
+3. `c61123132` — feat: complete Group 2.x→3.x migration — entity rename + config cleanup
+4. *(pending)* — fix: add synchronized admin group role for Group 3.x (replaces bypass group access)
