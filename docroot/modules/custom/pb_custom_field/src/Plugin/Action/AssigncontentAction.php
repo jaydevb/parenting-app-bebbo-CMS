@@ -19,7 +19,6 @@ use Drupal\group\Entity;
 use Drupal\node\Entity\Node;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Language\LanguageManager;
-use Drupal\group\Entity\GroupContent;
 use Drupal\Core\Url;
  */
 /**
