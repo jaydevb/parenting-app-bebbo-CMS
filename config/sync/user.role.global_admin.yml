@@ -257,6 +257,7 @@ permissions:
   - 'manage layout builder style groups'
   - 'manage layout builder styles'
   - 'manage redirect settings'
+  - 'rebuild node access permissions'
   - 'restful get custom_rest_resource'
   - 'schedule_import analytics_import_activities feeds'
   - 'schedule_import analytics_import_course feeds'

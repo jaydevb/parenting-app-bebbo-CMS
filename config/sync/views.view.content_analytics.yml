@@ -464,7 +464,6 @@ display:
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  sort_options_unsupported: ''
               type_exposed:
                 plugin_id: default
                 advanced:
@@ -718,6 +717,7 @@ display:
           empty_table: false
           caption: ''
           description: ''
+          class: ''
       row:
         type: fields
         options:
@@ -1412,10 +1412,10 @@ display:
         page_1: page_1
       filename: content-analytics.csv
       automatic_download: true
-      store_in_public_file_directory: false
       custom_redirect_path: false
       redirect_to_display: page_1
       include_query_params: true
+      export_filesystem: private
     cache_metadata:
       max-age: -1
       contexts:
@@ -1554,13 +1554,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              global_admin: '0'
-              reviewer: '0'
-              editor: '0'
-              sme: '0'
-              se: '0'
-              administrator: '0'
             reduce: false
           is_grouped: true
           group_info:
