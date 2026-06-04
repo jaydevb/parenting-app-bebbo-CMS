@@ -299,8 +299,8 @@ display:
           label: Created
           exclude: false
           alter:
-            alter_text: false
-            text: ''
+            alter_text: true
+            text: '{{ created|date("m/d/Y H:i A") }}'
             make_link: false
             path: ''
             absolute: false
@@ -627,6 +627,7 @@ display:
       max-age: -1
       contexts:
         - 'languages:language_interface'
+        - url
         - url.query_args
         - user.permissions
       tags: {  }
@@ -651,6 +652,7 @@ display:
       max-age: -1
       contexts:
         - 'languages:language_interface'
+        - url
         - url.query_args
         - user.permissions
       tags: {  }

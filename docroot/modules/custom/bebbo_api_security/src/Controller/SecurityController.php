@@ -77,7 +77,9 @@ class SecurityController extends ControllerBase {
     $device_id = $body['device_id'];
     $ip = $request->getClientIp() ?? '0.0.0.0';
 
-    $rate_error = $this->rateLimit($device_id, 'bebbo_register', 10, 3600);
+    $config = $this->config('bebbo_api_security.settings');
+    $limit = (int) $config->get('register_rate_limit') ?: 10;
+    $rate_error = $this->rateLimit($device_id, 'bebbo_register', $limit, 3600);
     if ($rate_error) {
       return $rate_error;
     }
@@ -168,7 +170,9 @@ class SecurityController extends ControllerBase {
     }
 
     $ip = $request->getClientIp() ?? '0.0.0.0';
-    $rate_error = $this->rateLimit($ip, 'bebbo_device_register', 5, 3600);
+    $config = $this->config('bebbo_api_security.settings');
+    $limit = (int) $config->get('device_register_ip_rate_limit') ?: 5;
+    $rate_error = $this->rateLimit($ip, 'bebbo_device_register', $limit, 3600);
     if ($rate_error) {
       return $rate_error;
     }
@@ -186,10 +190,11 @@ class SecurityController extends ControllerBase {
       ], 400);
     }
 
+    $challenge_expiry = (int) $config->get('challenge_expiry_seconds') ?: 120;
     return new JsonResponse([
       'status' => 'challenge_issued',
       'challenge' => $challenge,
-      'expires_in' => 120,
+      'expires_in' => $challenge_expiry,
     ]);
   }
 
@@ -209,7 +214,9 @@ class SecurityController extends ControllerBase {
     $device_id = $body['device_id'];
     $ip = $request->getClientIp() ?? '0.0.0.0';
 
-    $rate_error = $this->rateLimit($device_id, 'bebbo_device_verify', 10, 3600);
+    $config = $this->config('bebbo_api_security.settings');
+    $limit = (int) $config->get('verify_rate_limit') ?: 10;
+    $rate_error = $this->rateLimit($device_id, 'bebbo_device_verify', $limit, 3600);
     if ($rate_error) {
       return $rate_error;
     }

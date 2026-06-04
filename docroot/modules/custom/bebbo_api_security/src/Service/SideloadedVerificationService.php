@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\bebbo_api_security\Service;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Psr\Log\LoggerInterface;
 
@@ -19,10 +20,13 @@ class SideloadedVerificationService {
    *   The database connection.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger channel.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
    */
   public function __construct(
     protected readonly Connection $database,
     protected readonly LoggerInterface $logger,
+    protected readonly ConfigFactoryInterface $configFactory,
   ) {}
 
   /**
@@ -67,7 +71,7 @@ class SideloadedVerificationService {
       'device_id' => $device_id,
       'challenge' => $challenge,
       'purpose' => 'sideloaded_verify',
-      'expires' => time() + 120,
+      'expires' => time() + ((int) $this->configFactory->get('bebbo_api_security.settings')->get('challenge_expiry_seconds') ?: 120),
       'used' => 0,
       'created' => time(),
     ])->execute();
