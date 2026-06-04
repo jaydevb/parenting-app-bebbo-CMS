@@ -70,6 +70,7 @@ class ApiSecuritySettingsForm extends ConfigFormBase {
     $form['google'] = [
       '#type' => 'details',
       '#title' => $this->t('Google Play Integrity'),
+      '#open' => TRUE,
     ];
     $form['google']['google_package_name'] = [
       '#type' => 'textfield',
@@ -121,6 +122,7 @@ class ApiSecuritySettingsForm extends ConfigFormBase {
     $form['tokens'] = [
       '#type' => 'details',
       '#title' => $this->t('Token Lifetimes'),
+      '#open' => TRUE,
     ];
     $form['tokens']['jwt_expiry_seconds'] = [
       '#type' => 'number',
@@ -147,6 +149,7 @@ class ApiSecuritySettingsForm extends ConfigFormBase {
     $form['rate_limiting'] = [
       '#type' => 'details',
       '#title' => $this->t('Rate Limiting'),
+      '#open' => TRUE,
     ];
     $form['rate_limiting']['register_rate_limit'] = [
       '#type' => 'number',
