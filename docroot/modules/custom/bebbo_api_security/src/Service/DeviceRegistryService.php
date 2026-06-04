@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\bebbo_api_security\Service;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Psr\Log\LoggerInterface;
 
@@ -12,9 +13,20 @@ use Psr\Log\LoggerInterface;
  */
 class DeviceRegistryService {
 
+  /**
+   * Constructs a DeviceRegistryService.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger channel.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
+   */
   public function __construct(
     protected readonly Connection $database,
     protected readonly LoggerInterface $logger,
+    protected readonly ConfigFactoryInterface $configFactory,
   ) {}
 
   /**
@@ -100,19 +112,22 @@ class DeviceRegistryService {
       ->condition('expires', $now, '<')
       ->execute();
 
+    $config = $this->configFactory->get('bebbo_api_security.settings');
+    $retention_days = (int) $config->get('revoked_token_retention_days') ?: 7;
     $stats['tokens_revoked'] = $this->database->delete('bebbo_api_refresh_tokens')
       ->condition('revoked', 1)
-      ->condition('created', $now - 604800, '<')
+      ->condition('created', $now - ($retention_days * 86400), '<')
       ->execute();
 
     $stats['tokens_expired'] = $this->database->delete('bebbo_api_refresh_tokens')
       ->condition('expires', $now, '<')
       ->execute();
 
+    $max_entries = (int) $config->get('security_log_max_entries') ?: 10000;
     $max_id = $this->database->select('bebbo_api_security_log', 'l')
       ->fields('l', ['id'])
       ->orderBy('id', 'DESC')
-      ->range(10000, 1)
+      ->range($max_entries, 1)
       ->execute()
       ->fetchField();
 

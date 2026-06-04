@@ -8,6 +8,7 @@ services:
     arguments:
       - '@database'
       - '@logger.channel.bebbo_api_security'
+      - '@config.factory'
 
   bebbo_api_security.jwt_service:
     class: Drupal\bebbo_api_security\Service\JwtService
@@ -37,6 +38,7 @@ services:
     arguments:
       - '@database'
       - '@logger.channel.bebbo_api_security'
+      - '@config.factory'
 
   bebbo_api_security.request_subscriber:
     class: Drupal\bebbo_api_security\EventSubscriber\ApiSecuritySubscriber

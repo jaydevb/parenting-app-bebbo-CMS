@@ -75,6 +75,7 @@ class GooglePlayIntegrityService {
     }
 
     $access_token = $this->getGoogleAccessToken();
+    $timeout = (int) $config->get('google_api_timeout') ?: 10;
 
     try {
       $response = $this->httpClient->request('POST',
@@ -85,7 +86,7 @@ class GooglePlayIntegrityService {
             'Content-Type' => 'application/json',
           ],
           'json' => ['integrity_token' => $integrity_token],
-          'timeout' => 10,
+          'timeout' => $timeout,
         ]
       );
     }
@@ -201,13 +202,14 @@ class GooglePlayIntegrityService {
 
     $assertion = JWT::encode($jwt_payload, $sa_json['private_key'], 'RS256');
 
+    $timeout = (int) $this->configFactory->get('bebbo_api_security.settings')->get('google_api_timeout') ?: 10;
     try {
       $response = $this->httpClient->request('POST', 'https://oauth2.googleapis.com/token', [
         'form_params' => [
           'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
           'assertion' => $assertion,
         ],
-        'timeout' => 10,
+        'timeout' => $timeout,
       ]);
     }
     catch (GuzzleException $e) {
