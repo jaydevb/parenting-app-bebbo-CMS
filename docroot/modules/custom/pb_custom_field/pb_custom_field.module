@@ -1719,6 +1719,7 @@ function pb_custom_field_preprocess_html(&$variables) {
   ];
   if (in_array($internal, $homepage_paths)) {
     $variables['#attached']['library'][] = 'pb_custom_field/homepage';
+    $variables['#attached']['library'][] = 'pb_custom_form/bootstrap';
     if (!$logged_in) {
       $variables['attributes']['class'][] = 'pb-main-homepage';
     }
