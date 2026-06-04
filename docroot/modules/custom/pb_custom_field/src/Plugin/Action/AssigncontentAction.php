@@ -209,7 +209,7 @@ class AssigncontentAction extends ViewsBulkOperationsActionBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $currentAccount = $this->getCurrentUser();
     $cur_user_roles = $currentAccount->getRoles();
     $authorized_roles = ['se', 'sme', 'editor', 'reviewer'];
@@ -309,7 +309,7 @@ class AssigncontentAction extends ViewsBulkOperationsActionBase {
   /**
    * {@inheritdoc}
    */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $country_code = $form_state->getvalue('country_option');
     if (empty($country_code)) {
       $form_state->setErrorByName('country_option', $this->t('Please select the Country.'));
@@ -323,7 +323,7 @@ class AssigncontentAction extends ViewsBulkOperationsActionBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['language_option'] = $form_state->getValue('language_option');
     $this->configuration['country_option'] = $form_state->getValue('country_option');
   }
