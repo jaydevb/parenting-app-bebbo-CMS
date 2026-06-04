@@ -30,14 +30,33 @@ class DeviceRegistryService {
   ) {}
 
   /**
-   * Insert a new device record.
+   * Register or re-register a device (UPSERT).
+   *
+   * On re-registration, preserves the original created timestamp and
+   * invalidates any existing refresh tokens and challenges.
    *
    * @return int
-   *   The auto-increment ID of the inserted row.
+   *   Merge status constant.
    */
   public function registerDevice(array $fields): int {
-    return (int) $this->database->insert('bebbo_api_devices')
-      ->fields($fields)
+    $device_id = $fields['device_id'];
+
+    // Invalidate stale tokens and challenges on re-registration.
+    $this->database->delete('bebbo_api_refresh_tokens')
+      ->condition('device_id', $device_id)
+      ->execute();
+    $this->database->delete('bebbo_api_challenges')
+      ->condition('device_id', $device_id)
+      ->execute();
+
+    // Preserve original created timestamp on update.
+    $update_fields = $fields;
+    unset($update_fields['device_id'], $update_fields['created']);
+
+    return (int) $this->database->merge('bebbo_api_devices')
+      ->keys(['device_id' => $device_id])
+      ->fields($update_fields)
+      ->insertFields(['created' => $fields['created'] ?? time()])
       ->execute();
   }
 
@@ -138,6 +157,30 @@ class DeviceRegistryService {
         ->execute();
     }
 
+    return $stats;
+  }
+
+  /**
+   * Truncate all security tables, resetting auto-increment counters.
+   *
+   * @return array
+   *   Row counts per table before truncation.
+   */
+  public function truncateAll(): array {
+    $tables = [
+      'devices' => 'bebbo_api_devices',
+      'challenges' => 'bebbo_api_challenges',
+      'tokens' => 'bebbo_api_refresh_tokens',
+      'logs' => 'bebbo_api_security_log',
+    ];
+    $stats = [];
+    foreach ($tables as $key => $table) {
+      $stats[$key] = (int) $this->database->select($table)
+        ->countQuery()
+        ->execute()
+        ->fetchField();
+      $this->database->truncate($table)->execute();
+    }
     return $stats;
   }
 

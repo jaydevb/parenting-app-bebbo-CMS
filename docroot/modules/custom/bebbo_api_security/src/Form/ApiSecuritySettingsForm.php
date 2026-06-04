@@ -4,13 +4,31 @@ declare(strict_types=1);
 
 namespace Drupal\bebbo_api_security\Form;
 
+use Drupal\bebbo_api_security\Service\DeviceRegistryService;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Admin configuration form for API security settings.
  */
 class ApiSecuritySettingsForm extends ConfigFormBase {
+
+  /**
+   * The device registry service.
+   *
+   * @var \Drupal\bebbo_api_security\Service\DeviceRegistryService
+   */
+  protected DeviceRegistryService $registry;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->registry = $container->get('bebbo_api_security.device_registry');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -226,6 +244,36 @@ class ApiSecuritySettingsForm extends ConfigFormBase {
       '#rows' => 4,
     ];
 
+    // Data Management.
+    $form['data_management'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Data Management'),
+    ];
+    $form['data_management']['purge_expired'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Purge Expired Data'),
+      '#description' => $this->t('Remove expired challenges, revoked tokens, and trim security log per retention settings above.'),
+      '#submit' => ['::purgeExpiredSubmit'],
+      '#limit_validation_errors' => [],
+      '#attributes' => ['class' => ['button']],
+    ];
+    $form['data_management']['purge_description'] = [
+      '#markup' => '<p>' . $this->t('Remove expired challenges, revoked/expired tokens, and trim the security log per retention settings.') . '</p>',
+    ];
+    $form['data_management']['truncate_all'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Truncate All Security Tables'),
+      '#submit' => ['::truncateAllSubmit'],
+      '#limit_validation_errors' => [],
+      '#attributes' => [
+        'class' => ['button', 'button--danger'],
+        'onclick' => 'return confirm("This will permanently delete ALL data from devices, challenges, tokens, and security log tables. Auto-increment resets to 1. This cannot be undone. Continue?")',
+      ],
+    ];
+    $form['data_management']['truncate_description'] = [
+      '#markup' => '<p>' . $this->t('Delete ALL data from devices, challenges, tokens, and security log. Auto-increment resets to 1. <strong>Cannot be undone.</strong>') . '</p>',
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -328,6 +376,32 @@ class ApiSecuritySettingsForm extends ConfigFormBase {
       ->set('protected_api_patterns', trim($form_state->getValue('protected_api_patterns') ?? ''))
       ->set('excluded_api_patterns', trim($form_state->getValue('excluded_api_patterns') ?? ''))
       ->save();
+  }
+
+  /**
+   * Submit handler for the "Purge Expired Data" button.
+   */
+  public function purgeExpiredSubmit(array &$form, FormStateInterface $form_state): void {
+    $stats = $this->registry->purgeExpired();
+    $this->messenger()->addStatus($this->t('Purged: @challenges expired challenges, @revoked revoked tokens, @expired expired tokens, @logs old log entries.', [
+      '@challenges' => $stats['challenges'],
+      '@revoked' => $stats['tokens_revoked'],
+      '@expired' => $stats['tokens_expired'],
+      '@logs' => $stats['logs'],
+    ]));
+  }
+
+  /**
+   * Submit handler for the "Truncate All Security Tables" button.
+   */
+  public function truncateAllSubmit(array &$form, FormStateInterface $form_state): void {
+    $stats = $this->registry->truncateAll();
+    $this->messenger()->addWarning($this->t('Truncated all security tables: @devices devices, @challenges challenges, @tokens refresh tokens, @logs log entries removed.', [
+      '@devices' => $stats['devices'],
+      '@challenges' => $stats['challenges'],
+      '@tokens' => $stats['tokens'],
+      '@logs' => $stats['logs'],
+    ]));
   }
 
 }
