@@ -1,10 +1,9 @@
 display:
   default:
     display_options:
-      exposed_form:
-        options:
-          exposed_sorts_label: 'Sort by'
       fields:
+        edit_user:
+          text: 'Edit member'
         name:
           label: User
         group_roles:
@@ -13,7 +12,8 @@ display:
           text: 'Manage member'
         edit_group_content:
           text: 'Assign roles'
-        edit_user:
-          text: 'Edit member'
         dropbutton:
           label: Operations
+      exposed_form:
+        options:
+          exposed_sorts_label: 'Sort by'

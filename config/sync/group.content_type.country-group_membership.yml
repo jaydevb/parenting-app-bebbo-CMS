@@ -7,8 +7,6 @@ dependencies:
   module:
     - user
 id: country-group_membership
-label: 'Country: Group membership'
-description: 'Adds users to groups as members.'
 group_type: country
 content_plugin: group_membership
 plugin_config:
