@@ -57,3 +57,19 @@ table.tmgmt-ui-review input.unreviewed,
 .breadcrumb__list .breadcrumb__item:nth-child(n+3) {
   display: none;
 }
+
+.header-un-logo img {
+  max-width: 205px;
+  height: auto;
+}
+
+.main-logo img {
+  max-width: 150px;
+  height: auto;
+}
+
+.main-logo {
+  color: #4fa9dd;
+  font-style: italic;
+  font-weight: 600;
+}
