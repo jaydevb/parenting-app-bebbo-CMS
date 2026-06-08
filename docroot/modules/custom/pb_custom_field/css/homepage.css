@@ -280,7 +280,7 @@
     display: block;
   }
 
-  .pb-main-homepage #block-logo {
+  .pb-main-homepage #block-gin-logo {
     width: 85% !important;
   }
 }
@@ -305,7 +305,7 @@
   text-decoration: none;
 }
 
-.pb-main-homepage #block-logo {
+.pb-main-homepage #block-gin-logo {
   background-color: #4FA9DD;
 }
 
@@ -553,7 +553,7 @@ img[alt="bebbo-hearts"] {
   margin-right: 35px;
 }
 
-#block-mainnavigation {
+#block-gin-mainnavigation {
   background: #f2f2f2;
   padding: 20px;
 }
@@ -723,7 +723,7 @@ img[alt="bebbo-hearts"] {
     justify-content: flex-start;
   }
 
-  .pb-main-homepage #block-logo {
+  .pb-main-homepage #block-gin-logo {
     width: 100% !important;
   }
 
