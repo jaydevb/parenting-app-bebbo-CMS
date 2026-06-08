@@ -1003,15 +1003,6 @@ function pb_custom_form_csv_download_redirect($form, FormStateInterface $form_st
 }
 
 /**
- * Implements hook_page_attachments_alter().
- *
- * Allows alteration of page attachments before rendering.
- */
-function pb_custom_form_page_attachments_alter(&$page) {
-  $page['#attached']['library'][] = 'pb_custom_form/bootstrap';
-}
-
-/**
  * Implements hook_preprocess_page().
  */
 function pb_custom_form_preprocess_page(&$variables) {
