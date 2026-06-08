@@ -10,6 +10,11 @@ homepage:
   js:
     js/homepage.js: {}
 
+homepage_grid:
+  css:
+    theme:
+      css/homepage-grid.css: {}
+
 admin_rtl:
   css:
     theme:

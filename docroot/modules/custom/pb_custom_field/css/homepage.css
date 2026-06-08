@@ -124,13 +124,13 @@
   font-weight: 500;
 }
 
-.pb-main-homepage .all-parent {
+.pb-landing .all-parent {
   width: 300px;
   margin: 0 auto;
 }
 
 @media screen and (min-width: 768px) {
-  .pb-main-homepage .all-parent {
+  .pb-landing .all-parent {
     width: 500px;
     margin: 0 auto;
   }
@@ -251,11 +251,11 @@
 }
 
 @media screen and (max-width: 767px) {
-  .pb-main-homepage .two-section img {
+  .pb-landing .two-section img {
     width: 125px;
   }
 
-  .pb-main-homepage .two-section {
+  .pb-landing .two-section {
     width: 300px;
   }
 
@@ -309,13 +309,13 @@
   background-color: #4FA9DD;
 }
 
-.pb-main-homepage .page-content {
+.pb-landing .page-content {
   margin-bottom: 0;
   margin-top: 0;
 }
 
-.pb-main-homepage .field.field--name-field-mandatory-content.field--type-boolean.field--label-above,
-.pb-main-homepage .field.field--name-field-licensed-content.field--type-boolean.field--label-above {
+.pb-landing .field.field--name-field-mandatory-content.field--type-boolean.field--label-above,
+.pb-landing .field.field--name-field-licensed-content.field--type-boolean.field--label-above {
   display: none;
 }
 
@@ -414,6 +414,15 @@ img[alt="bebbo-hearts"] {
   width: 50px;
   text-align: center;
   margin: 20px;
+}
+
+/* Restore Bootstrap 4's .media flex component (previously loaded from the
+   Bootstrap CDN). The justify-content rules below center/align images inside
+   media and only work when .media is a flex container. Scoped to .pb-landing
+   so it never touches the Gin admin theme. */
+.pb-landing .media {
+  display: flex;
+  align-items: flex-start;
 }
 
 .block-download-applogo .media--type-image {
@@ -606,7 +615,7 @@ img[alt="bebbo-hearts"] {
   overflow-x: hidden;
 }
 
-.homepageblock1 {
+.pb-main-homepage .homepageblock1 {
   margin-top: 160px;
 }
 
