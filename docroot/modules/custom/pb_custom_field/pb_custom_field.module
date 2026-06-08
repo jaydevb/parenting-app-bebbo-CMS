@@ -1124,13 +1124,13 @@ function pb_custom_field_redirect_to_add_member_page($form, FormStateInterface $
     $nid = $entity->id();
   }
 
-  $query = \Drupal::database()->select('group_content_field_data');
+  $query = \Drupal::database()->select('group_relationship_field_data');
   if (isset($nid)) {
     $query->condition('entity_id', $nid);
   }
   $query->orderBy('id', 'DESC');
   $query->range(0, 1);
-  $query->fields('group_content_field_data');
+  $query->fields('group_relationship_field_data');
   $result = $query->execute()->fetchAll();
   if (!empty($result)) {
     $group_content_id = $result[0]->id;
@@ -1430,9 +1430,9 @@ function pb_custom_field_views_query_alter(ViewExecutable $view, QueryPluginBase
 
           // If this is the part of the query filtering on title, change the
           // condition to filter on node ID.
-          if ($condition['field'] == 'groups_field_data_group_content_field_data.id') {
+          if ($condition['field'] == 'groups_field_data_group_relationship_field_data.id') {
             $condition = [
-              'field' => 'groups_field_data_group_content_field_data.id',
+              'field' => 'groups_field_data_group_relationship_field_data.id',
               'value' => $gid,
               'operator' => '=',
             ];
@@ -1721,6 +1721,7 @@ function pb_custom_field_preprocess_html(&$variables) {
     $variables['#attached']['library'][] = 'pb_custom_field/homepage';
     if (!$logged_in) {
       $variables['attributes']['class'][] = 'pb-main-homepage';
+      $variables['#attached']['library'][] = 'pb_custom_form/bootstrap';
     }
   }
   if (!$logged_in) {

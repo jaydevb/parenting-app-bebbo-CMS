@@ -54,6 +54,7 @@ module:
   file_sanitizer: 0
   filelog: 0
   filter: 0
+  flexible_permissions: 0
   fpa: 0
   gin_toolbar: 0
   gnode: 0
