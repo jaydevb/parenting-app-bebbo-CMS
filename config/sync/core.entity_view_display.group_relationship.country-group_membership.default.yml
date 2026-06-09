@@ -3,10 +3,10 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.group_content.country-group_membership.group_roles
-    - group.content_type.country-group_membership
-id: group_content.country-group_membership.default
-targetEntityType: group_content
+    - field.field.group_relationship.country-group_membership.group_roles
+    - group.relationship_type.country-group_membership
+id: group_relationship.country-group_membership.default
+targetEntityType: group_relationship
 bundle: country-group_membership
 mode: default
 content:

@@ -10,10 +10,6 @@ display:
           label: Ролі
         changed:
           label: Оновлено
-        view_group_content:
-          text: 'Manage member'
-        edit_group_content:
-          text: 'Assign roles'
         dropbutton:
           label: Операції
       pager:

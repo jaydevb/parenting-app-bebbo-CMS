@@ -54,7 +54,7 @@ function group_country_field_form_alter(array &$form, FormStateInterface $form_s
  * Implements views query alter.
  */
 function group_country_field_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
-  if ($view->id() == 'duplicate_of_moderated_group_content') {
+  if ($view->id() == 'duplicate_of_moderated_group_relationship') {
     group_country_field_views_query_alter_moderated_group($view, $query);
     return;
   }
@@ -134,7 +134,7 @@ function group_country_field_views_query_alter_moderated_group(ViewExecutable $v
  * Implements hook_views_pre_render().
  */
 function group_country_field_views_pre_render(ViewExecutable $view): void {
-  if ($view->id() === 'duplicate_of_moderated_group_content') {
+  if ($view->id() === 'duplicate_of_moderated_group_relationship') {
     $group = \Drupal::routeMatch()->getParameter('group');
     if ($group) {
       if (is_numeric($group)) {

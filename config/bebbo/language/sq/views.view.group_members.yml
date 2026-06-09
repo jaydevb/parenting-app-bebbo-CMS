@@ -8,10 +8,6 @@ display:
           label: User
         group_roles:
           label: Roles
-        view_group_content:
-          text: 'Manage member'
-        edit_group_content:
-          text: 'Assign roles'
         dropbutton:
           label: Operations
       exposed_form:
