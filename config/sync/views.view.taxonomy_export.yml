@@ -20,6 +20,7 @@ dependencies:
     - taxonomy.vocabulary.parent_gender
     - taxonomy.vocabulary.relationship_to_parent
     - taxonomy.vocabulary.standard_deviation_category
+    - taxonomy.vocabulary.strings
     - taxonomy.vocabulary.subcategory
     - taxonomy.vocabulary.target_audience
     - taxonomy.vocabulary.type_of_article
@@ -314,6 +315,7 @@ display:
             parent_gender: parent_gender
             relationship_to_parent: relationship_to_parent
             standard_deviation_category: standard_deviation_category
+            strings: strings
             subcategory: subcategory
             target_audience: target_audience
             type_of_article: type_of_article
@@ -334,14 +336,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              global_admin: '0'
-              reviewer: '0'
-              editor: '0'
-              sme: '0'
-              se: '0'
-              administrator: '0'
-              translator: '0'
             reduce: true
           is_grouped: false
           group_info:
@@ -386,6 +380,7 @@ display:
           empty_table: false
           caption: ''
           description: ''
+          class: ''
       row:
         type: fields
       query:
@@ -758,7 +753,7 @@ display:
       automatic_download: true
       export_method: batch
       export_batch_size: 100
-      store_in_public_file_directory: false
+      export_filesystem: private
       custom_redirect_path: false
       redirect_to_display: none
       include_query_params: false

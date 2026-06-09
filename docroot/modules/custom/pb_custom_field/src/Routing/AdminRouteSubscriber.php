@@ -44,7 +44,7 @@ class AdminRouteSubscriber extends RouteSubscriberBase {
       'view.taxonomy_export_standard_deviation.page_1',
       // Groups.
       'view.group_members.page_1',
-      'view.duplicate_of_moderated_group_content.moderated_content',
+      'view.duplicate_of_moderated_group_relationship.moderated_content',
       // Users.
       'view.user_admin_people.page_2',
       'view.users_list.page_2',
