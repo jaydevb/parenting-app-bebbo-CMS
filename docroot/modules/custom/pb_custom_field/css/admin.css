@@ -73,3 +73,15 @@ table.tmgmt-ui-review input.unreviewed,
   font-style: italic;
   font-weight: 600;
 }
+
+.pb-main-homepage .gin-secondary-toolbar,
+.pb-main-homepage .region-sticky-watcher,
+.pb-main-homepage .region-sticky,
+.pb-main-homepage .sticky-shadow {
+  display: none;
+}
+
+.pb-main-homepage .content-header {
+  padding: 0;
+  background: transparent;
+}
