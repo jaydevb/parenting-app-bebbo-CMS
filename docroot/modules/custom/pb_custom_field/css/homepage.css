@@ -534,7 +534,8 @@ img[alt="bebbo-hearts"] {
 }
 
 .layout--twocol-section--50-50 img {
-  width: 75px;
+  height: 30px;
+  width: auto;
   margin-left: 13px;
 }
 

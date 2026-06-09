@@ -9,9 +9,9 @@ dependencies:
     - system
     - user
   theme:
-    - claro
-id: claro_logo
-theme: claro
+    - gin
+id: gin_logo
+theme: gin
 region: header
 weight: -14
 provider: null
