@@ -250,6 +250,9 @@
             },
             "drupal/autocomplete_id": {
                 "Filter unpublished entities from ID-based autocomplete results": "patches/autocomplete_id/filter_unpublished_entities.patch"
+            },
+            "drupal/menu_export": {
+                "Fix drush command calling protected exportMenus method": "patches/menu_export_drush_visibility.patch"
             }
         }
     },

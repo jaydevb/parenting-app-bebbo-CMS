@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "80bf2e9d311a2b14e8983448bdc591e2",
+    "content-hash": "659ba05920cc7125e5492418e14e2cb1",
     "packages": [
         {
             "name": "acquia/drupal-spec-tool",
@@ -6998,8 +6998,12 @@
                 },
                 {
                     "name": "Joseph Olstad",
-                    "homepage": "https://www.drupal.org/user/3397192",
+                    "homepage": "https://www.drupal.org/user/3741669",
                     "email": "joseph.olstad@drupal.org"
+                },
+                {
+                    "name": "sandeepguntaka",
+                    "homepage": "https://www.drupal.org/user/3397192"
                 }
             ],
             "description": "This module exports and imports menus and menu links.",

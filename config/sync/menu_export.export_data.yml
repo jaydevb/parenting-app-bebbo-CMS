@@ -21,7 +21,7 @@
   menu_name:
     value: editorial-menu
   link:
-    uri: 'internal:/global-content-list'
+    uri: 'internal:/country-content-list'
     title: ''
     options: {  }
   external:
@@ -29,12 +29,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-50'
+    value: '-49'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1624517021'
+    value: '1780406419'
   default_langcode:
     value: '1'
   revision_default:
@@ -48,7 +48,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -88,12 +88,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-48'
+    value: '-47'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1778592436'
+    value: '1780403075'
   default_langcode:
     value: '1'
   revision_default:
@@ -107,7 +107,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -147,12 +147,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-47'
+    value: '-45'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1743673589'
+    value: '1780405747'
   default_langcode:
     value: '1'
   revision_default:
@@ -160,13 +160,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -198,7 +198,7 @@
   menu_name:
     value: editorial-menu
   link:
-    uri: 'internal:/admin/config/regional/language/add'
+    uri: 'internal:/admin/config/regional/language'
     title: ''
     options: {  }
   external:
@@ -206,12 +206,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-45'
+    value: '-43'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1743673589'
+    value: '1780405895'
   default_langcode:
     value: '1'
   revision_default:
@@ -219,13 +219,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -265,12 +265,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-46'
+    value: '-44'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1743673589'
+    value: '1780405820'
   default_langcode:
     value: '1'
   revision_default:
@@ -278,13 +278,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -324,12 +324,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-49'
+    value: '-48'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1764772739'
+    value: '1780405409'
   default_langcode:
     value: '1'
   revision_default:
@@ -343,7 +343,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -383,12 +383,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-44'
+    value: '-42'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1627362268'
+    value: '1780406368'
   default_langcode:
     value: '1'
   revision_default:
@@ -396,13 +396,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -448,7 +448,7 @@
   parent:
     value: 'menu_link_content:43d7c694-1ab4-446e-bd39-76009d2ed5dc'
   changed:
-    value: '1761734459'
+    value: '1780405740'
   default_langcode:
     value: '1'
   revision_default:
@@ -456,13 +456,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -502,13 +502,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '-49'
+    value: '-48'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:e4fbbe06-dedb-4497-81c0-42ed48a7389f'
   changed:
-    value: '1624384882'
+    value: '1780405883'
   default_langcode:
     value: '1'
   revision_default:
@@ -516,13 +516,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -568,7 +568,7 @@
   parent:
     value: 'menu_link_content:bcf35cf7-73e2-4ea4-a568-dea9bee18661'
   changed:
-    value: '1626974581'
+    value: '1780406365'
   default_langcode:
     value: '1'
   revision_default:
@@ -576,13 +576,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -628,7 +628,7 @@
   parent:
     value: 'menu_link_content:bcf35cf7-73e2-4ea4-a568-dea9bee18661'
   changed:
-    value: '1626974588'
+    value: '1780406358'
   default_langcode:
     value: '1'
   revision_default:
@@ -636,13 +636,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -688,7 +688,7 @@
   parent:
     value: 'menu_link_content:43d7c694-1ab4-446e-bd39-76009d2ed5dc'
   changed:
-    value: '1761734459'
+    value: '1780405743'
   default_langcode:
     value: '1'
   revision_default:
@@ -696,13 +696,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -742,13 +742,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '-49'
+    value: '-48'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:c659125b-835a-4622-847b-f5ba2bba7f4f'
   changed:
-    value: '1627362268'
+    value: '1780405804'
   default_langcode:
     value: '1'
   revision_default:
@@ -756,13 +756,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -808,7 +808,7 @@
   parent:
     value: 'menu_link_content:e4fbbe06-dedb-4497-81c0-42ed48a7389f'
   changed:
-    value: '1624732626'
+    value: '1780405887'
   default_langcode:
     value: '1'
   revision_default:
@@ -816,13 +816,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -862,13 +862,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '-47'
+    value: '-48'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:66da6c66-6252-497a-b0d8-53ed20212dc7'
   changed:
-    value: '1626971014'
+    value: '1780406208'
   default_langcode:
     value: '1'
   revision_default:
@@ -882,7 +882,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -922,12 +922,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-42'
+    value: '-38'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1627362268'
+    value: '1780406125'
   default_langcode:
     value: '1'
   revision_default:
@@ -935,13 +935,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: reviewer
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -974,20 +974,20 @@
     value: editorial-menu
   link:
     uri: 'internal:/group/41/members'
-    title: null
+    title: ''
     options: {  }
   external:
     value: '0'
   rediscover:
     value: '1'
   weight:
-    value: '-50'
+    value: '-46'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:c659125b-835a-4622-847b-f5ba2bba7f4f'
   changed:
-    value: '1627362268'
+    value: '1780405798'
   default_langcode:
     value: '1'
   revision_default:
@@ -995,13 +995,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: reviewer
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1041,13 +1041,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '-48'
+    value: '-50'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:c659125b-835a-4622-847b-f5ba2bba7f4f'
   changed:
-    value: '1627362268'
+    value: '1780405816'
   default_langcode:
     value: '1'
   revision_default:
@@ -1055,13 +1055,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1101,13 +1101,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '0'
+    value: '-49'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:66da6c66-6252-497a-b0d8-53ed20212dc7'
   changed:
-    value: '1626169689'
+    value: '1780406208'
   default_langcode:
     value: '1'
   revision_default:
@@ -1121,7 +1121,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1153,20 +1153,21 @@
   menu_name:
     value: editorial-menu
   link:
-    uri: 'internal:/group/41/members'
-    title: null
+    uri: 'internal:/group/6/members'
+    title: ''
     options: {  }
   external:
     value: '0'
   rediscover:
     value: '1'
   weight:
-    value: '-43'
+    value: '-49'
   expanded:
     value: '0'
-  parent: false
+  parent:
+    value: 'menu_link_content:c659125b-835a-4622-847b-f5ba2bba7f4f'
   changed:
-    value: '1778591151'
+    value: '1780405810'
   default_langcode:
     value: '1'
   revision_default:
@@ -1174,13 +1175,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: reviewer
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1220,13 +1221,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '0'
+    value: '-50'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:66da6c66-6252-497a-b0d8-53ed20212dc7'
   changed:
-    value: '1626074184'
+    value: '1780406411'
   default_langcode:
     value: '1'
   revision_default:
@@ -1240,7 +1241,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1272,7 +1273,7 @@
   menu_name:
     value: editorial-menu
   link:
-    uri: 'internal:/admin/tmgmt/job_items'
+    uri: 'internal:/admin/tmgmt/jobs'
     title: ''
     options: {  }
   external:
@@ -1286,7 +1287,7 @@
   parent:
     value: 'menu_link_content:65004a8e-ba1f-43f8-a108-37d55d29aba7'
   changed:
-    value: '1761734459'
+    value: '1780405406'
   default_langcode:
     value: '1'
   revision_default:
@@ -1300,7 +1301,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1340,12 +1341,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-40'
+    value: '-37'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1721812385'
+    value: '1780406119'
   default_langcode:
     value: '1'
   revision_default:
@@ -1353,13 +1354,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: global_admin
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1399,12 +1400,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '-39'
+    value: '-50'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1632368649'
+    value: '1780406263'
   default_langcode:
     value: '1'
   revision_default:
@@ -1412,13 +1413,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1458,12 +1459,12 @@
   rediscover:
     value: '0'
   weight:
-    value: '-38'
+    value: '-41'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1641957109'
+    value: '1780406053'
   default_langcode:
     value: '1'
   revision_default:
@@ -1477,7 +1478,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1523,7 +1524,7 @@
   parent:
     value: 'menu_link_content:3c7e267a-6c10-4efd-8654-41d657c1ecf6'
   changed:
-    value: '1742906053'
+    value: '1780406044'
   default_langcode:
     value: '1'
   revision_default:
@@ -1537,7 +1538,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1577,12 +1578,12 @@
   rediscover:
     value: '0'
   weight:
-    value: '-37'
+    value: '-40'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1743673589'
+    value: '1780406110'
   default_langcode:
     value: '1'
   revision_default:
@@ -1596,7 +1597,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1636,13 +1637,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '0'
+    value: '-49'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:89b69e27-2acb-4528-aa42-134d864d2c4f'
   changed:
-    value: '1637558871'
+    value: '1780406104'
   default_langcode:
     value: '1'
   revision_default:
@@ -1656,7 +1657,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1696,13 +1697,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '0'
+    value: '-50'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:89b69e27-2acb-4528-aa42-134d864d2c4f'
   changed:
-    value: '1637558924'
+    value: '1780406107'
   default_langcode:
     value: '1'
   revision_default:
@@ -1716,7 +1717,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1743,7 +1744,7 @@
   enabled:
     value: '1'
   title:
-    value: 'Import Taxonomy'
+    value: 'Import Taxonomy (Feeds)'
   description: false
   menu_name:
     value: editorial-menu
@@ -1756,12 +1757,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '-36'
+    value: '-50'
   expanded:
     value: '0'
-  parent: false
+  parent:
+    value: 'menu_link_content:6ffc3c54-07d8-4788-8e51-663b6737d818'
   changed:
-    value: '1743673589'
+    value: '1780403172'
   default_langcode:
     value: '1'
   revision_default:
@@ -1775,7 +1777,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1800,7 +1802,7 @@
   revision_user: false
   revision_log_message: false
   enabled:
-    value: '1'
+    value: '0'
   title:
     value: 'Feeds Type'
   description: false
@@ -1815,13 +1817,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '1'
+    value: '-49'
   expanded:
     value: '0'
   parent:
-    value: 'menu_link_content:2f932b25-2b85-4721-bc41-dba801403ba8'
+    value: 'menu_link_content:6ffc3c54-07d8-4788-8e51-663b6737d818'
   changed:
-    value: '1640660992'
+    value: '1780403257'
   default_langcode:
     value: '1'
   revision_default:
@@ -1835,7 +1837,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1875,13 +1877,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '2'
+    value: '-48'
   expanded:
     value: '0'
   parent:
-    value: 'menu_link_content:2f932b25-2b85-4721-bc41-dba801403ba8'
+    value: 'menu_link_content:6ffc3c54-07d8-4788-8e51-663b6737d818'
   changed:
-    value: '1640661025'
+    value: '1780403120'
   default_langcode:
     value: '1'
   revision_default:
@@ -1895,7 +1897,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1922,7 +1924,7 @@
   enabled:
     value: '1'
   title:
-    value: 'Keyword link to content'
+    value: 'Keywords link to content'
   description: false
   menu_name:
     value: editorial-menu
@@ -1935,26 +1937,27 @@
   rediscover:
     value: '1'
   weight:
-    value: '-48'
+    value: '-45'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:3c7e267a-6c10-4efd-8654-41d657c1ecf6'
   changed:
-    value: '1742906053'
+    value: '1780405981'
   default_langcode:
     value: '1'
   revision_default:
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role: false
+  menu_per_role__show_role:
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -1981,7 +1984,7 @@
   enabled:
     value: '1'
   title:
-    value: 'Keyword Not linked to content'
+    value: 'Keywords not linked to content'
   description: false
   menu_name:
     value: editorial-menu
@@ -1994,26 +1997,27 @@
   rediscover:
     value: '1'
   weight:
-    value: '-49'
+    value: '-44'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:3c7e267a-6c10-4efd-8654-41d657c1ecf6'
   changed:
-    value: '1742906053'
+    value: '1780405978'
   default_langcode:
     value: '1'
   revision_default:
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role: false
+  menu_per_role__show_role:
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -2053,26 +2057,27 @@
   rediscover:
     value: '1'
   weight:
-    value: '-47'
+    value: '-48'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:3c7e267a-6c10-4efd-8654-41d657c1ecf6'
   changed:
-    value: '1742906053'
+    value: '1780406028'
   default_langcode:
     value: '1'
   revision_default:
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role: false
+  menu_per_role__show_role:
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -2112,26 +2117,27 @@
   rediscover:
     value: '1'
   weight:
-    value: '-45'
+    value: '-46'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:3c7e267a-6c10-4efd-8654-41d657c1ecf6'
   changed:
-    value: '1742906053'
+    value: '1780406005'
   default_langcode:
     value: '1'
   revision_default:
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role: false
+  menu_per_role__show_role:
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -2171,13 +2177,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '0'
+    value: '-45'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:6ffc3c54-07d8-4788-8e51-663b6737d818'
   changed:
-    value: '1738064167'
+    value: '1780405454'
   default_langcode:
     value: '1'
   revision_default:
@@ -2191,7 +2197,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -2233,26 +2239,27 @@
   rediscover:
     value: '1'
   weight:
-    value: '-46'
+    value: '-50'
   expanded:
     value: '0'
   parent:
-    value: 'menu_link_content:3c7e267a-6c10-4efd-8654-41d657c1ecf6'
+    value: 'menu_link_content:74f2eb98-339f-434f-9f56-a2b5fa1f6d6e'
   changed:
-    value: '1742906053'
+    value: '1780406012'
   default_langcode:
     value: '1'
   revision_default:
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role: false
+  menu_per_role__show_role:
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -2294,12 +2301,12 @@
   rediscover:
     value: '1'
   weight:
-    value: '0'
+    value: '-39'
   expanded:
     value: '0'
   parent: false
   changed:
-    value: '1763419984'
+    value: '1780406086'
   default_langcode:
     value: '1'
   revision_default:
@@ -2313,7 +2320,7 @@
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -2342,7 +2349,7 @@
   enabled:
     value: '1'
   title:
-    value: 'Strings Management'
+    value: 'Individual string translation'
   description: false
   menu_name:
     value: editorial-menu
@@ -2355,25 +2362,27 @@
   rediscover:
     value: '1'
   weight:
-    value: '0'
+    value: '-46'
   expanded:
     value: '0'
-  parent: false
+  parent:
+    value: 'menu_link_content:6ffc3c54-07d8-4788-8e51-663b6737d818'
   changed:
-    value: '1776922973'
+    value: '1780405467'
   default_langcode:
     value: '1'
   revision_default:
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role: false
+  menu_per_role__show_role:
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -2402,7 +2411,7 @@
   enabled:
     value: '1'
   title:
-    value: 'Content Engagement'
+    value: 'Content engagement'
   description: false
   menu_name:
     value: editorial-menu
@@ -2415,13 +2424,13 @@
   rediscover:
     value: '1'
   weight:
-    value: '-44'
+    value: '-49'
   expanded:
     value: '0'
   parent:
     value: 'menu_link_content:3c7e267a-6c10-4efd-8654-41d657c1ecf6'
   changed:
-    value: '1779178391'
+    value: '1780406037'
   default_langcode:
     value: '1'
   revision_default:
@@ -2429,13 +2438,13 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: authenticated
+    target_id: administrator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
     attributes:
       name: title
-      content: 'Export Menus | Bebbo'
+      content: '| Bebbo'
   content_translation_source:
     value: und
   content_translation_outdated:
@@ -2446,3 +2455,127 @@
     value: '1'
   content_translation_created:
     value: '1778584286'
+361:
+  id:
+    value: '361'
+  uuid:
+    value: 6c01dfef-31cd-4d49-89a4-4df5ce04ec3d
+  revision_id:
+    value: '361'
+  langcode:
+    value: en
+  bundle:
+    value: menu_link_content
+  revision_created:
+    value: '1780402440'
+  revision_user: false
+  revision_log_message: false
+  enabled:
+    value: '1'
+  title:
+    value: 'Manage Translation Job Items'
+  description: false
+  menu_name:
+    value: editorial-menu
+  link:
+    uri: 'internal:/admin/tmgmt/job_items'
+    title: ''
+    options: {  }
+  external:
+    value: '0'
+  rediscover:
+    value: '1'
+  weight:
+    value: '-49'
+  expanded:
+    value: '0'
+  parent:
+    value: 'menu_link_content:65004a8e-ba1f-43f8-a108-37d55d29aba7'
+  changed:
+    value: '1780406252'
+  default_langcode:
+    value: '1'
+  revision_default:
+    value: '1'
+  revision_translation_affected:
+    value: '1'
+  menu_per_role__show_role:
+    target_id: editor
+  menu_per_role__hide_role: false
+  metatag:
+    tag: meta
+    attributes:
+      name: title
+      content: '| Bebbo'
+  content_translation_source:
+    value: und
+  content_translation_outdated:
+    value: '0'
+  content_translation_uid:
+    target_id: '20941'
+  content_translation_status:
+    value: '1'
+  content_translation_created:
+    value: '1780402440'
+366:
+  id:
+    value: '366'
+  uuid:
+    value: ce0c550b-57be-4bb5-b308-c9f584f143f6
+  revision_id:
+    value: '366'
+  langcode:
+    value: en
+  bundle:
+    value: menu_link_content
+  revision_created:
+    value: '1780403334'
+  revision_user: false
+  revision_log_message: false
+  enabled:
+    value: '1'
+  title:
+    value: 'View strings'
+  description: false
+  menu_name:
+    value: editorial-menu
+  link:
+    uri: 'internal:/admin/structure/taxonomy/manage/strings/overview'
+    title: ''
+    options: {  }
+  external:
+    value: '0'
+  rediscover:
+    value: '1'
+  weight:
+    value: '-47'
+  expanded:
+    value: '0'
+  parent:
+    value: 'menu_link_content:6ffc3c54-07d8-4788-8e51-663b6737d818'
+  changed:
+    value: '1780403419'
+  default_langcode:
+    value: '1'
+  revision_default:
+    value: '1'
+  revision_translation_affected:
+    value: '1'
+  menu_per_role__show_role:
+    target_id: administrator
+  menu_per_role__hide_role: false
+  metatag:
+    tag: meta
+    attributes:
+      name: title
+      content: '| Bebbo'
+  content_translation_source:
+    value: und
+  content_translation_outdated:
+    value: '0'
+  content_translation_uid:
+    target_id: '20941'
+  content_translation_status:
+    value: '1'
+  content_translation_created:
+    value: '1780403334'
