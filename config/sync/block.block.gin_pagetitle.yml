@@ -1,18 +1,17 @@
-uuid: 3a606f8a-a977-4cba-8944-60365ca02b9c
+uuid: ecf09995-5fcc-4fdd-93ae-7d789dda687c
 langcode: en
 status: true
 dependencies:
   module:
+    - node
     - system
     - user
   theme:
     - gin
-_core:
-  default_config_hash: HLQY2xgby8K3vN_98hiOSasOhm9pdCsH234-s0duJ8Q
-id: gin_page_title
+id: gin_pagetitle
 theme: gin
-region: header
-weight: -6
+region: content
+weight: -14
 provider: null
 plugin: page_title_block
 settings:
@@ -24,7 +23,7 @@ visibility:
   request_path:
     id: request_path
     negate: true
-    pages: "/share\r\n/homepage\r\n/about-us\r\n/privacy-policy\r\n/terms-and-conditions\r\n/foleja\r\n/foleja-about-us\r\n/foleja-privacy-policy"
+    pages: "/homepage\r\n/share\r\n/foleja"
   user_role:
     id: user_role
     negate: false
@@ -32,4 +31,10 @@ visibility:
       user: '@user.current_user_context:current_user'
     roles:
       anonymous: anonymous
-      authenticated: authenticated
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
+    bundles:
+      page: page

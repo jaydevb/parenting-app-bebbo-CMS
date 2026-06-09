@@ -1,4 +1,4 @@
-uuid: 04b76b5c-9b75-4d18-a330-8bfb4a659893
+uuid: 5dca9792-8695-4b19-a997-ce97c44e3891
 langcode: en
 status: true
 dependencies:
@@ -6,13 +6,14 @@ dependencies:
     - 'block_content:basic:3e466a00-3228-4ee8-b5d3-40e30bb6fbd8'
   module:
     - block_content
+    - language
     - user
   theme:
-    - claro
-id: logo
-theme: claro
+    - gin
+id: gin_logo
+theme: gin
 region: header
-weight: -13
+weight: -8
 provider: null
 plugin: 'block_content:3e466a00-3228-4ee8-b5d3-40e30bb6fbd8'
 settings:
@@ -31,3 +32,10 @@ visibility:
       user: '@user.current_user_context:current_user'
     roles:
       anonymous: anonymous
+  language:
+    id: language
+    negate: false
+    context_mapping:
+      language: '@language.current_language_context:language_interface'
+    langcodes:
+      en: en

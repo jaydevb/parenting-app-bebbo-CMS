@@ -13,7 +13,7 @@ folder: ../config/bangla
 module: {  }
 theme: {  }
 complete_list:
-  - block.block.claro_logo
+  - block.block.gin_logo
   - system.site
   - entity_share_client.import_config.config_stage
   - taxonomy.vocabulary.subcategory
@@ -90,9 +90,7 @@ complete_list:
   - views.view.duplicate_of_tax_test
 partial_list:
   - ai_translate.settings
-  - block.block.claro_help_search
   - block.block.languagedropdownswitcher
-  - block.block.mainnavigation
   - core.entity_form_display.group.country.default
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library

@@ -1706,22 +1706,37 @@ function pb_custom_field_user_login_form_submit($form, FormStateInterface $form_
 }
 
 /**
+ * Returns the homepage/landing page aliases that receive custom styling.
+ */
+function _pb_custom_field_homepage_paths() {
+  return [
+    "/homepage", "/about-us", "/terms-and-conditions",
+    "/privacy-policy", "/foleja", "/foleja-about-us",
+    "/foleja-privacy-policy",
+  ];
+}
+
+/**
  * Hook implements hook_preprocess_html.
  */
 function pb_custom_field_preprocess_html(&$variables) {
   $logged_in = \Drupal::currentUser()->isAuthenticated();
   $current_path = \Drupal::service('path.current')->getPath();
   $internal = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
-  $homepage_paths = [
-    "/homepage", "/about-us", "/terms-and-conditions",
-    "/privacy-policy", "/foleja", "/foleja-about-us",
-    "/foleja-privacy-policy",
-  ];
+  $homepage_paths = _pb_custom_field_homepage_paths();
   if (in_array($internal, $homepage_paths)) {
+    // Public landing styling and the scoped Bootstrap grid load for every user
+    // so the layout renders correctly for editors viewing the node too. The
+    // grid CSS is scoped under .pb-landing and confined to grid elements, so it
+    // never touches the Gin admin chrome.
     $variables['#attached']['library'][] = 'pb_custom_field/homepage';
+    $variables['#attached']['library'][] = 'pb_custom_field/homepage_grid';
+    // Shared content styling (and the grid scope) applies to all users.
+    $variables['attributes']['class'][] = 'pb-landing';
+    // Kiosk styling (fixed header, hidden admin chrome) is anonymous only so
+    // logged-in editors keep the Gin toolbar and local task tabs.
     if (!$logged_in) {
       $variables['attributes']['class'][] = 'pb-main-homepage';
-      $variables['#attached']['library'][] = 'pb_custom_form/bootstrap';
     }
   }
   if (!$logged_in) {
