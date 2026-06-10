@@ -16,10 +16,6 @@ display:
         created:
           label: Joined
           separator: ', '
-        view_group_content:
-          text: 'Manage member'
-        edit_group_content:
-          text: 'Assign roles'
         dropbutton:
           label: Operations
       title: Members

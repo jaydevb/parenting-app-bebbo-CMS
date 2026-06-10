@@ -606,12 +606,8 @@ class CsvExportController extends ControllerBase {
 
       // Generate filename with filters.
       $filename_parts = ['entity-share-export'];
-      if (!empty($channel_id)) {
-        $filename_parts[] = 'channel-' . preg_replace('/[^a-zA-Z0-9_-]/', '', $channel_id);
-      }
-      if (!empty($remote_id)) {
-        $filename_parts[] = 'remote-' . preg_replace('/[^a-zA-Z0-9_-]/', '', $remote_id);
-      }
+      $filename_parts[] = 'channel-' . preg_replace('/[^a-zA-Z0-9_-]/', '', $channel_id);
+      $filename_parts[] = 'remote-' . preg_replace('/[^a-zA-Z0-9_-]/', '', $remote_id);
       $filename_parts[] = date('Y-m-d-H-i-s');
       $filename_parts[] = count($csv_data) . '-records';
       $filename = implode('-', $filename_parts) . '.csv';

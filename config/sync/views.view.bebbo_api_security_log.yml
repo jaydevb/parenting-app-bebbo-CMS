@@ -601,6 +601,7 @@ display:
           sticky: true
           summary: ''
           empty_table: true
+          class: ''
       row:
         type: fields
       query:

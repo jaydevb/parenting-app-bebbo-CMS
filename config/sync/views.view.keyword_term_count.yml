@@ -210,7 +210,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -400,13 +400,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              global_admin: '0'
-              reviewer: '0'
-              editor: '0'
-              sme: '0'
-              se: '0'
-              administrator: '0'
             min_placeholder: ''
             max_placeholder: ''
             placeholder: ''
@@ -473,6 +466,7 @@ display:
           empty_table: false
           caption: ''
           description: ''
+          class: ''
       row:
         type: fields
       query:
@@ -705,7 +699,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -851,10 +845,10 @@ display:
       automatic_download: true
       export_method: batch
       export_batch_size: 100
-      store_in_public_file_directory: false
       custom_redirect_path: false
       redirect_to_display: page_1
       include_query_params: false
+      export_filesystem: private
     cache_metadata:
       max-age: -1
       contexts:
@@ -1051,7 +1045,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -1082,10 +1076,10 @@ display:
       automatic_download: true
       export_method: batch
       export_batch_size: 100
-      store_in_public_file_directory: false
       custom_redirect_path: false
       redirect_to_display: page_2
       include_query_params: false
+      export_filesystem: private
     cache_metadata:
       max-age: -1
       contexts:
@@ -1283,7 +1277,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -1429,10 +1423,10 @@ display:
       automatic_download: true
       export_method: batch
       export_batch_size: 100
-      store_in_public_file_directory: false
       custom_redirect_path: false
       redirect_to_display: page_3
       include_query_params: false
+      export_filesystem: private
     cache_metadata:
       max-age: -1
       contexts:
@@ -1632,7 +1626,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -1876,10 +1870,10 @@ display:
       automatic_download: true
       export_method: batch
       export_batch_size: 100
-      store_in_public_file_directory: false
       custom_redirect_path: false
       redirect_to_display: page_5
       include_query_params: false
+      export_filesystem: private
     cache_metadata:
       max-age: -1
       contexts:
@@ -2078,7 +2072,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -2595,13 +2589,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              global_admin: '0'
-              reviewer: '0'
-              editor: '0'
-              sme: '0'
-              se: '0'
-              administrator: '0'
             min_placeholder: ''
             max_placeholder: ''
             placeholder: ''
@@ -2701,6 +2688,7 @@ display:
           empty_table: false
           caption: ''
           description: ''
+          class: ''
       row:
         type: fields
         options: {  }
@@ -2922,7 +2910,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -3260,7 +3248,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -3439,6 +3427,7 @@ display:
           empty_table: false
           caption: ''
           description: ''
+          class: ''
       row:
         type: fields
         options: {  }
@@ -3675,7 +3664,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -3900,13 +3889,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              global_admin: '0'
-              reviewer: '0'
-              editor: '0'
-              sme: '0'
-              se: '0'
-              administrator: '0'
             min_placeholder: ''
             max_placeholder: ''
             placeholder: ''
