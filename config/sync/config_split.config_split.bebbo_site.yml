@@ -173,6 +173,7 @@ complete_list:
   - language/ro/views.view.user_admin_people
   - language/ro/views.view.who_s_new
   - language/ro/views.view.who_s_online
+  - language/ro/views.view.watchdog
   - language/rs-en/language.entity.rs-en
   - language/rs-sr/language.entity.rs-sr
   - language/ru/core.entity_form_mode.media.media_library
@@ -222,6 +223,7 @@ complete_list:
   - language/ru/views.view.user_admin_people
   - language/ru/views.view.who_s_new
   - language/ru/views.view.who_s_online
+  - language/ru/views.view.watchdog
   - language/sk/block.block.claro_content
   - language/sk/block.block.claro_help
   - language/sk/block.block.claro_page_title
@@ -319,6 +321,7 @@ complete_list:
   - language/sk/views.view.user_admin_people
   - language/sk/views.view.who_s_new
   - language/sk/views.view.who_s_online
+  - language/sk/views.view.watchdog
   - language/sq/core.entity_view_mode.paragraph.preview
   - language/sq/language.entity.en
   - language/sq/language.entity.ro
@@ -355,6 +358,7 @@ complete_list:
   - language/sq/views.view.user_admin_people
   - language/sq/views.view.who_s_new
   - language/sq/views.view.who_s_online
+  - language/sq/views.view.watchdog
   - language/sr/core.entity_view_mode.paragraph.preview
   - language/sr/filter.format.basic_html
   - language/sr/language.entity.en
@@ -390,6 +394,7 @@ complete_list:
   - language/sr/views.view.user_admin_people
   - language/sr/views.view.who_s_new
   - language/sr/views.view.who_s_online
+  - language/sr/views.view.watchdog
   - language/tj-ru/language.entity.tj-ru
   - language/tj-tg/language.entity.tj-tg
   - language/uk/core.entity_form_mode.media.media_library
@@ -436,6 +441,7 @@ complete_list:
   - language/uk/views.view.user_admin_people
   - language/uk/views.view.who_s_new
   - language/uk/views.view.who_s_online
+  - language/uk/views.view.watchdog
   - language/uz-ru/language.entity.uz-ru
   - language/uz-uz/language.entity.uz-uz
   - language/xk-rs/language.entity.xk-rs

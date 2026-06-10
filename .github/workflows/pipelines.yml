@@ -27,7 +27,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: 8.4
           tools: composer
           extensions: mbstring, pdo, xml, gd, curl, zip, bcmath, intl
 
@@ -57,12 +57,9 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: 8.4
           tools: composer
           extensions: mbstring, pdo, xml, gd, curl, zip, bcmath, intl
-
-      - run: |
-          composer install --prefer-dist --no-progress --no-interaction
 
       - name: Install Acquia CLI
         run: |
@@ -92,7 +89,7 @@ jobs:
       - name: Ensure clean git state
         run: |
           git reset --hard
-          git clean -fd
+          git clean -fdx
 
       - name: Deploy feature branch build to Dev
         run: |
