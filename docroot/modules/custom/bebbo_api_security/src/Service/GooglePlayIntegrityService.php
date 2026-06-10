@@ -91,8 +91,13 @@ class GooglePlayIntegrityService {
       );
     }
     catch (GuzzleException $e) {
-      $this->logger->error('Google Play Integrity API error: @msg', [
+      $response_body = '';
+      if (method_exists($e, 'getResponse') && $e->getResponse()) {
+        $response_body = (string) $e->getResponse()->getBody();
+      }
+      $this->logger->error('Google Play Integrity API error: @msg | Full response: @body', [
         '@msg' => $e->getMessage(),
+        '@body' => $response_body ?: '(no response body)',
       ]);
       throw new \RuntimeException('Failed to verify integrity token with Google.');
     }
@@ -101,6 +106,10 @@ class GooglePlayIntegrityService {
     if (!$payload) {
       throw new \RuntimeException('Invalid response from Google Play Integrity API.');
     }
+
+    $this->logger->debug('Play Integrity decoded payload: @payload', [
+      '@payload' => json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+    ]);
 
     if ($expected_request_hash === NULL) {
       $expected_request_hash = $device_id;
@@ -133,6 +142,10 @@ class GooglePlayIntegrityService {
 
     // Verify requestHash — binds the integrity token to this registration.
     $actual_hash = $details['requestDetails']['requestHash'] ?? '';
+    $this->logger->debug('Nonce comparison — expected: @expected | actual requestHash: @actual', [
+      '@expected' => $expected_request_hash,
+      '@actual' => $actual_hash,
+    ]);
     if (!hash_equals($expected_request_hash, $actual_hash)) {
       throw new \RuntimeException('requestHash mismatch: integrity token not bound to this request.');
     }
