@@ -140,14 +140,14 @@ class GooglePlayIntegrityService {
 
     $details = $payload['tokenPayloadExternal'] ?? [];
 
-    // Verify requestHash — binds the integrity token to this registration.
-    $actual_hash = $details['requestDetails']['requestHash'] ?? '';
-    $this->logger->debug('Nonce comparison — expected: @expected | actual requestHash: @actual', [
+    // Verify nonce — binds integrity token to this request.
+    $actual_nonce = $details['requestDetails']['nonce'] ?? '';
+    $this->logger->debug('Nonce comparison — expected: @expected | actual nonce: @actual', [
       '@expected' => $expected_request_hash,
-      '@actual' => $actual_hash,
+      '@actual' => $actual_nonce,
     ]);
-    if (!hash_equals($expected_request_hash, $actual_hash)) {
-      throw new \RuntimeException('requestHash mismatch: integrity token not bound to this request.');
+    if (!hash_equals($expected_request_hash, $actual_nonce)) {
+      throw new \RuntimeException('Nonce mismatch: integrity token not bound to this request.');
     }
 
     // Verify package name.
