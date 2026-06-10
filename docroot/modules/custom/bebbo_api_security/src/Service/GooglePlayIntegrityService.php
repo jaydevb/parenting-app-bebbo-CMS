@@ -103,7 +103,7 @@ class GooglePlayIntegrityService {
     }
 
     if ($expected_request_hash === NULL) {
-      $expected_request_hash = rtrim(strtr(base64_encode(hash('sha256', $device_id, TRUE)), '+/', '-_'), '=');
+      $expected_request_hash = $device_id;
     }
 
     $this->verifyVerdicts($payload, $device_id, $expected_request_hash);
@@ -119,7 +119,7 @@ class GooglePlayIntegrityService {
    * @param string $device_id
    *   Device identifier for error context.
    * @param string $expected_request_hash
-   *   Base64url-encoded SHA-256 hash the app used as nonce.
+   *   The challenge string the app passed verbatim as nonce.
    *
    * @throws \RuntimeException
    *   If any verdict check fails.
