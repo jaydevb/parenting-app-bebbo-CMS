@@ -92,10 +92,7 @@ class SecurityController extends ControllerBase {
             'message' => 'integrity_token is required for Android.',
           ], 400);
         }
-        $expected_hash = NULL;
-        if (!empty($body['nonce'])) {
-          $expected_hash = rtrim(strtr(base64_encode(hash('sha256', $body['nonce'], TRUE)), '+/', '-_'), '=');
-        }
+        $expected_hash = !empty($body['nonce']) ? $body['nonce'] : NULL;
         $this->googleService->verifyToken($body['integrity_token'], $device_id, $expected_hash);
         $auth_method = 'play_integrity';
 
