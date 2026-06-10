@@ -32,7 +32,7 @@ if [ "$target_env" != 'prod' ]; then
   # Run deploymnet steps for each site.
   for site_name in ${SITES[@]}; do
     echo "-------------Running for site: $site_name--------------"
-    DRUSH="php8.4 -d memory_limit=1024M vendor/bin/drush @$site.$target_env -l $site_name"
+    DRUSH="php -d memory_limit=1024M vendor/bin/drush @$site.$target_env -l $site_name"
     $DRUSH cr
     echo "Running updb."
     $DRUSH updb -y
