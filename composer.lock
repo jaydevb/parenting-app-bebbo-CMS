@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e14d2d22552bcf343ae0336b246ae3d9",
+    "content-hash": "1da0ba36aad903d9f08c67f34dc5872d",
     "packages": [
         {
             "name": "acquia/drupal-spec-tool",
@@ -21333,11 +21333,11 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=8.3"
+        "php": ">=8.4"
     },
     "platform-dev": {},
     "platform-overrides": {
-        "php": "8.3"
+        "php": "8.4"
     },
     "plugin-api-version": "2.9.0"
 }
