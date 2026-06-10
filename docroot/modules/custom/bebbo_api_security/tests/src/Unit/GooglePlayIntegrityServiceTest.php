@@ -250,6 +250,36 @@ class GooglePlayIntegrityServiceTest extends TestCase {
   /**
    * @covers ::verifyVerdicts
    */
+  public function testVerifyVerdictsAcceptsNonceBasedHash(): void {
+    $nonce = 'challenge-3372ac375291-test';
+    $request_hash = rtrim(strtr(base64_encode(hash('sha256', $nonce, TRUE)), '+/', '-_'), '=');
+
+    $payload = [
+      'tokenPayloadExternal' => [
+        'requestDetails' => [
+          'requestPackageName' => 'org.unicef.bebbo',
+          'timestampMillis' => (string) (time() * 1000),
+          'requestHash' => $request_hash,
+        ],
+        'deviceIntegrity' => [
+          'deviceRecognitionVerdict' => ['MEETS_DEVICE_INTEGRITY'],
+        ],
+        'appIntegrity' => [
+          'appRecognitionVerdict' => 'PLAY_RECOGNIZED',
+        ],
+      ],
+    ];
+
+    $method = new \ReflectionMethod($this->service, 'verifyVerdicts');
+    $method->setAccessible(TRUE);
+
+    $method->invoke($this->service, $payload, 'some-device-id', $request_hash);
+    $this->assertTrue(TRUE);
+  }
+
+  /**
+   * @covers ::verifyVerdicts
+   */
   public function testVerifyVerdictsRejectsMissingRequestHash(): void {
     $device_id = 'test-device';
     $request_hash = rtrim(strtr(base64_encode(hash('sha256', $device_id, TRUE)), '+/', '-_'), '=');
