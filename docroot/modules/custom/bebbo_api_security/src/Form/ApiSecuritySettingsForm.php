@@ -119,6 +119,12 @@ class ApiSecuritySettingsForm extends ConfigFormBase {
       '#description' => $this->t('HTTP timeout for Google API requests.'),
       '#default_value' => $config->get('google_api_timeout') ?: 10,
     ];
+    $form['google']['google_allow_unrecognized_version'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Accept UNRECOGNIZED_VERSION app verdict'),
+      '#description' => $this->t('Dev/testing only — allows sideloaded debug builds (adb installs) that Google has not published. Every acceptance is logged as a warning. <strong>Never enable in production.</strong>'),
+      '#default_value' => $config->get('google_allow_unrecognized_version'),
+    ];
 
     // Apple App Attest.
     $form['apple'] = [
@@ -359,6 +365,7 @@ class ApiSecuritySettingsForm extends ConfigFormBase {
       ->set('google_project_number', $form_state->getValue('google_project_number'))
       ->set('google_verdict_freshness_seconds', (int) $form_state->getValue('google_verdict_freshness_seconds'))
       ->set('google_api_timeout', (int) $form_state->getValue('google_api_timeout'))
+      ->set('google_allow_unrecognized_version', (bool) $form_state->getValue('google_allow_unrecognized_version'))
       ->set('apple_team_id', $form_state->getValue('apple_team_id'))
       ->set('apple_bundle_id', $form_state->getValue('apple_bundle_id'))
       ->set('apple_production_mode', (bool) $form_state->getValue('apple_production_mode'))

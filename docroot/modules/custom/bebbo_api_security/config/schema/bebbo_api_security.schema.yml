@@ -56,6 +56,9 @@ bebbo_api_security.settings:
     google_api_timeout:
       type: integer
       label: 'Google API HTTP timeout in seconds'
+    google_allow_unrecognized_version:
+      type: boolean
+      label: 'Accept UNRECOGNIZED_VERSION app verdict (dev/testing only)'
     device_register_ip_rate_limit:
       type: integer
       label: 'Device registration rate limit per IP per hour'
