@@ -107,9 +107,11 @@ class GooglePlayIntegrityService {
       throw new \RuntimeException('Invalid response from Google Play Integrity API.');
     }
 
-    $this->logger->debug('Play Integrity decoded payload: @payload', [
-      '@payload' => json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
-    ]);
+    if ((bool) $config->get('debug_logging')) {
+      $this->logger->debug('Play Integrity decoded payload: @payload', [
+        '@payload' => json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+      ]);
+    }
 
     if ($expected_request_hash === NULL) {
       $expected_request_hash = $device_id;
@@ -142,10 +144,12 @@ class GooglePlayIntegrityService {
 
     // Verify nonce — binds integrity token to this request.
     $actual_nonce = $details['requestDetails']['nonce'] ?? '';
-    $this->logger->debug('Nonce comparison — expected: @expected | actual nonce: @actual', [
-      '@expected' => $expected_request_hash,
-      '@actual' => $actual_nonce,
-    ]);
+    if ((bool) $config->get('debug_logging')) {
+      $this->logger->debug('Nonce comparison — expected: @expected | actual nonce: @actual', [
+        '@expected' => $expected_request_hash,
+        '@actual' => $actual_nonce,
+      ]);
+    }
     if (!hash_equals($expected_request_hash, $actual_nonce)) {
       throw new \RuntimeException('Nonce mismatch: integrity token not bound to this request.');
     }
