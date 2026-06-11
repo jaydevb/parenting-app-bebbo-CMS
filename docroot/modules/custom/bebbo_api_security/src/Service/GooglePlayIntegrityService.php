@@ -178,8 +178,17 @@ class GooglePlayIntegrityService {
 
     // Verify app recognition.
     $app_verdict = $details['appIntegrity']['appRecognitionVerdict'] ?? 'UNEVALUATED';
-    if ($app_verdict !== 'PLAY_RECOGNIZED') {
+    $allowed_verdicts = ['PLAY_RECOGNIZED'];
+    if ((bool) $config->get('google_allow_unrecognized_version')) {
+      $allowed_verdicts[] = 'UNRECOGNIZED_VERSION';
+    }
+    if (!in_array($app_verdict, $allowed_verdicts, TRUE)) {
       throw new \RuntimeException("App not recognized by Play Store: {$app_verdict}");
+    }
+    if ($app_verdict === 'UNRECOGNIZED_VERSION') {
+      $this->logger->warning('Accepted UNRECOGNIZED_VERSION app verdict for device @device — google_allow_unrecognized_version is enabled. This must be off in production.', [
+        '@device' => $device_id,
+      ]);
     }
   }
 

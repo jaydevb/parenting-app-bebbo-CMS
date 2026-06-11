@@ -16,6 +16,7 @@ apple_root_ca_pem: ''
 debug_logging: false
 challenge_expiry_seconds: 120
 google_api_timeout: 10
+google_allow_unrecognized_version: false
 device_register_ip_rate_limit: 5
 verify_rate_limit: 10
 revoked_token_retention_days: 7
