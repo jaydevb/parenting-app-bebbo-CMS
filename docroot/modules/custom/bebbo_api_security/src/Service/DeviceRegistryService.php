@@ -83,6 +83,21 @@ class DeviceRegistryService {
   }
 
   /**
+   * Fetch the newest unused, unexpired challenge for a device.
+   */
+  public function getActiveChallenge(string $device_id): ?object {
+    return $this->database->select('bebbo_api_challenges', 'c')
+      ->fields('c')
+      ->condition('c.device_id', $device_id)
+      ->condition('c.used', 0)
+      ->condition('c.expires', time(), '>')
+      ->orderBy('c.created', 'DESC')
+      ->range(0, 1)
+      ->execute()
+      ->fetchObject() ?: NULL;
+  }
+
+  /**
    * Update device fields.
    */
   public function updateDevice(string $device_id, array $fields): void {

@@ -172,6 +172,49 @@ class DeviceRegistryServiceTest extends KernelTestBase {
   }
 
   /**
+   * Helper to insert a challenge row.
+   */
+  private function insertChallenge(string $device_id, array $overrides = []): string {
+    $challenge = $overrides['challenge'] ?? bin2hex(random_bytes(32));
+    $this->container->get('database')->insert('bebbo_api_challenges')->fields($overrides + [
+      'device_id' => $device_id,
+      'challenge' => $challenge,
+      'purpose' => 'sideloaded_verify',
+      'expires' => time() + 120,
+      'used' => 0,
+      'created' => time(),
+    ])->execute();
+    return $challenge;
+  }
+
+  /**
+   * Tests getActiveChallenge returns the newest unused, unexpired challenge.
+   *
+   * @covers ::getActiveChallenge
+   */
+  public function testGetActiveChallengeReturnsNewestUnused(): void {
+    $this->insertChallenge('dev-020', ['created' => time() - 60]);
+    $newest = $this->insertChallenge('dev-020', ['created' => time()]);
+
+    $row = $this->registry->getActiveChallenge('dev-020');
+    $this->assertNotNull($row);
+    $this->assertEquals($newest, $row->challenge);
+  }
+
+  /**
+   * Tests getActiveChallenge skips used and expired challenges.
+   *
+   * @covers ::getActiveChallenge
+   */
+  public function testGetActiveChallengeIgnoresUsedAndExpired(): void {
+    $this->insertChallenge('dev-021', ['used' => 1]);
+    $this->insertChallenge('dev-021', ['expires' => time() - 10]);
+
+    $this->assertNull($this->registry->getActiveChallenge('dev-021'));
+    $this->assertNull($this->registry->getActiveChallenge('no-such-device'));
+  }
+
+  /**
    * Tests purgeExpired removes expired challenges.
    *
    * @covers ::purgeExpired

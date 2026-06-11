@@ -92,7 +92,20 @@ class SecurityController extends ControllerBase {
             'message' => 'integrity_token is required for Android.',
           ], 400);
         }
+        // Prefer the server-issued challenge stored at issuance time; fall
+        // back to a client-supplied nonce for callers without a challenge.
         $expected_hash = !empty($body['nonce']) ? $body['nonce'] : NULL;
+        $stored_challenge = $this->registry->getActiveChallenge($device_id);
+        if ($stored_challenge) {
+          $expected_hash = $stored_challenge->challenge;
+        }
+        if ((bool) $config->get('debug_logging')) {
+          $this->logger->debug('Play Integrity nonce source for @device: stored challenge from DB: @stored | body nonce: @body', [
+            '@device' => $device_id,
+            '@stored' => $stored_challenge->challenge ?? '(none)',
+            '@body' => $body['nonce'] ?? '(none)',
+          ]);
+        }
         $this->googleService->verifyToken($body['integrity_token'], $device_id, $expected_hash);
         $auth_method = 'play_integrity';
 
