@@ -20929,8 +20929,8 @@ display:
           label: ''
           exclude: true
           alter:
-            alter_text: true
-            text: '{{ field_featured_image_1|number_format }}'
+            alter_text: false
+            text: ''
             make_link: false
             path: ''
             absolute: false

@@ -38,15 +38,18 @@
     }
 
     var isSingle = getQuizType() === SINGLE_QUESTION;
+    var count = getQuestionCount();
 
-    // Hide/show the "Add new Quiz Question" button.
-    $wrapper.find('input[name*="-add"]').toggle(!isSingle);
+    // Show the "Add new Quiz Question" button unless this is a single question
+    // quiz that already has its one question. A single quiz with no question
+    // yet still needs the button to add that one required question.
+    $wrapper.find('input[name*="-add"]').toggle(!isSingle || count === 0);
 
     // Hide/show duplicate buttons in entity operation cells.
     $wrapper.find('.ief-entity-operations input[name*="entity-duplicate"]').toggle(!isSingle);
 
     // Auto-remove extra entities for single question quiz.
-    if (isSingle && !removing && !pendingConfirm && getQuestionCount() > 1) {
+    if (isSingle && !removing && !pendingConfirm && count > 1) {
       removeLastEntity($wrapper);
     }
   }

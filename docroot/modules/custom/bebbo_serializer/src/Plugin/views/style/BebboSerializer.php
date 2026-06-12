@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
 use Drupal\group\Entity\Group;
+use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\language_visibility_control\LanguageVisibilityService;
 use Drupal\rest\Plugin\views\style\Serializer;
 use Drupal\rest\Plugin\views\display\RestExport;
@@ -924,19 +925,43 @@ class BebboSerializer extends Serializer {
    *   Keyed object: {machine_name: {name: "Label"}, ...}.
    */
   private function transformVocabularies(array $rows): array {
+    $langcode = $this->resolveLangcode();
+    $vocab_storage = $this->entityTypeManager->getStorage('taxonomy_vocabulary');
     $result = [];
-    foreach ($rows as $row) {
-      $parts = explode(',', $row['name'] ?? '', 2);
-      $machineName = trim($parts[0]);
-      if ($machineName === '' || $machineName === 'keywords') {
+
+    // Derive vocabularies from the view's result entities rather than the
+    // rendered "name" field. That field uses an access-gated
+    // entity_reference_label render, so anonymous API callers (the real app
+    // authenticating via JWT) would otherwise get an empty list. Loading the
+    // vocabulary and reading its label is not access-gated.
+    foreach ($this->view->result as $row) {
+      $term = $row->_entity ?? NULL;
+      if ($term === NULL) {
         continue;
       }
-      $label = htmlspecialchars_decode(
-        trim($parts[1] ?? $machineName),
-        ENT_QUOTES | ENT_HTML5,
-      );
-      $result[$machineName] = ['name' => $label];
+      $machineName = $term->bundle();
+      if ($machineName === '' || $machineName === 'keywords' || isset($result[$machineName])) {
+        continue;
+      }
+
+      // Prefer the requested language's translated vocabulary label; fall back
+      // to the base (default-language) label.
+      $label = NULL;
+      if ($this->languageManager instanceof ConfigurableLanguageManagerInterface) {
+        $label = $this->languageManager
+          ->getLanguageConfigOverride($langcode, 'taxonomy.vocabulary.' . $machineName)
+          ->get('name');
+      }
+      if (!$label) {
+        $vocab = $vocab_storage->load($machineName);
+        $label = $vocab !== NULL ? $vocab->label() : $machineName;
+      }
+
+      $result[$machineName] = [
+        'name' => htmlspecialchars_decode((string) $label, ENT_QUOTES | ENT_HTML5),
+      ];
     }
+
     return $result;
   }
 
@@ -2321,7 +2346,10 @@ class BebboSerializer extends Serializer {
   private function castToNumber(array &$row, array $fields): void {
     foreach ($fields as $field) {
       if (array_key_exists($field, $row)) {
-        $row[$field] = ($row[$field] ?? 0) + 0;
+        // Adding 0 preserves the natural int/float type, but PHP 8 throws a
+        // TypeError on non-numeric strings (e.g. an empty decimal field that
+        // Views renders as ''). Guard with is_numeric() and default to 0.
+        $row[$field] = is_numeric($row[$field]) ? $row[$field] + 0 : 0;
       }
     }
   }

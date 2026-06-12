@@ -26,6 +26,9 @@ use Drupal\Core\Database\Database;
 use Drupal\media\Entity\Media;
 use Drupal\file\Entity\File;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\group\Entity\GroupInterface;
 use Drupal\taxonomy\TermForm;
 
 /**
@@ -1862,6 +1865,30 @@ function pb_custom_field_form_user_form_alter(&$form, FormStateInterface $form_s
  * Alters user_register_form.
  */
 function pb_custom_field_form_user_register_form_alter(&$form, &$form_state, $form_id) {
+  // --- Group membership creation wizard (port of patch #2949408) ---
+  if ($form_state->has('group') && $form_state->has('store_id')) {
+    $account = \Drupal::currentUser();
+    /** @var \Drupal\group\Entity\GroupInterface $group */
+    $group = $form_state->get('group');
+    if ($group->hasPermission('create group_membership entity', $account)) {
+      // The register form hides the password unless the creator has
+      // "administer users"; group admins need it for direct account creation.
+      $form['account']['pass'] = [
+        '#type' => 'password_confirm',
+        '#size' => 25,
+        '#description' => t('Provide a password for the new account in both fields.'),
+        '#required' => TRUE,
+      ];
+      if (isset($form['account']['notify'])) {
+        $form['account']['notify']['#access'] = TRUE;
+      }
+      // Don't let browsers prefill the group admin's own data.
+      $form['#attributes']['data-user-info-from-browser'] = FALSE;
+      // Make RegisterForm::save() treat this as an admin-created account.
+      $form['administer_users']['#value'] = TRUE;
+    }
+  }
+
   $roles = Role::loadMultiple();
   $currentUser_roles = \Drupal::currentUser()->getRoles();
   $current_path = substr(\Drupal::service('path.current')->getPath(), 1);
@@ -2459,4 +2486,65 @@ function pb_custom_field_toolbar() {
   ];
 
   return $items;
+}
+
+/**
+ * Implements hook_group_relation_type_alter().
+ *
+ * Re-enables the "create new user + add as member" wizard that the Group
+ * 1.x manage-users patch (#2949408) provided. Setting entity_access to
+ * TRUE makes Group define the create/update/delete/view
+ * "group_membership entity" permissions and exposes the
+ * /group/{group}/content/create/group_membership route.
+ */
+function pb_custom_field_group_relation_type_alter(array &$definitions): void {
+  if (isset($definitions['group_membership'])) {
+    $definitions['group_membership']->set('entity_access', TRUE);
+  }
+}
+
+/**
+ * Implements hook_menu_local_actions_alter().
+ */
+function pb_custom_field_menu_local_actions_alter(&$local_actions): void {
+  // Disambiguate from the new "Add new member" action on the members page.
+  if (isset($local_actions['group.add_member'])) {
+    $local_actions['group.add_member']['title'] = t('Add existing member');
+  }
+}
+
+/**
+ * Implements hook_entity_field_access().
+ */
+function pb_custom_field_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
+  // Let group admins set the status (active/blocked) of their members
+  // when creating or editing user accounts through the group UI.
+  if ($operation === 'edit' && $field_definition->getName() === 'status' && $items !== NULL && $items->getEntity()->getEntityTypeId() === 'user') {
+    $entity = $items->getEntity();
+    // Never open up uid 1 or the editor's own account this way.
+    if ((int) $entity->id() === 1 || (int) $entity->id() === (int) $account->id()) {
+      return AccessResult::neutral();
+    }
+    if (!$entity->isNew()) {
+      $storage = \Drupal::entityTypeManager()->getStorage('group_relationship');
+      $relationships = $storage->loadByProperties([
+        'entity_id' => $entity->id(),
+        'plugin_id' => 'group_membership',
+      ]);
+      foreach ($relationships as $relationship) {
+        /** @var \Drupal\group\Entity\GroupRelationshipInterface $relationship */
+        $group = $relationship->getGroup();
+        if ($group->hasPermission('update any group_membership entity', $account)) {
+          return AccessResult::allowed()
+            ->addCacheableDependency($relationship)
+            ->cachePerUser();
+        }
+      }
+    }
+    elseif (($group = \Drupal::routeMatch()->getParameter('group')) && $group instanceof GroupInterface) {
+      return AccessResult::allowedIf($group->hasPermission('create group_membership entity', $account))
+        ->addCacheContexts(['route', 'user']);
+    }
+  }
+  return AccessResult::neutral();
 }
