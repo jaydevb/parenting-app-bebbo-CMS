@@ -573,7 +573,7 @@ display:
             group_roles: '0'
             changed: '0'
             created: '0'
-            delete_group_relationship: '0'
+            delete_group_relationship: delete_group_relationship
       pager:
         type: full
         options:
