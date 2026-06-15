@@ -205,7 +205,8 @@
                 "Fix league/csv 9.27 deprecations: createFromFileObject/createFromString (3562555)": "patches/csv_serialization_league_csv_deprecation-3562555.patch"
             },
             "drupal/entity_share": {
-                "PHP 8.4: explicit nullable params (issue 3553318, won't-fix on 3.x; fixed in 4.0.x)": "patches/entity_share/php84-implicit-nullable-3553318.patch"
+                "PHP 8.4: explicit nullable params (issue 3553318, won't-fix on 3.x; fixed in 4.0.x)": "patches/entity_share/php84-implicit-nullable-3553318.patch",
+                "D11/core 10.2+: remove dangling canonical link templates -> RouteNotFoundException on channel/remote list (3419256, MR!89)": "patches/entity_share/canonical-link-template-3419256.patch"
             },
             "drupal/views_data_export": {
                 "Batch export loses entity_type query metadata -> PluginNotFoundException with Group access (3173296)": "patches/views_data_export/batch-query-metadata-3173296.patch"
