@@ -107,7 +107,12 @@ class JwtService {
   }
 
   /**
-   * Validate and rotate a refresh token. Returns new JWT + refresh token.
+   * Validate a refresh token and issue a fresh access token.
+   *
+   * When `refresh_rotation_enabled` is TRUE (default) the presented refresh
+   * token is revoked and a new one is issued in the same family (rotation).
+   * When FALSE, the presented refresh token is reused unchanged and only a new
+   * access token is minted.
    *
    * Implements family-based replay detection: if a revoked token is reused,
    * the entire token family is revoked (compromised session).
@@ -144,25 +149,11 @@ class JwtService {
       return NULL;
     }
 
-    $this->database->update('bebbo_api_refresh_tokens')
-      ->fields(['revoked' => 1])
-      ->condition('id', $row->id)
-      ->execute();
-
     $config = $this->configFactory->get('bebbo_api_security.settings');
-    $expiry = (int) $config->get('refresh_expiry_seconds') ?: 2592000;
-    $new_raw = bin2hex(random_bytes(32));
-    $new_hash = hash('sha256', $new_raw);
+    $rotation_enabled = $config->get('refresh_rotation_enabled') ?? TRUE;
 
-    $this->database->insert('bebbo_api_refresh_tokens')->fields([
-      'device_id' => $row->device_id,
-      'token_hash' => $new_hash,
-      'token_family' => $row->token_family,
-      'expires' => time() + $expiry,
-      'revoked' => 0,
-      'created' => time(),
-    ])->execute();
-
+    // Look up the device first so a missing device cannot leave a rotated
+    // token orphaned (old revoked, new issued, but no response returned).
     $device = $this->database->select('bebbo_api_devices', 'd')
       ->fields('d', ['platform', 'auth_method'])
       ->condition('d.device_id', $row->device_id)
@@ -173,11 +164,39 @@ class JwtService {
       return NULL;
     }
 
+    if ($rotation_enabled) {
+      // Rotate: revoke the presented token and issue a new one in the same
+      // family.
+      $this->database->update('bebbo_api_refresh_tokens')
+        ->fields(['revoked' => 1])
+        ->condition('id', $row->id)
+        ->execute();
+
+      $expiry = (int) $config->get('refresh_expiry_seconds') ?: 2592000;
+      $new_raw = bin2hex(random_bytes(32));
+      $new_hash = hash('sha256', $new_raw);
+
+      $this->database->insert('bebbo_api_refresh_tokens')->fields([
+        'device_id' => $row->device_id,
+        'token_hash' => $new_hash,
+        'token_family' => $row->token_family,
+        'expires' => time() + $expiry,
+        'revoked' => 0,
+        'created' => time(),
+      ])->execute();
+
+      $refresh_token = $new_raw;
+    }
+    else {
+      // Rotation disabled: reuse the presented refresh token unchanged.
+      $refresh_token = $raw_refresh_token;
+    }
+
     $jwt = $this->createToken($row->device_id, $device->platform, $device->auth_method);
 
     return [
       'access_token' => $jwt,
-      'refresh_token' => $new_raw,
+      'refresh_token' => $refresh_token,
       'expires_in' => (int) $config->get('jwt_expiry_seconds') ?: 3600,
     ];
   }

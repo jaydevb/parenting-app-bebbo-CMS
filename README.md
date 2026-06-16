@@ -82,9 +82,6 @@ GRANT ALL PRIVILEGES ON turkey_db.* TO 'db'@'%';
 CREATE DATABASE IF NOT EXISTS ecuador_db;
 GRANT ALL PRIVILEGES ON ecuador_db.* TO 'db'@'%';
 
-CREATE DATABASE IF NOT EXISTS pacific_islands_db;
-GRANT ALL PRIVILEGES ON pacific_islands_db.* TO 'db'@'%';
-
 CREATE DATABASE IF NOT EXISTS somoa_db;
 GRANT ALL PRIVILEGES ON somoa_db.* TO 'db'@'%';
 

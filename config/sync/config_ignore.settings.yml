@@ -20,4 +20,5 @@ ignored_config_entities:
   - tmgmt.translator.google
   - tmgmt.translator.memsource
   - tmgmt.translator.microsoft
+  - tmgmt_memsource.settings
   - views.view.entity_share_client_entity_import_status
