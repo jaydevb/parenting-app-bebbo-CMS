@@ -139,5 +139,16 @@ drush/sites/.checksums
 # Deprecation detector rules
 .rules
 
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa
+id_ed25519
+auth.json
+credentials.json
+
 # misc
 # .ddev/*

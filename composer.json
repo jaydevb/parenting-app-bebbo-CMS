@@ -306,6 +306,15 @@
         "post-create-project-cmd": [
             "blt internal:create-project:init-repo"
         ],
+        "install-git-hooks": [
+            "if [ -d .git ] && [ -f scripts/git-hooks/pre-commit ] && [ -z \"$CI\" ] && [ -z \"$ACQUIA_HOSTING_DRUPAL_LOG\" ]; then cp scripts/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit && echo 'Git pre-commit hook installed.'; fi"
+        ],
+        "post-install-cmd": [
+            "@install-git-hooks"
+        ],
+        "post-update-cmd": [
+            "@install-git-hooks"
+        ],
         "nuke": [
             "rm -rf vendor composer.lock docroot/core docroot/modules/contrib docroot/profiles/contrib docroot/themes/contrib",
             "@composer clearcache --ansi",
