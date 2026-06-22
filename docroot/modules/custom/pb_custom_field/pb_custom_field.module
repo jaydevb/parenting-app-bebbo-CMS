@@ -1702,10 +1702,18 @@ function pb_custom_field_form_user_login_form_alter(&$form, FormStateInterface $
  * Implements hook_form_submit().
  */
 function pb_custom_field_user_login_form_submit($form, FormStateInterface $form_state) {
-
+  if (\Drupal::currentUser()->isAnonymous()) {
+    return;
+  }
   $redirect_url = Url::fromUri('internal:/dashboard');
   $form_state->setRedirectUrl($redirect_url);
+}
 
+/**
+ * Implements hook_form_FORM_ID_alter() for the TFA verify form.
+ */
+function pb_custom_field_form_email_tfa_email_tfa_verify_login_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $form['submit']['#submit'][] = 'pb_custom_field_user_login_form_submit';
 }
 
 /**

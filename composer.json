@@ -35,6 +35,7 @@
         "drupal/date_popup": "^2.0",
         "drupal/devel": "^5.4",
         "drupal/drupal-extension": "dev-main",
+        "drupal/email_tfa": "^3.0",
         "drupal/entity": "^1.6",
         "drupal/entity_reference_revisions": "*",
         "drupal/entity_reference_validators": "^2.0",
@@ -268,6 +269,9 @@
             },
             "drupal/menu_export": {
                 "Fix drush command calling protected exportMenus method": "patches/menu_export_drush_visibility.patch"
+            },
+            "drupal/contextual_range_filter": {
+                "Fix PHP 8.4 implicit nullable deprecation in DateRange::init() (https://www.drupal.org/i/3521312)": "patches/contextual_range_filter/3521312-implicit-nullable-php84.patch"
             }
         },
         "drupal-lenient": {
