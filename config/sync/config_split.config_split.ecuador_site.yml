@@ -149,7 +149,6 @@ complete_list:
   - pb_custom_form.landing_pages
   - pb_custom_form.language_redirects
   - pb_custom_form.mobile_app_share_link_form
-  - smtp.settings
   - views.view.bebbo_v2_apis
 partial_list:
   - ai_translate.settings

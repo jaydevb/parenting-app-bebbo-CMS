@@ -13,7 +13,6 @@ ignored_config_entities:
   - pb_custom_form.language_redirects
   - pb_custom_form.mobile_app_share_link_form
   - purge.logger_channels
-  - smtp.settings
   - 'tmgmt.translator.*'
   - tmgmt.translator.deepl_free
   - tmgmt.translator.deepl_pro
