@@ -5,9 +5,9 @@
  * Loaded on all admin pages via pb_custom_field_preprocess_page().
  */
 
-.user-logged-in .breadcrumb {
+/* .user-logged-in .breadcrumb {
   display: none;
-}
+} */
 
 .user-logged-in .js-form-item.form-item.js-form-type-checkbox.form-type--checkbox.form-type--boolean.js-form-item-select-all.form-item--select-all,
 .user-logged-in details#edit-multipage {
@@ -54,9 +54,6 @@ table.tmgmt-ui-review input.unreviewed,
   margin-right: 12px;
 }
 
-.breadcrumb__list .breadcrumb__item:nth-child(n+3) {
-  display: none;
-}
 
 .header-un-logo img {
   max-width: 205px;
