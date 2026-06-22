@@ -17,6 +17,7 @@ roles:
   se: se
 author: false
 site_mail: false
+user_fields: {  }
 emails: ''
 subject: 'New content is in review after translation in your Master Language [language]'
 body:

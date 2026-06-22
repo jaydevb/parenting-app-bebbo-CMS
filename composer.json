@@ -95,6 +95,7 @@
         "drupal/structure_sync": "^2.0",
         "drupal/svg_image": "^3.2",
         "drupal/symfony_mailer": "^1.4",
+        "drupal/symfony_mailer_office365": "^1.0@alpha",
         "drupal/tamper": "^1.0@beta",
         "drupal/title_length": "^2.1",
         "drupal/tmgmt": "^1.15",
