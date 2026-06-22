@@ -179,9 +179,14 @@ complete_list:
   - language/ru/core.entity_form_mode.media.media_library
   - language/ru/core.entity_view_mode.media.media_library
   - language/ru/core.entity_view_mode.paragraph.preview
+  - language/ru/field.field.block_content.basic.body
   - language/ru/field.field.media.image.field_media_image
   - language/ru/field.field.media.remote_video.field_media_oembed_video
+  - language/ru/field.field.node.article.body
+  - language/ru/field.field.node.page.body
   - language/ru/filter.format.basic_html
+  - language/ru/filter.format.email_html
+  - language/ru/filter.format.plain_text
   - language/ru/language.entity.en
   - language/ru/language.entity.ro
   - language/ru/language.entity.ru
@@ -224,6 +229,7 @@ complete_list:
   - language/ru/views.view.who_s_new
   - language/ru/views.view.who_s_online
   - language/ru/views.view.watchdog
+  - language/ru/symfony_mailer.mailer_policy.symfony_mailer.test
   - language/sk/block.block.claro_content
   - language/sk/block.block.claro_help
   - language/sk/block.block.claro_page_title
@@ -323,6 +329,9 @@ complete_list:
   - language/sk/views.view.who_s_online
   - language/sk/views.view.watchdog
   - language/sq/core.entity_view_mode.paragraph.preview
+  - language/sq/field.field.block_content.basic.body
+  - language/sq/field.field.node.article.body
+  - language/sq/field.field.node.page.body
   - language/sq/language.entity.en
   - language/sq/language.entity.ro
   - language/sq/language.entity.ru
@@ -360,6 +369,9 @@ complete_list:
   - language/sq/views.view.who_s_online
   - language/sq/views.view.watchdog
   - language/sr/core.entity_view_mode.paragraph.preview
+  - language/sr/field.field.block_content.basic.body
+  - language/sr/field.field.node.article.body
+  - language/sr/field.field.node.page.body
   - language/sr/filter.format.basic_html
   - language/sr/language.entity.en
   - language/sr/language.entity.ro
@@ -400,8 +412,12 @@ complete_list:
   - language/uk/core.entity_form_mode.media.media_library
   - language/uk/core.entity_view_mode.media.media_library
   - language/uk/core.entity_view_mode.paragraph.preview
+  - language/uk/field.field.block_content.basic.body
   - language/uk/field.field.media.image.field_media_image
+  - language/uk/field.field.node.article.body
+  - language/uk/field.field.node.page.body
   - language/uk/filter.format.basic_html
+  - language/uk/filter.format.plain_text
   - language/uk/language.entity.en
   - language/uk/language.entity.ro
   - language/uk/language.entity.ru

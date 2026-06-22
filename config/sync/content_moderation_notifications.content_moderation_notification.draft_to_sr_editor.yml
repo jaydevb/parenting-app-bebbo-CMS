@@ -10,6 +10,7 @@ roles:
   se: se
 author: false
 site_mail: false
+user_fields: {  }
 emails: ''
 subject: 'Content changed from Draft to Sr. Editor Review'
 body:

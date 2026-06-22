@@ -7,6 +7,9 @@ dependencies:
 id: country-admin
 label: 'Country Admin'
 weight: 100
+admin: false
+scope: individual
+global_role: null
 group_type: country
 permissions:
   - 'access content overview'
@@ -26,5 +29,3 @@ permissions:
   - 'view unpublished group_node:survey entity'
   - 'view unpublished group_node:vaccinations entity'
   - 'view unpublished group_node:video_article entity'
-admin: false
-scope: individual

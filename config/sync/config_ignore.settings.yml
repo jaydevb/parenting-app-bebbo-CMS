@@ -21,4 +21,6 @@ ignored_config_entities:
   - tmgmt.translator.memsource
   - tmgmt.translator.microsoft
   - tmgmt_memsource.settings
+  - symfony_mailer.mailer_transport.office_365_oauth
+  - symfony_mailer_office365.config
   - views.view.entity_share_client_entity_import_status

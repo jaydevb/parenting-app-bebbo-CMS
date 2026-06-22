@@ -30,6 +30,10 @@ display:
           label: Стан
         title:
           label: Title
+        source_language:
+          label: From
+        target_language:
+          label: To
         operations:
           label: Операції
       filters:
@@ -54,6 +58,10 @@ display:
           label: Created
         title:
           label: Title
+        source_language:
+          label: From
+        target_language:
+          label: To
         operations:
           label: Операції
       filters:
@@ -75,6 +83,10 @@ display:
           label: Created
         title:
           label: Title
+        source_language:
+          label: From
+        target_language:
+          label: To
         operations:
           label: Операції
       filters:
@@ -94,6 +106,10 @@ display:
           label: Стан
         title:
           label: Title
+        source_language:
+          label: From
+        target_language:
+          label: To
         operations:
           label: Операції
       filters:
@@ -115,6 +131,10 @@ display:
           label: Created
         title:
           label: Title
+        source_language:
+          label: From
+        target_language:
+          label: To
         operations:
           label: Операції
       filters:
@@ -134,5 +154,9 @@ display:
           label: Стан
         title:
           label: Title
+        source_language:
+          label: From
+        target_language:
+          label: To
         operations:
           label: Операції

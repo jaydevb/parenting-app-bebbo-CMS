@@ -10,6 +10,7 @@ roles:
   sme: sme
 author: false
 site_mail: false
+user_fields: {  }
 emails: ''
 subject: 'Content changed from Draft to SME Review'
 body:

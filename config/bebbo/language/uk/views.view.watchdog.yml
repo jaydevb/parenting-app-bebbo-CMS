@@ -5,6 +5,8 @@ display:
       fields:
         type:
           label: Тип
+        message:
+          label: Message
         name:
           label: User
         link:

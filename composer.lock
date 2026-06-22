@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "db599aab400f1adbaec3e943065422d4",
+    "content-hash": "93b1ead6686abfb0332474fba9165402",
     "packages": [
         {
             "name": "acquia/drupal-spec-tool",
@@ -8650,6 +8650,52 @@
             "homepage": "https://www.drupal.org/project/symfony_mailer",
             "support": {
                 "source": "https://git.drupalcode.org/project/symfony_mailer"
+            }
+        },
+        {
+            "name": "drupal/symfony_mailer_office365",
+            "version": "1.0.0-alpha4",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/symfony_mailer_office365.git",
+                "reference": "1.0.0-alpha4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/symfony_mailer_office365-1.0.0-alpha4.zip",
+                "reference": "1.0.0-alpha4",
+                "shasum": "0a486c2c3f5762411b235deee440a2c380b87a0d"
+            },
+            "require": {
+                "drupal/core": "^10 || ^11",
+                "drupal/symfony_mailer": "^1.5",
+                "league/oauth2-client": "^2.7"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "1.0.0-alpha4",
+                    "datestamp": "1758107219",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "n1k",
+                    "homepage": "https://www.drupal.org/user/2442656"
+                }
+            ],
+            "description": "Symfony mailer office365 support.",
+            "homepage": "https://www.drupal.org/project/symfony_mailer_office365",
+            "support": {
+                "source": "https://git.drupalcode.org/project/symfony_mailer_office365"
             }
         },
         {
@@ -21328,6 +21374,7 @@
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/inline_entity_form": 5,
         "drupal/rdf": 10,
+        "drupal/symfony_mailer_office365": 15,
         "drupal/tamper": 10,
         "drupal/ultimate_cron": 15,
         "drupal/webp": 5,
