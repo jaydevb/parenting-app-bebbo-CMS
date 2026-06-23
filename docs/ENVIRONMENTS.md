@@ -1,0 +1,229 @@
+# Bebbo CMS — Environments & Environment Synchronization
+
+> **Audience:** developers, maintainers, operations, release managers.
+> **Scope:** the four environments (Local / Dev / Stage / Prod), how Drupal settings resolve per environment, multisite domains per environment, the deploy pipeline + Acquia cloud hooks, and cross-site content sync.
+> **Verified against:** repository `HEAD` (branch `feature/group3-manage-users`). Every value below was read from the live files named in each section — `.ddev/config.yaml`, `docroot/sites/`, `hooks/`, `.github/workflows/pipelines.yml`. Where a setting lives on Acquia's servers (outside this repo) it is marked as such and **not** guessed.
+
+---
+
+## 1. Environment Matrix
+
+| Environment | Where | PHP | Deploy trigger | Acquia target | Config source |
+|-------------|-------|-----|----------------|---------------|---------------|
+| **Local** | DDEV (`bebbo.app`) | 8.4 | n/a (manual `ddev start`) | — | `config/sync` + active split |
+| **Dev** | Acquia Cloud | **8.4** | push to `develop` | `@parentbuddy2.dev` | `config/sync` + active split |
+| **Stage** | Acquia Cloud | **8.4** | push to `stage` | `@parentbuddy2.test` | `config/sync` + active split |
+| **Prod** | Acquia Cloud | **8.4**¹ | **manual only** | `@parentbuddy2.prod`¹ | `config/sync` + active split |
+
+¹ There is **no** `deploy-prod` job and **no** `@parentbuddy2.prod` reference in `pipelines.yml`. Prod is deployed manually; the cloud hook explicitly **skips** DB/config steps on prod (see [§6](#6-acquia-cloud-hooks)).
+
+---
+
+## 2. Local Development (DDEV)
+
+Source: `.ddev/config.yaml`.
+
+| Key | Value |
+|-----|-------|
+| `name` | `bebbo.app` |
+| `type` | `drupal11` |
+| `docroot` | `docroot` |
+| `php_version` | `8.4` |
+| `webserver_type` | `apache-fpm` |
+| `database` | MariaDB **10.11** |
+| `xdebug_enabled` | `false` |
+| `composer_version` | `2` |
+| `corepack_enable` | `false` |
+| `use_dns_when_possible` | `true` |
+
+> **`type: drupal11`** matches the installed core (**11.3.x**, `composer.lock`). DDEV v1.25.1 supports the `drupal11` type. (Previously `drupal10`; corrected.)
+
+### 2.1 JWT key opt-in (commented by default)
+
+`.ddev/config.yaml` documents an opt-in `web_environment` entry for `BEBBO_JWT_PRIVATE_KEY` (used by the `bebbo_api_security` V2 JWT layer). It is **commented out** by default — enable locally if testing the V2 secure API.
+
+### 2.2 Local databases
+
+Each site gets its own database locally. `.ddev/mysql/init-databases.sql` creates:
+
+`bangladesh_db` · `turkey_db` · `ecuador_db` · `pakistan_db` · `somoa_db` · `zimbabwe_db`
+
+The **default (bebbo)** site uses DDEV's base `db` database (no override). Each country `settings.php` sets its DB name only when `IS_DDEV_PROJECT == 'true'`. Note `somoa_db` serves the **Pacific Islands (Bebbo Pacific)** site.
+
+---
+
+## 3. Multisite Domains per Environment
+
+Source: `docroot/sites/sites.php` (`$sites` map: domain → site directory). The **default** site (`bebbo.app`) has **no** entry — it falls through to `sites/default/`.
+
+### 3.1 Production domains (verified, exact)
+
+| Site dir | Production domain(s) |
+|----------|----------------------|
+| `bangladesh` | `babuni.app`, `bangla.bebbo.app` |
+| `turkey` | `merhababebek.app`, `tr.bebbo.app` |
+| `ecuador` | `wawamor.ec`, `ec.bebbo.app` |
+| `pakistan` | `pk.bebbo.app` |
+| `somoa` (Pacific Islands / Bebbo Pacific) | `ws.bebbo.app`, `bebbopacific.app` |
+| `zimbabwe` | `umntwana.app`, `rerai.umntwana.app`, `zw.bebbo.app` |
+
+> The **`somoa`** directory is the **Pacific Islands (Bebbo Pacific)** site (serving Fiji + Samoa) — both `ws.bebbo.app` and `bebbopacific.app` route to it. `somoa` is a historical directory name, not a separate Samoa site. There is **no** `pacific_islands` directory entry anywhere in `sites.php`.
+
+### 3.2 Stage / Dev / Local patterns
+
+`sites.php` also maps environment-prefixed hosts, all to the same six country directories using a fixed slug per site (`bangla`, `tr`, `ec`, `pk`, `ws`, `zw`):
+
+| Environment | Host pattern | Example |
+|-------------|--------------|---------|
+| Stage | `{slug}-stage.bebbo.app` | `tr-stage.bebbo.app` → `turkey` |
+| Dev | `{slug}-dev.bebbo.app` | `pk-dev.bebbo.app` → `pakistan` |
+| Local (DDEV) | `{slug}.bebbo.app.ddev.site` | `ec.bebbo.app.ddev.site` → `ecuador` |
+
+---
+
+## 4. Settings Load Order
+
+The real chain is **not** flat — a country `settings.php` is a thin wrapper that delegates to `default/settings.php`, which is the actual orchestrator.
+
+### 4.1 Country site (e.g. `docroot/sites/turkey/settings.php`)
+
+```php
+$acquia_settings_file_name = 'prod_pbturkey-settings.inc';   // per-site Acquia include name
+require_once $app_root . '/sites/default/settings.php';       // runs the common stack (below)
+if (DDEV) { $databases['default']['default']['database'] = 'turkey_db'; }
+include $app_root . '/' . $site_path . '/site.splits.php';    // activate this site's split
+```
+
+### 4.2 `docroot/sites/default/settings.php` (the orchestrator)
+
+```php
+require_once common_settings/common.settings.php;   // shared base
+if (IS_DDEV_PROJECT) require_once settings.ddev.php; // local-only
+require_once common_settings/post.settings.php;      // "Keep post.settings.php LAST" — Acquia detection
+include site.splits.php;                              // activate split
+```
+
+> **Idempotent double-include:** for a country site, `site.splits.php` runs both inside `default/settings.php` and again at the end of the country file. It only sets a config flag `TRUE`, so this is harmless.
+
+### 4.3 What each shared file actually sets (verified)
+
+- **`common.settings.php`** — is essentially stock Drupal `default.settings.php`. It does **not** set production `trusted_host_patterns`, real `hash_salt`, or `config_sync_directory` (those are commented stock docs). It *does* set: `update_free_access = FALSE`, `file_scan_ignore_directories`, `entity_update_batch_size = 50`, `entity_update_backup = TRUE`, `state_cache = TRUE`, container services yaml.
+- **`post.settings.php`** — the real environment logic:
+  - `config_sync_directory = '../config/sync'` (always).
+  - `hash_salt = hash('sha256', $app_root . '/' . $site_path)` (always).
+  - SMTP user/pass read from env vars (`getenv(...) ?: ''`).
+  - tmgmt translator API keys are present but **commented out**.
+
+> **Trusted hosts:** in-repo, `trusted_host_patterns` is set only in **DDEV** (`['.*']`). Production host validation is handled by the Acquia per-site include (`/var/www/site-php/{group}/{file}.inc`) which lives **on Acquia's servers, not in this repo** — so it is not documented here.
+
+---
+
+## 5. Acquia Environment Detection & Config
+
+Source: `docroot/sites/common_settings/post.settings.php`.
+
+- Detection reads env vars: `AH_SITE_GROUP` and `AH_SITE_ENVIRONMENT`. The Acquia block runs only `if ($ah_group && $ah_env)`.
+- **No per-environment branching** on `prod`/`test`/`dev`/`ode` inside this file — it does the same for every Acquia env. (The per-site `*.inc` name is hardcoded in each site's `settings.php`, e.g. `prod_pbturkey-settings.inc`.)
+- Sets within the Acquia block:
+  - `ini_set('memory_limit', '-1')` (first line of file).
+  - Acquia include: `require_once "/var/www/site-php/{group}/{settings_file}"` if readable.
+  - DB: `acquia_hosting_settings_autoconnect = FALSE`, `READ-COMMITTED` transaction isolation, `acquia_hosting_db_choose_active()`.
+  - Memcache: `require_once common_settings/cloud-memcache-d8+.php` if readable.
+  - `file_private_path = /mnt/files/{group}.{env}/{site_path}/files-private`.
+  - `file_temp_path = /mnt/tmp/{group}.{env}`.
+  - Optional API keys: `/mnt/gfs/{group}.{env}/nobackup/bebbo_app_apikeys.php` if readable.
+
+---
+
+## 6. Configuration per Environment
+
+| Layer | Path | Role |
+|-------|------|------|
+| Shared base | `config/sync/` | All 7 sites |
+| Per-site override | `config/{folder}/` | Activated by the site's split |
+| Split activation | `docroot/sites/{site}/site.splits.php` | `$config['config_split.config_split.{name}_site']['status'] = TRUE;` |
+
+All 7 `site.splits.php` follow the identical one-line pattern, each enabling its own split:
+
+| Site dir | Split entity |
+|----------|--------------|
+| `default` | `bebbo_site` ⚠️ (named `bebbo_site`, **not** `default_site`) |
+| `bangladesh` | `bangladesh_site` |
+| `turkey` | `turkey_site` |
+| `ecuador` | `ecuador_site` |
+| `pakistan` | `pakistan_site` |
+| `somoa` | `somoa_site` |
+| `zimbabwe` | `zimbabwe_site` |
+
+> The split **entity** name follows the *directory* name (`bangladesh_site`, `somoa_site`), even though the config *folder* may differ (`config/bangla/`, `config/somoa/`).
+
+### 6.1 `config/envs/` is an empty placeholder
+
+`config/envs/` contains **only** `README.md` — no `dev/`, `test/`, or `prod/` subdirectories and no `*.yml`. The README is a legacy BLT-style placeholder describing environment-based config_split directories that were never populated here. **There is no committed per-environment config override.** Environment differences come from Acquia env detection (§5) and the deploy pipeline, not from `config/envs/`.
+
+---
+
+## 7. Deployment Pipeline (CI/CD)
+
+Source: `.github/workflows/pipelines.yml`. Triggers (`on:`): push to `develop` / `stage`; PRs to `feature/**`, `bug/**`, `hotfix/**`, `develop`, `stage`; plus `workflow_dispatch`.
+
+| Job | Gate (`if:`) | PHP | Action |
+|-----|--------------|-----|--------|
+| `ci-checks` | every push + PR | 8.4 | `composer validate --no-check-all` → `composer install` → `phpcs` → `drupal-check -d docroot/modules/custom` → `phplint` |
+| `deploy-dev` | `push` && `refs/heads/develop` | 8.4 | `acli push:artifact @parentbuddy2.dev --no-interaction -vvv` |
+| `deploy-stage` | `push` && `refs/heads/stage` | 8.4 | `acli push:artifact @parentbuddy2.test --no-interaction` |
+
+- **Branch → env:** `develop` → Dev; `stage` → Stage/Test. `main` is **not** a trigger anywhere.
+- Deploy jobs `needs: ci-checks` (CI must pass first).
+- Minor diff: `deploy-dev` runs `git clean -fdx`, `deploy-stage` runs `git clean -fd` (no `-x`).
+- **No prod job** — prod is deployed manually.
+
+---
+
+## 8. Acquia Cloud Hooks
+
+Source: `hooks/`. The post-code-deploy and post-code-update scripts are **identical thin wrappers** that source `hooks/common/code-deploy.sh` — all logic lives there.
+
+### 8.1 Site list — `hooks/sites.sh`
+
+```bash
+SITES=(default bangladesh ecuador pakistan somoa turkey zimbabwe)
+```
+
+Exactly the 7 active sites (no `pacific_islands`).
+
+### 8.2 `hooks/common/code-deploy.sh`
+
+- **Prod skip:** `if [ "$target_env" != 'prod' ]; then … else echo "Manually do the deployment activity." fi`. Prod runs **no** automated DB/config steps.
+- For non-prod, loops every site in `SITES` with labeled progress (`Site N/7: name`, steps `[1/5]`–`[5/5]`), and runs per site:
+
+```bash
+DRUSH="php -d memory_limit=1024M vendor/bin/drush @$site.$target_env -l $site_name"
+$DRUSH cr              # [1/5] cache rebuild
+$DRUSH updb -y         # [2/5] database updates
+$DRUSH cim -y          # [3/5] config import (pass 1)
+$DRUSH cr && $DRUSH cim -y   # [4/5] cache rebuild + config import (pass 2)
+$DRUSH cr              # [5/5] final cache rebuild
+```
+
+> `cim -y` runs **twice** per site (with a cache rebuild between passes) — a deliberate belt-and-suspenders import to settle config that depends on freshly-imported config.
+
+---
+
+## 9. Cross-Environment / Cross-Site Content Sync
+
+Content is **not** shared at the database level — each site has its own DB (local: per-site `*_db`; Acquia: separate DB per site). Moving content **between sites or between environments** is done with the **Entity Share** module (`drupal/entity_share`, present in `composer.json`; see [`DEPENDENCIES.md`](DEPENDENCIES.md) §3.7).
+
+Entity Share exposes per-site channels and pulls content over JSON:API from a remote (e.g. pulling Prod content down to a local/Dev site). Channel and remote configuration is per-site and lives in each site's config split. (Detailed channel mechanics and known pull gotchas are operational knowledge, not committed pipeline config.)
+
+---
+
+## 10. Related Docs
+
+| Topic | Doc |
+|-------|-----|
+| System architecture & multisite topology | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| Dependencies & third-party services | [`DEPENDENCIES.md`](DEPENDENCIES.md) |
+| CI/CD pipeline deep dive | [`CICD_DEPLOYMENT.md`](CICD_DEPLOYMENT.md) |
+| Config splits & per-site overrides | [`CONFIGURATION.md`](CONFIGURATION.md) |
+| V2 API device security / JWT | [`API_SECURITY.md`](API_SECURITY.md) |
