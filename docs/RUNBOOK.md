@@ -273,7 +273,7 @@ Prod has **no automated deploy job** and the cloud hook explicitly **skips** DB/
 2. Manually run post-deploy steps per site if needed:
 
 ```bash
-DRUSH="php -d memory_limit=1024M vendor/bin/drush @parentbuddy2.prod -l <site_name>"
+DRUSH="php -d memory_limit=1024M vendor/drush/drush/drush.php @parentbuddy2.prod -l <site_name>"
 $DRUSH cr
 $DRUSH updb -y
 $DRUSH cim -y
@@ -395,7 +395,91 @@ See [`DEPENDENCIES.md`](DEPENDENCIES.md) §3.7 and [`ENVIRONMENTS.md`](ENVIRONME
 
 ---
 
-## 12. Troubleshooting
+## 12. Email (Symfony Mailer + Office 365 OAuth)
+
+Email is sent via `drupal/symfony_mailer` with the `drupal/symfony_mailer_office365` transport, using OAuth 2.0 Authorization Code flow against Microsoft 365 (`smtp.office365.com:587`). The `drupal/smtp` module was removed — Basic Auth is blocked by M365 Security Defaults at the tenant level.
+
+### 12.1 Post-deployment OAuth setup (required per environment)
+
+After deploying to a new environment (Stage, Prod), email will **not** work until OAuth is configured.
+
+**Part 1 — Microsoft Entra (client's M365 admin):**
+1. Register an app in Entra admin center → **App registrations** → **New registration**
+   - Name: **Bebbo Site Mailer**
+   - Supported account types: **Single tenant**
+   - Redirect URI: `https://<env-domain>/office365/oauth/callback`
+2. Copy Application (client) ID + Directory (tenant) ID
+3. Create a client secret under **Certificates & secrets** (note the expiry)
+4. Under **API permissions** → Office 365 Exchange Online → Delegated → `SMTP.Send` → Grant admin consent
+5. Confirm Authenticated SMTP is enabled on `admin@bebbo.app` mailbox
+
+**Part 2 — Drupal configuration:**
+1. Navigate to `/admin/config/system/mailer/office365`
+2. Enter: Tenant ID, Client ID, Client Secret
+3. Save and complete the interactive OAuth authorization flow in the browser
+4. Send test email from `/admin/config/system/mailer/transport/office_365_oauth`
+5. Confirm Drupal cron is running regularly (token auto-refresh depends on it)
+
+**Part 3 — Verification:**
+- Test email on all 7 sites: system test email, password reset, content moderation notifications
+- Monitor `/admin/reports/dblog` for mailer errors in first 24 hours
+- Note client secret expiry date for future renewal
+
+### 12.2 Config protection
+
+Two config entries are in `config_ignore` to prevent `drush cim` from overwriting live OAuth credentials:
+- `symfony_mailer.mailer_transport.office_365_oauth`
+- `symfony_mailer_office365.config`
+
+### 12.3 Troubleshooting email
+
+| Symptom | Cause / Fix |
+|---------|-------------|
+| "Client not authenticated to send mail" | OAuth token expired or never authorized. Re-run OAuth flow at `/admin/config/system/mailer/office365` |
+| Token refresh failing | Cron not running. Check `drush cron` and `ultimate_cron` status |
+| No emails after deploy | OAuth not configured on this environment. Follow §12.1 |
+| Client secret expired | Rotate secret in Entra, update at `/admin/config/system/mailer/office365` |
+
+---
+
+## 13. Multi-Factor Authentication (Email TFA)
+
+All user logins require email-based OTP verification via `drupal/email_tfa`. After entering username/password, users are redirected to `/tfa/verify/{uid}/{hash}` where they enter a 6-digit code sent to their email. On successful verification, users are redirected to `/dashboard`.
+
+### 13.1 Configuration
+
+Admin settings at `/admin/config/people/email-tfa` (permission: `administer email tfa`):
+- Scope: globally enabled (all users, no role exclusions)
+- OTP: 6 digits, 300s timeout, 5 attempts per hour
+- Dev mode: disabled
+
+### 13.2 Email notification policy
+
+Only three types of user-facing emails are enabled:
+
+| Email | Source | When |
+|---|---|---|
+| MFA OTP code | `email_tfa` | Every login |
+| Password reset link | `user.settings` (`password_reset`) | User-initiated via `/user/password` |
+| Admin-created account link | `user.settings` (`register_admin_created`) | Admin creates new user |
+
+All content moderation notifications are **disabled** (`status: false`). All other user notifications (`cancel_confirm`, `status_activated`, `register_no_approval_required`, `register_pending_approval`) are **disabled**.
+
+### 13.3 Dependencies
+
+Email TFA depends on working email delivery. If Symfony Mailer / OAuth is not configured, OTP codes cannot be sent and users will be locked out after login. Always verify email delivery before enabling TFA on a new environment.
+
+### 13.4 Troubleshooting MFA
+
+| Symptom | Cause / Fix |
+|---------|-------------|
+| "OTP not received" | Email delivery broken — check §12 above |
+| User locked out (flood limit) | 5 attempts per hour. Wait, or clear flood table: `drush sqlq "DELETE FROM flood WHERE event = 'email_tfa.failed_login'"` |
+| Redirect loop after login | Anonymous guard in `pb_custom_field_user_login_form_submit()` should prevent this — check if hook is firing |
+
+---
+
+## 14. Troubleshooting
 
 | Symptom | Cause / Fix |
 |---------|-------------|
@@ -408,7 +492,7 @@ See [`DEPENDENCIES.md`](DEPENDENCIES.md) §3.7 and [`ENVIRONMENTS.md`](ENVIRONME
 
 ---
 
-## 13. Related Docs
+## 15. Related Docs
 
 | Topic | Doc |
 |-------|-----|

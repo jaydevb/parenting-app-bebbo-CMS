@@ -12,6 +12,8 @@
 |-------------|-------|-----|----------------|---------------|---------------|
 | **Local** | DDEV (`bebbo.app`) | 8.4 | n/a (manual `ddev start`) | — | `config/sync` + active split |
 | **Dev** | Acquia Cloud | **8.4** | push to `develop` | `@parentbuddy2.dev` | `config/sync` + active split |
+
+> Acquia Dev runs MySQL 5.7.44 — below Drupal 11's MySQL 8.0 minimum. The `drupal/mysql57` contrib module backports the database driver. Its settings include is loaded in `post.settings.php` after the Acquia include so `$databases` is already populated.
 | **Stage** | Acquia Cloud | **8.4** | push to `stage` | `@parentbuddy2.test` | `config/sync` + active split |
 | **Prod** | Acquia Cloud | **8.4**¹ | **manual only** | `@parentbuddy2.prod`¹ | `config/sync` + active split |
 
@@ -108,10 +110,10 @@ include site.splits.php;                              // activate split
 ### 4.3 What each shared file actually sets (verified)
 
 - **`common.settings.php`** — is essentially stock Drupal `default.settings.php`. It does **not** set production `trusted_host_patterns`, real `hash_salt`, or `config_sync_directory` (those are commented stock docs). It *does* set: `update_free_access = FALSE`, `file_scan_ignore_directories`, `entity_update_batch_size = 50`, `entity_update_backup = TRUE`, `state_cache = TRUE`, container services yaml.
+- **`docroot/sites/default/services.yml`** — sets `session.cookie_samesite: Lax` (security hardening).
 - **`post.settings.php`** — the real environment logic:
   - `config_sync_directory = '../config/sync'` (always).
   - `hash_salt = hash('sha256', $app_root . '/' . $site_path)` (always).
-  - SMTP user/pass read from env vars (`getenv(...) ?: ''`).
   - tmgmt translator API keys are present but **commented out**.
 
 > **Trusted hosts:** in-repo, `trusted_host_patterns` is set only in **DDEV** (`['.*']`). Production host validation is handled by the Acquia per-site include (`/var/www/site-php/{group}/{file}.inc`) which lives **on Acquia's servers, not in this repo** — so it is not documented here.
@@ -198,7 +200,7 @@ Exactly the 7 active sites (no `pacific_islands`).
 - For non-prod, loops every site in `SITES` with labeled progress (`Site N/7: name`, steps `[1/5]`–`[5/5]`), and runs per site:
 
 ```bash
-DRUSH="php -d memory_limit=1024M vendor/bin/drush @$site.$target_env -l $site_name"
+DRUSH="php -d memory_limit=1024M vendor/drush/drush/drush.php @$site.$target_env -l $site_name"
 $DRUSH cr              # [1/5] cache rebuild
 $DRUSH updb -y         # [2/5] database updates
 $DRUSH cim -y          # [3/5] config import (pass 1)
@@ -218,7 +220,21 @@ Entity Share exposes per-site channels and pulls content over JSON:API from a re
 
 ---
 
-## 10. Related Docs
+## 10. Post-Deployment: Email OAuth Setup
+
+Email delivery via Symfony Mailer + Office 365 OAuth requires per-environment configuration after deploy. OAuth credentials are managed via the admin UI and protected by `config_ignore` — they are **not** in Git.
+
+After deploying to a new environment:
+1. Microsoft Entra app registration (client's M365 admin)
+2. Drupal credential entry at `/admin/config/system/mailer/office365`
+3. Interactive OAuth authorization in browser
+4. Verification: test email on all 7 sites
+
+Full step-by-step procedure: [`RUNBOOK.md`](RUNBOOK.md) §12.
+
+---
+
+## 11. Related Docs
 
 | Topic | Doc |
 |-------|-----|

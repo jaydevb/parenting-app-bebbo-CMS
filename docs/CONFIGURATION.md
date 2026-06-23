@@ -52,11 +52,41 @@ Complete reference of the configuration stored in this Drupal 11 multisite, sour
 | `syslog.settings` | Identity / Facility | `bebbo` / `128` (LOG_LOCAL0) |
 | `syslog.settings` | Format | `!base_url\|!timestamp\|!type\|!ip\|!request_uri\|!referer\|!uid\|!link\|!message` |
 
-### Mail — `system.mail.yml`
+### Mail — `system.mail.yml` + Symfony Mailer
+
 | Setting | Value |
 |---|---|
-| Default interface | `SMTPMailSystem` |
+| Default interface | `php_mail` (Symfony Mailer takes over at the transport layer) |
 | Mailer DSN | scheme `sendmail`, host `default` |
+| Default transport | `office_365_oauth` (`symfony_mailer.settings.yml`) |
+| Transport host | `smtp.office365.com:587` (TLS) |
+| Transport user | `admin@bebbo.app` |
+| Transport auth plugin | `office365_oauth` (`symfony_mailer_office365`) |
+| OAuth credentials | Placeholders in config — real values entered per-environment via `/admin/config/system/mailer/office365`; protected by `config_ignore` |
+| Mailer policy | URL-to-absolute, inline CSS, wrap-and-convert (plain: false, swiftmailer: false), theme: `_active_fallback` |
+| Test email policy | Subject `"Test email from [site:name]"`, format `email_html` |
+
+**Background:** `drupal/smtp` (Basic Auth via `SMTPMailSystem`) was removed because Microsoft 365 Security Defaults block Authenticated SMTP at the tenant level. Replaced by `drupal/symfony_mailer` + `drupal/symfony_mailer_office365` using OAuth 2.0 Authorization Code flow (delegated `SMTP.Send` permission). OAuth tokens are auto-refreshed via Drupal cron. See [`RUNBOOK.md`](RUNBOOK.md) §14 for post-deployment setup steps.
+
+### Email TFA (Multi-Factor Authentication) — `email_tfa.settings.yml`
+
+| Setting | Value |
+|---|---|
+| Status | `enabled` (`status: true`) |
+| Scope | `globally_enabled` (all users) |
+| OTP code length | `6` digits |
+| OTP timeout | `300` s (5 min) |
+| Flood protection | `5` attempts per `3600` s (1 h) |
+| Dev mode | `disabled` |
+| Role exclusion | none (`ignore_role: {}`) |
+| Email subject | "One Time Password" |
+| Email body tokens | `[user:email_tfa]`, `[user:name]`, `[site:name]` |
+| Log events | `disabled` |
+| Routes intercepted | `email_tfa.verifiy`, `user.logout` |
+| Admin settings | `/admin/config/people/email-tfa` (permission: `administer email tfa`) |
+| Verification route | `/tfa/verify/{uid}/{hash}` |
+
+After standard login, users are redirected to the OTP verification page. On successful verification, users are redirected to `/dashboard` (via custom submit handler in `pb_custom_field`). Bebbo split carries language translation overrides for `email_tfa.settings` in `ro`, `ru`, `sk`, `sq`, `sr`, `uk`.
 
 ### Admin UI
 | File | Setting | Value |
@@ -89,6 +119,7 @@ Complete reference of the configuration stored in this Drupal 11 multisite, sour
 | `admin_full_html` | Admin Full HTML | Active |
 | `full_html` | Full HTML | Active (weight -10) |
 | `plain_text` | Plain text | Active (weight -8) |
+| `email_html` | Email HTML | Active (weight 10) — used by Symfony Mailer test email templates; no filters configured |
 | `basic_html` | Basic HTML | **Disabled** |
 | `restricted_html` | Restricted HTML | **Disabled** |
 
@@ -129,7 +160,21 @@ Complete reference of the configuration stored in this Drupal 11 multisite, sour
 | Cancel method | `user_cancel_block` |
 | Password reset timeout | `86400` s (24 h) |
 | Password strength meter | `true` |
-| Notify on reset / activate / admin-created | all `true` |
+
+**User email notifications** — restricted to security-related and onboarding emails only:
+
+| Notification | Enabled | Reason |
+|---|---|---|
+| `password_reset` | **true** | Security — user-initiated password recovery |
+| `register_admin_created` | **true** | Onboarding — one-time login link for new users (registration is `admin_only`) |
+| `cancel_confirm` | false | Non-essential |
+| `status_activated` | false | Non-essential |
+| `status_blocked` | false | Non-essential |
+| `status_canceled` | false | Non-essential |
+| `register_no_approval_required` | false | Not applicable (`admin_only` registration) |
+| `register_pending_approval` | false | Not applicable (`admin_only` registration) |
+
+Combined with Email TFA (§1 above) and disabled content moderation notifications (§7), the only emails users receive are: **MFA OTP codes**, **password reset links**, and **admin-created account links**.
 
 ### Keys — `key.key.*`
 | Key ID | Label | Provider | Source |
@@ -680,12 +725,12 @@ Default moderation state: **draft**.
 ### Moderation notifications (`content_moderation_notifications.*` — 7)
 | ID | Trigger | Notifies | Status |
 |---|---|---|---|
-| `draft_to_sme` | Draft → SME Review | SME | Active |
-| `draft_to_sr_editor` | Draft → Sr. Editor Review | Senior Editor | Active |
-| `sme_review_to_sr_editor_review_` | SME Review → Sr. Editor Review | Senior Editor | Active |
-| `sme_to_require_modification` | SME Review → Require Modification | Editor | Active |
-| `sr_editor_review_to_require_modifications_` | Sr. Editor Review → Require Modifications | Editor | Active |
-| `master_any_state_to_review_after_translation` | Any → Review after translation | Editor, SE | Active |
+| `draft_to_sme` | Draft → SME Review | SME | **Disabled** |
+| `draft_to_sr_editor` | Draft → Sr. Editor Review | Senior Editor | **Disabled** |
+| `sme_review_to_sr_editor_review_` | SME Review → Sr. Editor Review | Senior Editor | **Disabled** |
+| `sme_to_require_modification` | SME Review → Require Modification | Editor | **Disabled** |
+| `sr_editor_review_to_require_modifications_` | Sr. Editor Review → Require Modifications | Editor | **Disabled** |
+| `master_any_state_to_review_after_translation` | Any → Review after translation | Editor, SE | **Disabled** |
 | `master_senior_editor_publish` | Sr. Editor / Draft → Published | Editor, SE | **Disabled** |
 
 All notify the role only (author + site_mail notifications off).
@@ -851,14 +896,31 @@ The path/count/disable settings actually live in **`jsonapi_extras.settings.yml`
 | Default disabled | `false` | jsonapi_extras.settings |
 | Validate config integrity | `false` | jsonapi_extras.settings |
 
-### REST resource — `rest.resource.custom_rest_resource`
+### REST resources
+
+**`rest.resource.custom_rest_resource`** — V1 force-update check
+
 | Setting | Value |
 |---|---|
 | Plugin | `custom_rest_resource` (from `pb_custom_rest_api`) |
+| Path | `/api/check-update/{country}` |
 | Methods | GET |
 | Formats | json |
 | Authentication | basic_auth |
 | Granularity | resource |
+
+**`rest.resource.v2_custom_rest_resource`** — V2 force-update check
+
+| Setting | Value |
+|---|---|
+| Plugin | `v2_custom_rest_resource` (from `pb_custom_rest_api`) |
+| Path | `/v2/api/check-update/{country}` |
+| Methods | GET |
+| Formats | json |
+| Authentication | basic_auth |
+| Granularity | resource |
+
+The V2 resource extends the V1 class with zero logic changes — identical response, different URL path.
 
 ---
 
@@ -999,13 +1061,12 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 - **All sites:** block, language entities, mobile_app_links, pb_custom_form, system.site
 - **entity_share_client:** all except bebbo (bangla, ecuador, pakistan, somoa, turkey, zimbabwe)
 - **ai_translate:** all 6 non-default sites
-- **SMTP:** ecuador, turkey
 - **Field overrides:** bangla, pakistan, somoa, turkey
 - **entity_share_server channels (~30):** somoa, zimbabwe (+ turkey, ecuador)
 - **workflows.workflow.group_workflow:** somoa, turkey, zimbabwe (complete_list)
 
 ### `config_ignore.settings.yml` — never imported/exported
-`admin_toolbar.settings`, `bebbo_api_security.settings`, `entity_share_client.remote*`, `google_analytics.settings`, `mobile_app_links.android_packages`, `mobile_app_links.ios`, `pb_content_analytics.settings`, `pb_custom_form.landing_pages`, `pb_custom_form.language_redirects`, `pb_custom_form.mobile_app_share_link_form`, `purge.logger_channels`, `smtp.settings`, `tmgmt.translator.*`, `tmgmt_memsource.settings`, `views.view.entity_share_client_entity_import_status`.
+`admin_toolbar.settings`, `bebbo_api_security.settings`, `entity_share_client.remote*`, `mobile_app_links.android_packages`, `mobile_app_links.ios`, `pb_content_analytics.settings`, `pb_custom_form.landing_pages`, `pb_custom_form.language_redirects`, `pb_custom_form.mobile_app_share_link_form`, `purge.logger_channels`, `symfony_mailer.mailer_transport.office_365_oauth`, `symfony_mailer_office365.config`, `tmgmt.translator.*`, `tmgmt_memsource.settings`, `views.view.entity_share_client_entity_import_status`.
 
 ### Custom-module configs in sync
 - `pb_custom_form.adminsettings` — Master language `en,sr,ru,sq`
