@@ -453,11 +453,23 @@ Admin settings at `/admin/config/people/email-tfa` (permission: `administer emai
 - OTP: 6 digits, 300s timeout, 5 attempts per hour
 - Dev mode: disabled
 
-### 13.2 Dependencies
+### 13.2 Email notification policy
+
+Only three types of user-facing emails are enabled:
+
+| Email | Source | When |
+|---|---|---|
+| MFA OTP code | `email_tfa` | Every login |
+| Password reset link | `user.settings` (`password_reset`) | User-initiated via `/user/password` |
+| Admin-created account link | `user.settings` (`register_admin_created`) | Admin creates new user |
+
+All content moderation notifications are **disabled** (`status: false`). All other user notifications (`cancel_confirm`, `status_activated`, `register_no_approval_required`, `register_pending_approval`) are **disabled**.
+
+### 13.3 Dependencies
 
 Email TFA depends on working email delivery. If Symfony Mailer / OAuth is not configured, OTP codes cannot be sent and users will be locked out after login. Always verify email delivery before enabling TFA on a new environment.
 
-### 13.3 Troubleshooting MFA
+### 13.4 Troubleshooting MFA
 
 | Symptom | Cause / Fix |
 |---------|-------------|

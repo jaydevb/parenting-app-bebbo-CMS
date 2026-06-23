@@ -160,7 +160,21 @@ After standard login, users are redirected to the OTP verification page. On succ
 | Cancel method | `user_cancel_block` |
 | Password reset timeout | `86400` s (24 h) |
 | Password strength meter | `true` |
-| Notify on reset / activate / admin-created | all `true` |
+
+**User email notifications** — restricted to security-related and onboarding emails only:
+
+| Notification | Enabled | Reason |
+|---|---|---|
+| `password_reset` | **true** | Security — user-initiated password recovery |
+| `register_admin_created` | **true** | Onboarding — one-time login link for new users (registration is `admin_only`) |
+| `cancel_confirm` | false | Non-essential |
+| `status_activated` | false | Non-essential |
+| `status_blocked` | false | Non-essential |
+| `status_canceled` | false | Non-essential |
+| `register_no_approval_required` | false | Not applicable (`admin_only` registration) |
+| `register_pending_approval` | false | Not applicable (`admin_only` registration) |
+
+Combined with Email TFA (§1 above) and disabled content moderation notifications (§7), the only emails users receive are: **MFA OTP codes**, **password reset links**, and **admin-created account links**.
 
 ### Keys — `key.key.*`
 | Key ID | Label | Provider | Source |
