@@ -34,7 +34,7 @@ if [ "$target_env" != 'prod' ]; then
     echo "=============================================="
     echo "  Site $current/$total: $site_name"
     echo "=============================================="
-    DRUSH="php -d memory_limit=1024M vendor/bin/drush @$site.$target_env -l $site_name"
+    DRUSH="php -d memory_limit=1024M vendor/drush/drush/drush.php @$site.$target_env -l $site_name"
 
     echo "[1/5] Cache rebuild..."
     $DRUSH cr

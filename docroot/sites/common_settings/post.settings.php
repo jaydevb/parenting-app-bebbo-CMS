@@ -24,6 +24,12 @@ if ($ah_group && $ah_env) {
     require_once $acquia_inc;
   }
 
+  // MySQL 5.7 backport driver — must run after $databases is populated by the Acquia include.
+  $mysql57_settings = DRUPAL_ROOT . '/modules/contrib/mysql57/settings.inc';
+  if (file_exists($mysql57_settings)) {
+    require $mysql57_settings;
+  }
+
   // 2) Transaction isolation – SESSION level on all targets (default/replica/slave).
   if (!empty($databases['default']['default'])) {
     $databases['default']['default']['init_commands'] = [

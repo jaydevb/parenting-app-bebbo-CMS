@@ -60,7 +60,6 @@ module:
   fpa: 0
   gin_toolbar: 0
   gnode: 0
-  google_analytics: 0
   group: 0
   group_country_field: 0
   help: 0
@@ -101,6 +100,7 @@ module:
   migrate_upgrade: 0
   mobile_app_links: 0
   mysql: 0
+  mysql57: 0
   node: 0
   node_title_length: 0
   options: 0
@@ -133,7 +133,6 @@ module:
   structure_sync: 0
   svg_image: 0
   symfony_mailer: 0
-  symfony_mailer_bc: 0
   symfony_mailer_office365: 0
   syslog: 0
   system: 0
@@ -157,6 +156,7 @@ module:
   toolbar: 0
   toolbar_menu: 0
   toolbar_menu_clean: 0
+  update: 0
   user: 0
   video_embed_field: 0
   video_embed_media: 0
