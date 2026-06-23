@@ -62,19 +62,17 @@ flowchart TB
         ai[OpenAI<br/>AI translation]
         bq[BigQuery HTTP API<br/>content analytics]
         attest[Apple App Attest /<br/>Google Play Integrity]
-        ga[Google Analytics]
-        smtp[SMTP mail]
+        mailer[Office 365 OAuth mail<br/>Symfony Mailer]
     end
 
     cms --> tmgmt
     cms --> ai
     cms --> bq
     sec --> attest
-    cms --> ga
-    cms --> smtp
+    cms --> mailer
 ```
 
-External integrations are enabled in `composer.json` and described in detail in **`DEPENDENCIES.md`** (to be created). API security details live in **`API_SECURITY.md`**; the REST surface in **`API_REFERENCE.md`**.
+External integrations are enabled in `composer.json` and described in detail in **`DEPENDENCIES.md`**. API security details live in **`API_SECURITY.md`**; the REST surface in **`API_REFERENCE.md`**.
 
 > **No GraphQL.** The project exposes **REST** (custom serializers — V1 under `/api/…`, V2 under `/v2/api/…`) and **JSON:API** (`jsonapi` + `jsonapi_extras`, both enabled). There is no GraphQL module in `composer.json`, `composer.lock`, or `docroot/modules/contrib`. The V2 API is protected by the `bebbo_api_security` JWT layer (see `API_SECURITY.md`).
 >
@@ -184,7 +182,7 @@ flowchart TB
 
 ### 4.1 Module installation rule (critical)
 
-`core.extension.yml` lives **only** in `config/sync` and is the single source of truth for enabled modules across all 7 sites (**167 modules + 2 themes enabled** at `HEAD`). A site needing an extra module declares it in the `module:` field of its split entity — **never** by adding `core.extension` to a split. Details and the editing workflow are in **`CONFIGURATION.md`**.
+`core.extension.yml` lives **only** in `config/sync` and is the single source of truth for enabled modules across all 7 sites (**171 modules + 2 themes enabled** at `HEAD`). A site needing an extra module declares it in the `module:` field of its split entity — **never** by adding `core.extension` to a split. Details and the editing workflow are in **`CONFIGURATION.md`**.
 
 ---
 

@@ -12,7 +12,7 @@
 |---------|------|-----------|--------|
 | **V1 REST** | `/api/*` | `custom_serialization` Views style (+ `bebbo_serializer` for `/api/strings`, `pb_custom_standard_deviation` for `/api/standard_deviation`) | Legacy — still live |
 | **V2 REST** | `/v2/api/*` | `bebbo_serializer` Views style | Current |
-| **Force-Update** | `/api/check-update/{country}` | `pb_custom_rest_api` REST resource (`custom_rest_resource`) | Live |
+| **Force-Update** | `/api/check-update/{country}` + `/v2/api/check-update/{country}` | `pb_custom_rest_api` REST resources (`custom_rest_resource` / `v2_custom_rest_resource`) | Live |
 | **Device Security** | `/api/security/*` | `bebbo_api_security` (`SecurityController`) | Live — attestation + JWT issuance (see [§13.1](#131-device-security--attestation-api-apisecurity)) |
 | **App-links** | `/.well-known/*` | `mobile_app_links` (`WellKnownController`) | Live — deep-link domain verification (see [§13.2](#132-app-link-well-known-endpoints)) |
 | **JSON:API** | `/jsonapi/*` | core `jsonapi` + `jsonapi_extras` | Enabled, **read-only** |
@@ -70,10 +70,11 @@ Only those two flags. **No pretty-print, and no `&nbsp;` substitution** — earl
 | Type casting | inline `(int)`, comma-split | helper methods `castToInt/castToBool/castToNumber/toIntArray/toStringArray` |
 | New content types | — | **Course** (`/v2/api/course`), **Quiz** (`/v2/api/quiz`) |
 | New endpoints | — | **`/v2/api/guide`**, **`/v2/api/weekly-overview`** |
-| Dropped in V2 | `sponsors`, `strings`*, `related-article-contents/*/milestone`, `updated-pinned-contents/*/faq`, the `pinned-contents/*/faq|child_growth|health_check_ups|vaccinations` variants | (not re-implemented) |
+| Dropped in V2 | `sponsors`, `related-article-contents/*/milestone`, `updated-pinned-contents/*/faq`, the `pinned-contents/*/faq|child_growth|health_check_ups|vaccinations` variants | (not re-implemented) |
+| New V2 aliases | — | `/v2/api/strings/%` (same as V1 `/api/strings/%`) and `/v2/api/check-update/{country}` (same as V1 `/api/check-update/{country}`) — identical responses at V2 URL paths |
 | Engagement counts | — | `read_count`, `love_count` on activities/articles/video-articles/course |
 
-\* `/api/strings/%` is actually served by the **`bebbo_serializer`** style (not `custom_serialization`), even though it sits under `/api/`. There is no `/v2/api/strings`.
+\* `/api/strings/%` is served by the **`bebbo_serializer`** style (not `custom_serialization`), even though it sits under `/api/`. A V2 alias at `/v2/api/strings/%` now exists as well (same view, `v2_string_rest_export` display).
 
 > Both V1 and V2 remain live. The mobile app migrated to V2; V1 is retained for backward compatibility.
 
@@ -112,7 +113,7 @@ Only those two flags. **No pretty-print, and no `&nbsp;` substitution** — earl
 | `/api/country-groups/%` | country_listing / custom_serialization | langcode forced to `en` |
 | `/api/vocabularies/%` | tax / custom_serialization | keyed map (see [§7](#7-taxonomy--vocabulary)) |
 | `/api/taxonomies/%/%` | tax / custom_serialization | keyed map |
-| `/api/strings/%` | tax / **`bebbo_serializer`** | **V1-only** |
+| `/api/strings/%` | tax / **`bebbo_serializer`** | Also available at `/v2/api/strings/%` (same view, `v2_string_rest_export` display) |
 | `/api/sponsors/%` | sponsors_list / custom_serialization | **V1-only**; `%` is country-group id (`all` allowed), no `langcode` key in output |
 
 ### 4.2 Shared value transforms (`CustomSerializer::render`)
@@ -164,6 +165,8 @@ V1 honors exactly **one** parameter inside the serializer: **`pregnancy=true`** 
 | `/v2/api/country-groups/%` | `country_listing_export` (country_listing view) | `transformCountryGroups` |
 | `/v2/api/vocabularies/%` | `vocabulary_rest_export` (tax view) | `transformVocabularies` |
 | `/v2/api/taxonomies/%/%` | `terms_rest_export` (tax view) | `transformTaxonomies` |
+| `/v2/api/strings/%` | `v2_string_rest_export` (tax view) | Same fields/filters as V1 `/api/strings/%` — V2 URL alias |
+| `/v2/api/check-update/{country}` | `v2_custom_rest_resource` (REST plugin) | Same as V1 `/api/check-update/{country}` — V2 URL alias |
 
 ### 5.1 Envelope variants
 - **Standard:** `{status,total,langcode,datetime,data}`; `total = (int) view->total_rows`.

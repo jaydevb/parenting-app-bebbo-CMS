@@ -97,7 +97,7 @@ Run on Acquia infrastructure after code lands on an environment (not in GitHub A
 ### `code-deploy.sh` behaviour
 Args (Acquia-supplied): `site target-env source-branch deployed-tag repo-url repo-type`. `set -e` (exit on error).
 
-- **If `target_env != prod`:** `cd /var/www/html/$site.$target_env`, source `sites.sh`, then for **each** of the 7 sites run (with progress `Site N/7: name`), using `php -d memory_limit=1024M vendor/bin/drush @$site.$target_env -l $site_name`:
+- **If `target_env != prod`:** `cd /var/www/html/$site.$target_env`, source `sites.sh`, then for **each** of the 7 sites run (with progress `Site N/7: name`), using `php -d memory_limit=1024M vendor/drush/drush/drush.php @$site.$target_env -l $site_name`:
   1. `drush cr` — cache rebuild
   2. `drush updb -y` — database updates
   3. `drush cim -y` — config import (pass 1)

@@ -193,6 +193,7 @@ Grouped by function for readability. **Constraint** is the exact string from `co
 | `drupal/contextual_range_filter` | `^3.0` |
 | `drupal/better_exposed_filters` | `^7.1` |
 | `drupal/content_moderation_notifications` | `^3.7` |
+| `drupal/contextual_range_filter` | `^3.0` |
 | `drupal/rdf` | `^3.0@beta` |
 | `drupal/quickedit` | `^2.0` |
 | `drupal/layout_builder_styles` | `^2.1` |
@@ -231,7 +232,6 @@ Grouped by function for readability. **Constraint** is the exact string from `co
 | `drupal/toolbar_menu_clean` | `^2.0` |
 | `drupal/fpa` | `^4.0` |
 | `drupal/devel` | `^5.4` |
-| `drupal/upgrade_status` | `^4.3` |
 | `drupal/drupal-extension` | `dev-main` (Behat; declared in `require`, not `require-dev`) |
 
 ### 3.14 Security & auth primitives
@@ -242,18 +242,31 @@ Grouped by function for readability. **Constraint** is the exact string from `co
 | `drupal/security_review` | `^3.1` | Security audit checklist |
 | `drupal/shield` | `^1.2.0` | HTTP basic-auth shield |
 | `drupal/key` | `^1.22` | Key/secret management |
+| `drupal/email_tfa` | `^3.0` | Email-based two-factor authentication (MFA) — OTP sent to user's email after login |
 | `enshrined/svg-sanitize` | `^0.22.0` | SVG sanitization (used by `file_sanitizer`) |
 | `firebase/php-jwt` | `^7.0@stable` | JWT sign/verify (V2 API security) |
 | `spomky-labs/cbor-php` | `^3.0` | CBOR decode (Apple App Attest) |
 
-### 3.15 Mail & analytics
+### 3.15 Mail & mobile
 
 | Package | Constraint | Role |
 |---------|-----------|------|
-| `drupal/symfony_mailer` | `^1.4` | Mailer |
-| `drupal/smtp` | `^1.0` | SMTP transport |
-| `drupal/google_analytics` | `^4.0` | GA tracking |
+| `drupal/symfony_mailer` | `^1.4` | Symfony Mailer framework (mail transport layer) |
+| `drupal/symfony_mailer_office365` | `^1.0@alpha` | Office 365 OAuth (XOAUTH2) transport for Symfony Mailer |
 | `drupal/mobile_app_links` | `^2.0` | `.well-known` deep-link files |
+
+### 3.16 Database compatibility
+
+| Package | Constraint | Role |
+|---------|-----------|------|
+| `drupal/mysql57` | `^1.0` | MySQL 5.7 backport driver for Acquia Dev (Drupal 11 requires MySQL 8.0+) |
+
+### 3.17 Frontend assets
+
+| Package | Constraint | Role |
+|---------|-----------|------|
+| `npm-asset/js-cookie` | `^3.0` | js-cookie library (installed locally, avoids CDN loading) |
+| `oomphinc/composer-installers-extender` | `^2.0` | Allows Composer to install npm-asset packages to `docroot/libraries/` |
 
 ---
 
@@ -344,6 +357,7 @@ Applied by `cweagans/composer-patches`. `composer-exit-on-patch-failure: true` �
 | `drupal/config_split` | Collection `complete_list` matching on export (lang overrides → wrong dir) | local |
 | `drupal/inline_entity_form` | Allow override of translation restriction on IEF add-new | local |
 | `drupal/autocomplete_id` | Filter unpublished entities from ID autocomplete | local |
+| `drupal/contextual_range_filter` | PHP 8.4 implicit-nullable in `DateRange::init()` (3521312) | local |
 | `drupal/menu_export` | Drush command calling protected `exportMenus` | local |
 
 ---
@@ -367,10 +381,9 @@ What the codebase reaches out to over the network, and which dependency drives i
 | Microsoft Translator | `tmgmt_microsoft` | Translation API | Backend for TMGMT |
 | Phrase / Memsource | `tmgmt_memsource` | Translation API | Backend for TMGMT |
 | OpenAI | `ai` + `ai_provider_openai` | AI API | AI-assisted translation/content |
-| Google Analytics | `google_analytics` | Analytics | Editorial/admin tracking |
 | BigQuery | **custom** `pb_content_analytics` | HTTP analytics | No contrib package — custom HTTP sync (see `MODULES.md`) |
 | Apple App Attest / Google Play Integrity | **custom** `bebbo_api_security` | Device attestation | Uses `firebase/php-jwt` + `spomky-labs/cbor-php` + OpenSSL; not a contrib integration package (see `API_SECURITY.md`) |
-| SMTP mail server | `symfony_mailer` + `smtp` | Mail | Outbound editorial mail |
+| Microsoft 365 (Office 365 OAuth mail) | `symfony_mailer` + `symfony_mailer_office365` | Mail | OAuth 2.0 (Authorization Code) via `smtp.office365.com:587`; sends as `admin@bebbo.app`. Replaced `drupal/smtp` (Basic Auth blocked by M365 Security Defaults). OAuth credentials managed per-environment via `config_ignore`. See [`CONFIGURATION.md`](CONFIGURATION.md) §1 and [`RUNBOOK.md`](RUNBOOK.md) §14 |
 | Acquia Cloud (Varnish/CDN, memcache) | `acquia_connector` · `acquia_purge` · `memcache` · `acquia/memcache-settings` | Hosting/cache | Production platform |
 
 ---

@@ -218,6 +218,8 @@ The largest editorial module. Controls field access, form alterations, editorial
 | `hook_menu_local_actions_alter` | Renames "Add member" → "Add existing member" |
 | `hook_entity_operation_alter` | Controls edit/delete/translate by moderation state |
 | `hook_entity_field_access` | Lets group admins set user status via group UI |
+| `hook_user_login_form_submit` | Dashboard redirect after login — early-returns if user is anonymous (guards against redirect before TFA verification) |
+| `hook_form_email_tfa_email_tfa_verify_login_alter` | Adds dashboard redirect submit handler to TFA OTP verification form, so user lands on `/dashboard` after successful MFA |
 | `hook_form_user_login_form_alter` | Adds password reset link |
 | `hook_form_user_form_alter` | Customizes user profile form |
 | `hook_form_user_register_form_alter` | Group membership creation wizard, restricts role selection |
@@ -593,7 +595,9 @@ Sanitizes filenames on upload (transliteration, unsafe character removal, lowerc
 
 Single REST resource plugin for the force-update check endpoint.
 
-### REST Resource
+### REST Resources
+
+**V1 — `CustomRestResource`**
 
 | Property | Value | Source |
 |----------|-------|--------|
@@ -605,6 +609,17 @@ Single REST resource plugin for the force-update check endpoint.
 The plugin annotation declares only `id`, `label`, and `uri_paths`. Enabled methods, formats, and authentication are defined in the REST resource config (`rest.resource.custom_rest_resource.yml`), which lives in shared base config (`config/sync/`), not in this module.
 
 `CustomRestResource::get($country)` queries the `forcefull_check_update_api` table (owned by `pb_custom_form`) for the latest `content_update` and `app_update` records by country group ID.
+
+**V2 — `V2CustomRestResource`**
+
+| Property | Value | Source |
+|----------|-------|--------|
+| Plugin ID | `v2_custom_rest_resource` | `@RestResource` annotation |
+| Path | `/v2/api/check-update/{country}` | annotation `uri_paths.canonical` |
+| Method | GET | `config/sync/rest.resource.v2_custom_rest_resource.yml` |
+| Auth | `basic_auth` | `config/sync/rest.resource.v2_custom_rest_resource.yml` |
+
+Extends `CustomRestResource` with zero logic changes — identical response at a V2 URL path. Added to support the second app version.
 
 Full response shape documented in [`API_REFERENCE.md` §9](API_REFERENCE.md#9-force-update-rest-resource).
 
