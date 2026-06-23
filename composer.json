@@ -50,6 +50,7 @@
         "drupal/fpa": "^4.0",
         "drupal/gin": "^5.0",
         "drupal/gin_toolbar": "^3.0",
+        "drupal/google_analytics": "^4.0",
         "drupal/group": "^3",
         "drupal/image_style_quality": "^1.7",
         "drupal/imageapi_optimize": "^4.2",
