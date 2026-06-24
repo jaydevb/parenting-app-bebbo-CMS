@@ -617,22 +617,6 @@ class BebboSerializer extends Serializer {
   }
 
   /**
-   * Loads English node titles for the given node IDs.
-   */
-  private function getEnglishNodeTitles(array $nids): array {
-    if (empty($nids)) {
-      return [];
-    }
-
-    return $this->database->select('node_field_data', 'n')
-      ->fields('n', ['nid', 'title'])
-      ->condition('nid', array_filter(array_unique($nids)), 'IN')
-      ->condition('langcode', 'en')
-      ->execute()
-      ->fetchAllKeyed(0, 1);
-  }
-
-  /**
    * Transforms rows for the daily home screen messages display.
    *
    * Casts id to int and decodes HTML entities in title. This is one of the

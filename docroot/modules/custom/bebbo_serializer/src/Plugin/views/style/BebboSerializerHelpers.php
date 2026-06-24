@@ -19,6 +19,7 @@ use Drupal\file\FileInterface;
  * @property \Symfony\Component\HttpFoundation\RequestStack $requestStack
  * @property \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
  * @property \Drupal\Core\Language\LanguageManagerInterface $languageManager
+ * @property \Drupal\Core\Database\Connection $database
  */
 trait BebboSerializerHelpers {
 
@@ -368,6 +369,28 @@ trait BebboSerializerHelpers {
       return array_map([$this, 'normalizeMarkup'], $value);
     }
     return $value;
+  }
+
+  /**
+   * Loads English node titles for the given node IDs.
+   *
+   * @param array $nids
+   *   Node IDs.
+   *
+   * @return array
+   *   Map of nid => English title.
+   */
+  private function getEnglishNodeTitles(array $nids): array {
+    if (empty($nids)) {
+      return [];
+    }
+
+    return $this->database->select('node_field_data', 'n')
+      ->fields('n', ['nid', 'title'])
+      ->condition('nid', array_filter(array_unique($nids)), 'IN')
+      ->condition('langcode', 'en')
+      ->execute()
+      ->fetchAllKeyed(0, 1);
   }
 
 }
