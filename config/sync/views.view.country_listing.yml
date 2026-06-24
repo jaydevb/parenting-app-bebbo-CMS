@@ -1858,3 +1858,130 @@ display:
         - 'config:field.storage.group.field_country_sponsor_logo'
         - 'config:field.storage.group.field_language'
         - 'config:field.storage.group.field_unicef_logo'
+  v1_country_listing_rest_export:
+    id: v1_country_listing_rest_export
+    display_title: 'Country Groups API (V1)'
+    display_plugin: rest_export
+    position: 1
+    display_options:
+      pager:
+        type: none
+        options:
+          offset: 0
+      filters:
+        status:
+          id: status
+          table: groups_field_data
+          field: status
+          entity_type: group
+          entity_field: status
+          plugin_id: boolean
+          value: '1'
+          group: 1
+          expose:
+            operator: ''
+        langcode:
+          id: langcode
+          table: groups_field_data
+          field: langcode
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: group
+          entity_field: langcode
+          plugin_id: language
+          operator: in
+          value:
+            '***LANGUAGE_site_default***': '***LANGUAGE_site_default***'
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+      filter_groups:
+        operator: AND
+        groups:
+          1: AND
+      style:
+        type: bebbo_v1_serializer
+        options:
+          formats:
+            bebbo_json: bebbo_json
+          uses_fields: false
+      row:
+        type: data_field
+        options:
+          field_options:
+            id:
+              alias: CountryID
+              raw_output: false
+            label:
+              alias: name
+              raw_output: false
+            field_country_email:
+              alias: country_email
+              raw_output: false
+            field_country_national_partner:
+              alias: country_national_partner
+              raw_output: true
+            field_country_sponsor_logo:
+              alias: country_sponsor_logo
+              raw_output: true
+            field_unicef_logo:
+              alias: unicef_logo
+              raw_output: true
+            field_language:
+              alias: langcode
+              raw_output: true
+            field_content_toggle:
+              alias: content_toggle
+              raw_output: false
+            field_app_name:
+              alias: app_name
+              raw_output: false
+      defaults:
+        filters: false
+        filter_groups: false
+      display_description: ''
+      display_extenders: {  }
+      path: v1/api/country-groups/%
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - request_format
+        - url
+        - user.permissions
+      tags:
+        - 'config:field.storage.group.field_app_name'
+        - 'config:field.storage.group.field_content_toggle'
+        - 'config:field.storage.group.field_country_email'
+        - 'config:field.storage.group.field_country_national_partner'
+        - 'config:field.storage.group.field_country_sponsor_logo'
+        - 'config:field.storage.group.field_language'
+        - 'config:field.storage.group.field_unicef_logo'

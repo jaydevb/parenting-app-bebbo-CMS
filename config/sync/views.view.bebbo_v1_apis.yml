@@ -16255,7 +16255,7 @@ display:
         - 'config:field.storage.node.field_related_articles'
         - 'config:field.storage.node.field_related_video_articles'
   v1_pinned_faq_rest_export:
-    id: rest_export_1
+    id: v1_pinned_faq_rest_export
     display_title: 'Pinned FAQ API (V1)'
     display_plugin: rest_export
     position: 1
@@ -17729,7 +17729,7 @@ display:
         - 'config:field.storage.node.field_related_articles'
         - 'config:field.storage.node.field_related_video_articles'
   v1_pinned_vaccinations_rest_export:
-    id: rest_export_12
+    id: v1_pinned_vaccinations_rest_export
     display_title: 'Pinned Vaccinations API (V1)'
     display_plugin: rest_export
     position: 1
@@ -19295,7 +19295,7 @@ display:
         - 'config:field.storage.node.field_related_articles'
         - 'config:field.storage.node.field_related_video_articles'
   v1_standard_deviation_rest_export:
-    id: rest_export_15
+    id: v1_standard_deviation_rest_export
     display_title: 'Standard Deviation API (V1)'
     display_plugin: rest_export
     position: 19
@@ -19919,7 +19919,7 @@ display:
         - 'config:field.storage.node.field_related_articles'
         - 'config:field.storage.node.field_standard_deviation'
   v1_pinned_health_checkup_rest_export:
-    id: rest_export_17
+    id: v1_pinned_health_checkup_rest_export
     display_title: 'Pinned Health Check-Ups API (V1)'
     display_plugin: rest_export
     position: 1
@@ -21485,7 +21485,7 @@ display:
         - 'config:field.storage.node.field_related_articles'
         - 'config:field.storage.node.field_related_video_articles'
   v1_pinned_child_growth_rest_export:
-    id: rest_export_18
+    id: v1_pinned_child_growth_rest_export
     display_title: 'Pinned Child Growth API (V1)'
     display_plugin: rest_export
     position: 1
@@ -23051,7 +23051,7 @@ display:
         - 'config:field.storage.node.field_related_articles'
         - 'config:field.storage.node.field_related_video_articles'
   v1_related_milestone_rest_export:
-    id: rest_export_20
+    id: v1_related_milestone_rest_export
     display_title: 'Related Article - Milestone API (V1)'
     display_plugin: rest_export
     position: 1
@@ -24485,7 +24485,7 @@ display:
         - 'config:field.storage.node.field_related_articles'
         - 'config:field.storage.node.field_related_video_articles'
   v1_updated_pinned_faq_rest_export:
-    id: rest_export_21
+    id: v1_updated_pinned_faq_rest_export
     display_title: 'Updated Pinned FAQ API (V1)'
     display_plugin: rest_export
     position: 1

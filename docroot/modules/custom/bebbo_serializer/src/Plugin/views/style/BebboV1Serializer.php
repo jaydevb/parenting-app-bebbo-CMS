@@ -3,10 +3,13 @@
 namespace Drupal\bebbo_serializer\Plugin\views\style;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
+use Drupal\group\Entity\Group;
+use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\language_visibility_control\LanguageVisibilityService;
 use Drupal\rest\Plugin\views\style\Serializer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -313,6 +316,10 @@ class BebboV1Serializer extends Serializer {
       'v1_related_milestone_rest_export',
       'v1_updated_pinned_faq_rest_export' => $this->transformPinnedContent($rows),
       'v1_standard_deviation_rest_export' => $this->transformStandardDeviation($rows),
+      'v1_country_listing_rest_export' => $this->transformCountryGroups($rows),
+      'v1_vocabulary_rest_export' => $this->transformVocabularies($rows),
+      'v1_terms_rest_export' => $this->transformTaxonomies($rows),
+      'v1_sponsors_rest_export' => $this->transformSponsors($rows),
       default => $rows,
     };
   }
@@ -1054,6 +1061,692 @@ class BebboV1Serializer extends Serializer {
         'UTF-8'
       );
     }
+  }
+
+  /**
+   * Transforms rows for the V1 country-groups listing display.
+   *
+   * Filters out CountryID 131, deduplicates, resolves media fields, builds
+   * languages array from Group entities and custom_language_data, and moves
+   * CountryID 126 to the end.
+   *
+   * @param array $rows
+   *   Raw rows from the view.
+   *
+   * @return array
+   *   Transformed rows.
+   */
+  private function transformCountryGroups(array $rows): array {
+    if (empty($rows)) {
+      return $rows;
+    }
+
+    $rows = array_values(array_filter($rows, fn($row) => ($row['CountryID'] ?? '') !== '131'));
+
+    $seen = [];
+    $rows = array_values(array_filter($rows, function ($row) use (&$seen) {
+      $id = $row['CountryID'] ?? '';
+      if (isset($seen[$id])) {
+        return FALSE;
+      }
+      $seen[$id] = TRUE;
+      return TRUE;
+    }));
+
+    $mediaKeys = ['country_national_partner', 'country_sponsor_logo', 'unicef_logo'];
+    foreach ($rows as &$row) {
+      foreach ($mediaKeys as $key) {
+        $row[$key] = $this->parseViewCoverImage($row[$key] ?? NULL);
+      }
+    }
+    unset($row);
+
+    $groupIds = array_filter(array_column($rows, 'CountryID'));
+    $groupStorage = $this->entityTypeManager->getStorage('group');
+    $groups = $groupStorage->loadMultiple($groupIds);
+
+    $entry126Index = NULL;
+    foreach ($rows as $index => &$row) {
+      $countryId = $row['CountryID'] ?? '';
+      $group = $groups[$countryId] ?? NULL;
+
+      if ($countryId === '126') {
+        $row['name'] = 'Rest of the world';
+        $row['displayName'] = 'Rest of the world';
+        $row['languages'] = $this->buildLanguagesForRestOfWorld();
+        $entry126Index = $index;
+      }
+      elseif ($group instanceof Group) {
+        $row['languages'] = $this->buildLanguagesForGroup($row['name'] ?? '', $group);
+        $defaultToggle = $group->getUntranslated()->get('field_content_toggle')->getValue();
+        $row['content_toggle'] = implode(', ', array_column($defaultToggle, 'value'));
+      }
+      else {
+        $row['languages'] = [];
+      }
+
+      unset($row['langcode']);
+    }
+    unset($row);
+
+    if ($entry126Index !== NULL) {
+      $entry = array_splice($rows, $entry126Index, 1);
+      $rows[] = $entry[0];
+    }
+
+    return $rows;
+  }
+
+  /**
+   * Builds languages array for a regular country group.
+   *
+   * @param string $countryName
+   *   The country display name.
+   * @param \Drupal\group\Entity\Group $group
+   *   The group entity.
+   *
+   * @return array
+   *   Array of language objects.
+   */
+  private function buildLanguagesForGroup(string $countryName, Group $group): array {
+    $fieldLanguages = $group->get('field_language')->getValue();
+    $langcodes = array_filter(array_column($fieldLanguages, 'value'));
+
+    if (empty($langcodes)) {
+      return [];
+    }
+
+    $langData = $this->database->select('custom_language_data', 'cld')
+      ->fields('cld')
+      ->condition('langcode', $langcodes, 'IN')
+      ->execute()
+      ->fetchAllAssoc('langcode', \PDO::FETCH_ASSOC);
+
+    $configLanguages = $this->entityTypeManager
+      ->getStorage('configurable_language')
+      ->loadMultiple($langcodes);
+
+    $languages = [];
+    foreach ($langcodes as $langcode) {
+      if (!$this->languageManager->getLanguage($langcode)) {
+        continue;
+      }
+      $configLang = $configLanguages[$langcode] ?? NULL;
+      if (!$configLang) {
+        continue;
+      }
+
+      $data = $langData[$langcode] ?? [];
+
+      if ($group->hasTranslation($langcode)) {
+        $toggleValues = $group->getTranslation($langcode)->get('field_content_toggle')->getValue();
+        $contentToggle = implode(', ', array_column($toggleValues, 'value'));
+      }
+      else {
+        $contentToggle = '';
+      }
+
+      $languages[] = [
+        'name' => $countryName,
+        'displayName' => $data['custom_language_name_local'] ?? '',
+        'languageCode' => $langcode,
+        'locale' => $data['custom_locale'] ?? '',
+        'luxonLocale' => $data['custom_luxon'] ?? '',
+        'pluralShow' => $data['custom_plural'] ?? '',
+        'content_toggle' => $contentToggle,
+        'view_weight' => $configLang->get('weight') ?? 0,
+      ];
+    }
+
+    $languages = $this->languageVisibilityService->filterLanguageDataForApi($languages, $group);
+
+    usort($languages, fn($a, $b) => ($a['view_weight'] ?? 0) <=> ($b['view_weight'] ?? 0));
+    foreach ($languages as &$lang) {
+      unset($lang['view_weight']);
+    }
+    unset($lang);
+
+    return $languages;
+  }
+
+  /**
+   * Builds languages array for CountryID 126 (Rest of the World).
+   *
+   * @return array
+   *   Array of language objects for en and ru.
+   */
+  private function buildLanguagesForRestOfWorld(): array {
+    $langcodes = ['en', 'ru'];
+    $langData = $this->database->select('custom_language_data', 'cld')
+      ->fields('cld')
+      ->condition('langcode', $langcodes, 'IN')
+      ->execute()
+      ->fetchAllAssoc('langcode', \PDO::FETCH_ASSOC);
+
+    $configLanguages = $this->entityTypeManager
+      ->getStorage('configurable_language')
+      ->loadMultiple($langcodes);
+
+    $languages = [];
+    foreach ($langcodes as $langcode) {
+      $configLang = $configLanguages[$langcode] ?? NULL;
+      $displayName = $configLang ? $configLang->label() : '';
+      $data = $langData[$langcode] ?? [];
+
+      $name = ($langcode === 'en') ? 'English' : 'Russian';
+      $languages[] = [
+        'name' => $name,
+        'displayName' => $displayName,
+        'languageCode' => $langcode,
+        'locale' => $data['custom_locale'] ?? '',
+        'luxonLocale' => $data['custom_luxon'] ?? '',
+        'pluralShow' => $data['custom_plural'] ?? '',
+      ];
+    }
+
+    return $languages;
+  }
+
+  /**
+   * Transforms vocabulary list rows into a keyed object.
+   *
+   * @param array $rows
+   *   Raw rows from the view.
+   *
+   * @return array
+   *   Keyed object: {machine_name: {name: "Label"}, ...}.
+   */
+  private function transformVocabularies(array $rows): array {
+    $langcode = $this->resolveLangcode();
+    $vocabStorage = $this->entityTypeManager->getStorage('taxonomy_vocabulary');
+    $result = [];
+
+    foreach ($this->view->result as $row) {
+      $term = $row->_entity ?? NULL;
+      if ($term === NULL) {
+        continue;
+      }
+      $machineName = $term->bundle();
+      if ($machineName === '' || $machineName === 'keywords' || isset($result[$machineName])) {
+        continue;
+      }
+
+      $label = NULL;
+      if ($this->languageManager instanceof ConfigurableLanguageManagerInterface) {
+        $label = $this->languageManager
+          ->getLanguageConfigOverride($langcode, 'taxonomy.vocabulary.' . $machineName)
+          ->get('name');
+      }
+      if (!$label) {
+        $vocab = $vocabStorage->load($machineName);
+        $label = $vocab !== NULL ? $vocab->label() : $machineName;
+      }
+
+      $result[$machineName] = [
+        'name' => htmlspecialchars_decode((string) $label, ENT_QUOTES | ENT_HTML5),
+      ];
+    }
+
+    return $result;
+  }
+
+  /**
+   * Transforms taxonomy term rows for one or all vocabularies.
+   *
+   * @param array $rows
+   *   Raw rows from the view (one row per vocabulary).
+   *
+   * @return array
+   *   Keyed by vocabulary machine name: {vocab: [terms]}.
+   */
+  private function transformTaxonomies(array $rows): array {
+    if (empty($rows)) {
+      return $rows;
+    }
+
+    $langcode = $this->resolveLangcode();
+
+    $specialtyVocabs = [
+      'growth_period',
+      'child_age',
+      'growth_introductory',
+      'chatbot_subcategory',
+      'category',
+    ];
+    $uniqueNameVocabs = [
+      'growth_type',
+      'activity_category',
+      'child_gender',
+      'parent_gender',
+      'relationship_to_parent',
+      'chatbot_category',
+      'subcategory',
+      'target_audience',
+      'course_category',
+    ];
+
+    $toSpecialty = [];
+    $toUniqueName = [];
+    $toBasic = [];
+
+    foreach ($rows as $row) {
+      $vocabInfo = explode(',', $row['vid'] ?? '', 2);
+      $vocabMachine = trim($vocabInfo[0]);
+      if ($vocabMachine === '' || $vocabMachine === 'keywords') {
+        continue;
+      }
+
+      if (in_array($vocabMachine, $specialtyVocabs, TRUE)) {
+        $toSpecialty[] = $vocabMachine;
+      }
+      elseif (in_array($vocabMachine, $uniqueNameVocabs, TRUE)) {
+        $toUniqueName[] = $vocabMachine;
+      }
+      else {
+        $toBasic[] = $vocabMachine;
+      }
+    }
+
+    $result = [];
+
+    foreach ($toSpecialty as $vocabMachine) {
+      $result[$vocabMachine] = match ($vocabMachine) {
+        'growth_period'       => $this->queryGrowthPeriodTerms($langcode),
+        'child_age'           => $this->queryChildAgeTerms($langcode),
+        'growth_introductory' => $this->queryGrowthIntroductoryTerms($langcode),
+        'chatbot_subcategory' => $this->queryChatbotSubcategoryTerms($langcode),
+        'category'            => $this->queryCategoryTerms($langcode),
+      };
+    }
+
+    if (!empty($toUniqueName)) {
+      foreach ($this->queryUniqueNameTermsBatch($toUniqueName, $langcode) as $vid => $terms) {
+        $result[$vid] = $terms;
+      }
+    }
+
+    if (!empty($toBasic)) {
+      foreach ($this->queryBasicTermsBatch($toBasic, $langcode) as $vid => $terms) {
+        $result[$vid] = $terms;
+      }
+    }
+
+    return $result;
+  }
+
+  /**
+   * Builds the base taxonomy term query for a vocabulary and language.
+   *
+   * @param string $vocabMachine
+   *   The vocabulary machine name.
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return \Drupal\Core\Database\Query\SelectInterface
+   *   The base select query.
+   */
+  private function buildTermBaseQuery(string $vocabMachine, string $langcode): SelectInterface {
+    $query = $this->database->select('taxonomy_term_field_data', 'td');
+    $query->condition('td.vid', $vocabMachine);
+    $query->condition('td.langcode', $langcode);
+    $query->condition('td.status', 1);
+    $query->fields('td', ['tid', 'name']);
+    return $query;
+  }
+
+  /**
+   * Queries growth_period vocabulary terms.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return array
+   *   Array of term data.
+   */
+  private function queryGrowthPeriodTerms(string $langcode): array {
+    $query = $this->buildTermBaseQuery('growth_period', $langcode);
+    $query->leftJoin('taxonomy_term__field_vaccination_opens', 'vo', 'vo.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term__field_short_name', 'sn', 'sn.entity_id = td.tid AND sn.langcode = td.langcode');
+    $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
+    $query->addField('vo', 'field_vaccination_opens_value', 'vaccination_opens');
+    $query->addField('sn', 'field_short_name_value', 'short_name');
+    $query->addField('un', 'field_unique_name_value', 'unique_name');
+
+    $results = $query->execute()->fetchAll();
+    $terms = [];
+    $needsMachineName = [];
+    foreach ($results as $idx => $row) {
+      $terms[] = [
+        'id' => (int) $row->tid,
+        'name' => $row->name,
+        'vaccination_opens' => (int) ($row->vaccination_opens ?? 0),
+        'short_name' => $row->short_name ?? '',
+        'unique_name' => $row->unique_name ?? '',
+      ];
+      if (empty($row->unique_name)) {
+        $needsMachineName[$idx] = (int) $row->tid;
+      }
+    }
+
+    $this->batchResolveMachineNames($terms, $needsMachineName);
+
+    return $terms;
+  }
+
+  /**
+   * Queries child_age vocabulary terms.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return array
+   *   Array of term data.
+   */
+  private function queryChildAgeTerms(string $langcode): array {
+    $query = $this->buildTermBaseQuery('child_age', $langcode);
+    $query->leftJoin('taxonomy_term__field_days_from', 'df', 'df.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term__field_days_to', 'dt', 'dt.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term__field_buffers_days', 'bd', 'bd.entity_id = td.tid');
+    $query->addField('df', 'field_days_from_value', 'days_from');
+    $query->addField('dt', 'field_days_to_value', 'days_to');
+    $query->addField('bd', 'field_buffers_days_value', 'buffers_days');
+    $query->addField('td', 'weight', 'weight');
+    $query->orderBy('td.weight', 'ASC');
+
+    $request = $this->requestStack->getCurrentRequest();
+    $pregnancyParam = $request ? $request->query->get('pregnancy') : NULL;
+    if ($pregnancyParam !== 'true') {
+      $query->condition('td.name', 'Pregnancy', '<>');
+    }
+
+    $results = $query->execute()->fetchAll();
+    $tids = array_column($results, 'tid');
+
+    $ageBracketMap = [];
+    if (!empty($tids)) {
+      $abQuery = $this->database->select('taxonomy_term__field_age_bracket', 'ab');
+      $abQuery->fields('ab', ['entity_id', 'field_age_bracket_target_id']);
+      $abQuery->condition('ab.entity_id', $tids, 'IN');
+      $abQuery->orderBy('ab.delta', 'ASC');
+      $abResults = $abQuery->execute()->fetchAll();
+      foreach ($abResults as $abRow) {
+        $ageBracketMap[(int) $abRow->entity_id][] = (int) $abRow->field_age_bracket_target_id;
+      }
+    }
+
+    $terms = [];
+    foreach ($results as $row) {
+      $tid = (int) $row->tid;
+      $terms[] = [
+        'id' => $tid,
+        'name' => $row->name,
+        'days_from' => (int) ($row->days_from ?? 0),
+        'days_to' => (int) ($row->days_to ?? 0),
+        'buffers_days' => (int) ($row->buffers_days ?? 0),
+        'age_bracket' => $ageBracketMap[$tid] ?? [],
+      ];
+    }
+    return $terms;
+  }
+
+  /**
+   * Queries growth_introductory vocabulary terms.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return array
+   *   Array of term data.
+   */
+  private function queryGrowthIntroductoryTerms(string $langcode): array {
+    $query = $this->buildTermBaseQuery('growth_introductory', $langcode);
+    $query->addField('td', 'description__value', 'body');
+    $query->leftJoin('taxonomy_term__field_days_from', 'df', 'df.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term__field_days_to', 'dt', 'dt.entity_id = td.tid');
+    $query->addField('df', 'field_days_from_value', 'days_from');
+    $query->addField('dt', 'field_days_to_value', 'days_to');
+
+    $results = $query->execute()->fetchAll();
+    $terms = [];
+    foreach ($results as $row) {
+      $terms[] = [
+        'id' => (int) $row->tid,
+        'name' => $row->name,
+        'body' => $row->body ?? '',
+        'days_from' => (int) ($row->days_from ?? 0),
+        'days_to' => (int) ($row->days_to ?? 0),
+      ];
+    }
+    return $terms;
+  }
+
+  /**
+   * Queries chatbot_subcategory vocabulary terms.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return array
+   *   Array of term data.
+   */
+  private function queryChatbotSubcategoryTerms(string $langcode): array {
+    $query = $this->buildTermBaseQuery('chatbot_subcategory', $langcode);
+    $query->leftJoin('taxonomy_term__field_chatbot_category', 'cc', 'cc.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
+    $query->addField('cc', 'field_chatbot_category_target_id', 'parent_category_id');
+    $query->addField('un', 'field_unique_name_value', 'unique_name');
+
+    $results = $query->execute()->fetchAll();
+    $terms = [];
+    $needsMachineName = [];
+    foreach ($results as $idx => $row) {
+      $terms[] = [
+        'id' => (int) $row->tid,
+        'name' => $row->name,
+        'parent_category_id' => (int) ($row->parent_category_id ?? 0),
+        'unique_name' => $row->unique_name ?? '',
+      ];
+      if (empty($row->unique_name)) {
+        $needsMachineName[$idx] = (int) $row->tid;
+      }
+    }
+
+    $this->batchResolveMachineNames($terms, $needsMachineName);
+
+    return $terms;
+  }
+
+  /**
+   * Queries category vocabulary terms.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return array
+   *   Array of term data.
+   */
+  private function queryCategoryTerms(string $langcode): array {
+    $query = $this->buildTermBaseQuery('category', $langcode);
+    $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
+    $query->leftJoin('taxonomy_term__field_type_of_article', 'toa', 'toa.entity_id = td.tid');
+    $query->leftJoin('taxonomy_term_field_data', 'toa_td_lang', "toa_td_lang.tid = toa.field_type_of_article_target_id AND toa_td_lang.langcode = td.langcode");
+    $query->leftJoin('taxonomy_term_field_data', 'toa_td_en', "toa_td_en.tid = toa.field_type_of_article_target_id AND toa_td_en.langcode = 'en'");
+    $query->addField('un', 'field_unique_name_value', 'unique_name');
+    $query->addExpression("COALESCE(toa_td_lang.name, toa_td_en.name)", 'type_of_article');
+
+    $results = $query->execute()->fetchAll();
+    $terms = [];
+    $needsMachineName = [];
+    foreach ($results as $idx => $row) {
+      $terms[] = [
+        'id' => (int) $row->tid,
+        'name' => $row->name,
+        'unique_name' => $row->unique_name ?? '',
+        'field_type_of_article' => $row->type_of_article ?? '',
+      ];
+      if (empty($row->unique_name)) {
+        $needsMachineName[$idx] = (int) $row->tid;
+      }
+    }
+
+    $this->batchResolveMachineNames($terms, $needsMachineName);
+
+    return $terms;
+  }
+
+  /**
+   * Queries multiple unique-name vocabularies in a single DB round-trip.
+   *
+   * @param array $vocabs
+   *   List of vocabulary machine names to fetch.
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return array
+   *   Keyed by vocabulary machine name.
+   */
+  private function queryUniqueNameTermsBatch(array $vocabs, string $langcode): array {
+    if (empty($vocabs)) {
+      return [];
+    }
+
+    $query = $this->database->select('taxonomy_term_field_data', 'td');
+    $query->condition('td.vid', $vocabs, 'IN');
+    $query->condition('td.langcode', $langcode);
+    $query->condition('td.status', 1);
+    $query->fields('td', ['tid', 'name', 'vid']);
+    $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
+    $query->addField('un', 'field_unique_name_value', 'unique_name');
+
+    $results = $query->execute()->fetchAll();
+
+    $grouped = [];
+    $needsMachineNameByVocab = [];
+    foreach ($results as $row) {
+      $vid = $row->vid;
+      $idx = count($grouped[$vid] ?? []);
+      $grouped[$vid][] = [
+        'id'          => (int) $row->tid,
+        'name'        => $row->name,
+        'unique_name' => $row->unique_name ?? '',
+      ];
+      if (empty($row->unique_name)) {
+        $needsMachineNameByVocab[$vid][$idx] = (int) $row->tid;
+      }
+    }
+
+    foreach ($needsMachineNameByVocab as $vid => $needsMap) {
+      $this->batchResolveMachineNames($grouped[$vid], $needsMap);
+    }
+
+    foreach ($vocabs as $vocab) {
+      if (!isset($grouped[$vocab])) {
+        $grouped[$vocab] = [];
+      }
+    }
+
+    return $grouped;
+  }
+
+  /**
+   * Queries multiple basic vocabularies in a single DB round-trip.
+   *
+   * @param array $vocabs
+   *   List of vocabulary machine names to fetch.
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return array
+   *   Keyed by vocabulary machine name.
+   */
+  private function queryBasicTermsBatch(array $vocabs, string $langcode): array {
+    if (empty($vocabs)) {
+      return [];
+    }
+
+    $query = $this->database->select('taxonomy_term_field_data', 'td');
+    $query->condition('td.vid', $vocabs, 'IN');
+    $query->condition('td.langcode', $langcode);
+    $query->condition('td.status', 1);
+    $query->fields('td', ['tid', 'name', 'vid']);
+
+    $results = $query->execute()->fetchAll();
+
+    $grouped = [];
+    foreach ($results as $row) {
+      $grouped[$row->vid][] = [
+        'id'   => (int) $row->tid,
+        'name' => $row->name,
+      ];
+    }
+
+    foreach ($vocabs as $vocab) {
+      if (!isset($grouped[$vocab])) {
+        $grouped[$vocab] = [];
+      }
+    }
+
+    return $grouped;
+  }
+
+  /**
+   * Batch-resolves machine names for terms missing field_unique_name.
+   *
+   * @param array &$terms
+   *   The terms array to modify.
+   * @param array $needsMachineName
+   *   Map of term array index => tid.
+   */
+  private function batchResolveMachineNames(array &$terms, array $needsMachineName): void {
+    if (empty($needsMachineName)) {
+      return;
+    }
+
+    $tids = array_values($needsMachineName);
+    $enNames = $this->database->select('taxonomy_term_field_data', 'td')
+      ->fields('td', ['tid', 'name'])
+      ->condition('td.tid', $tids, 'IN')
+      ->condition('td.langcode', 'en')
+      ->execute()
+      ->fetchAllKeyed();
+
+    foreach ($needsMachineName as $idx => $tid) {
+      $source = $enNames[$tid] ?? $terms[$idx]['name'];
+      $machine = strtolower($source);
+      $machine = preg_replace('/[^a-z0-9]/', '_', $machine);
+      $machine = preg_replace('/_+/', '_', $machine);
+      $terms[$idx]['unique_name'] = trim($machine, '_');
+    }
+  }
+
+  /**
+   * Transforms rows for the V1 sponsors listing display.
+   *
+   * Parses media fields and casts boolean fields.
+   *
+   * @param array $rows
+   *   Raw rows from the view.
+   *
+   * @return array
+   *   Transformed rows.
+   */
+  private function transformSponsors(array $rows): array {
+    if (empty($rows)) {
+      return $rows;
+    }
+
+    $mediaKeys = ['country_flag', 'country_sponsor_logo', 'country_national_partner'];
+    foreach ($rows as &$row) {
+      foreach ($mediaKeys as $key) {
+        if (array_key_exists($key, $row)) {
+          $row[$key] = $this->parseViewCoverImage($row[$key] ?? NULL);
+        }
+      }
+      $this->decodeHtmlEntities($row, ['title']);
+    }
+    unset($row);
+
+    return $rows;
   }
 
 }

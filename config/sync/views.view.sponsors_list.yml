@@ -10,6 +10,7 @@ dependencies:
     - field.storage.group.field_make_available_for_mobile
     - group.type.country
   module:
+    - bebbo_serializer
     - custom_serialization
     - group
     - options
@@ -753,6 +754,68 @@ display:
       display_description: ''
       display_extenders: {  }
       path: api/sponsors/%
+      auth: {  }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - request_format
+        - url
+        - user.permissions
+      tags:
+        - 'config:field.storage.group.field_country_flag'
+        - 'config:field.storage.group.field_country_national_partner'
+        - 'config:field.storage.group.field_country_sponsor_logo'
+        - 'config:field.storage.group.field_language'
+        - 'config:field.storage.group.field_make_available_for_mobile'
+  v1_sponsors_rest_export:
+    id: v1_sponsors_rest_export
+    display_title: 'Sponsors API (V1)'
+    display_plugin: rest_export
+    position: 1
+    display_options:
+      pager:
+        type: none
+        options:
+          offset: 0
+      style:
+        type: bebbo_v1_serializer
+        options:
+          uses_fields: false
+          formats:
+            bebbo_json: bebbo_json
+      row:
+        type: data_field
+        options:
+          field_options:
+            id:
+              alias: ''
+              raw_output: false
+            type:
+              alias: ''
+              raw_output: false
+            label:
+              alias: title
+              raw_output: false
+            field_country_flag:
+              alias: country_flag
+              raw_output: false
+            field_country_sponsor_logo:
+              alias: country_sponsor_logo
+              raw_output: false
+            field_country_national_partner:
+              alias: country_national_partner
+              raw_output: false
+            field_make_available_for_mobile:
+              alias: make_available_for_mobile
+              raw_output: false
+            field_language:
+              alias: language
+              raw_output: false
+      display_description: ''
+      display_extenders: {  }
+      path: v1/api/sponsors/%
       auth: {  }
     cache_metadata:
       max-age: -1
