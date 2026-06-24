@@ -26,7 +26,6 @@ complete_list:
   - entity_share_server.channel.content_article_pregnancy_tr_
   - field.field.taxonomy_term.subcategory.field_child_s_age
   - field.storage.taxonomy_term.field_child_s_age
-
   - language.entity.tr
   - language.negotiation
   - language/tr/block.block.claro_content
