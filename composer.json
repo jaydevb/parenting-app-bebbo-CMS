@@ -230,6 +230,9 @@
                 "Update the Entity Author Details": "patches/tmgmt/tmgmt_revision.patch",
                 "Fix JobType grouped filter passing array to escapeLike": "patches/tmgmt/tmgmt_job_type_grouped_filter_fix.patch"
             },
+            "drupal/tmgmt_memsource": {
+                "PHP 8.4: explicit nullable param in createFileTranslation": "patches/tmgmt_memsource-implicit-nullable-php84.patch"
+            },
             "drupal/imagemagick": {
                 "Fix derivative generation - preserve URL-encoded filenames": "patches/imagemagick/fix-url-encoded-filenames.patch"
             },
