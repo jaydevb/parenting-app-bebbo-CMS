@@ -5,59 +5,8 @@
  * It contains custom field module.
  */
 
-use Drupal\views\ViewExecutable;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-
-/**
- * Implements hook_views_query_alter().
- */
-function pb_custom_form_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
-  // Check if it's your specific view and display.
-  if ($view->id() == 'articles' && $view->current_display == 'rest_export_2') {
-
-    // Retrieve the contextual filter value.
-    // Adjust index based on your view's configuration.
-    // Retrieve all query parameters from the URL.
-    $query_params = \Drupal::request()->query->all();
-
-    // Check if the 'version' parameter is passed and is set to 2.
-    // $query_params['version'] == '2'.
-    if (isset($query_params['pregnancy']) && $query_params['pregnancy'] == 'true') {
-
-      // Remove 'Child Age' filter (<> Pregnancy) condition dynamically.
-      // Look for the condition related to 'Child Age' and remove it from the
-      // query. Assuming 'field_child_age' is the machine name of the 'Child
-      // Age' field.
-      // @phpstan-ignore-next-line
-      foreach ($query->where as &$where) {
-        if (!empty($where['conditions'])) {
-          foreach ($where['conditions'] as &$condition) {
-
-            $field_condition = 'node__field_child_age.field_child_age_target_id IN(:node__field_child_age_field_child_age_target_id[])';
-            if (isset($condition['field']) && $condition['field'] == $field_condition) {
-
-              $terms = \Drupal::service('entity_type.manager')
-                ->getStorage('taxonomy_term')->loadByProperties([
-                  'name' => 'Pregnancy',
-                  'vid' => 'child_age',
-                ]);
-              // Check if the term exists and return its name.
-              if ($terms) {
-                // Get the first term if there are multiple results.
-                $term = reset($terms);
-                $tid_pregnancy = (int) $term->id();
-                $condition['value'][':node__field_child_age_field_child_age_target_id[]'][] = $tid_pregnancy;
-
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
 
 /**
  * Implements hook_form_alter().
@@ -81,70 +30,6 @@ function pb_custom_form_form_alter(&$form, FormStateInterface $form_state, $form
     /* $form['#attached']['js'][] = drupal_get_path('module', 'pb_custom_field') . '/js/homepage.js'; */
     $form['#attached']['library'][] = 'pb_custom_field/mylib';
     $form['actions']['submit']['#submit'][] = 'bebbo_custom_general_group_country_save';
-  }
-}
-
-/**
- * Implements hook_views_post_execute().
- *
- * This hook avoids duplicate entry of nodes in view to optimize API
- * performance.
- */
-function pb_custom_form_views_post_execute(ViewExecutable $view) {
-  // For chil growth api.
-  if ($view->id() == 'articles') {
-    $display = $view->getDisplay()->display['id'];
-    $dedupe = function (array $rows, string $field_name) {
-      $seen = [];
-      $result = [];
-      foreach ($rows as $row) {
-        // ✅ Safe dynamic access
-        $id = $row->{$field_name} ?? NULL;
-        if ($id && !in_array($id, $seen, TRUE)) {
-          $seen[] = $id;
-          $result[] = $row;
-        }
-      }
-      return $result;
-    };
-    switch ($display) {
-      // Child Growth Pinned Content API.
-      case 'rest_export_18':
-        // Milestone Related Content API.
-      case 'rest_export_20':
-        $view->result = $dedupe($view->result, 'node_field_data_node__field_related_articles_nid');
-        break;
-
-      // Health Check-Ups Pinned Content API.
-      case 'rest_export_17':
-        // FAQ Pinned Content API  // api/pinned-contents/en/faq.
-      case 'rest_export_1':
-        // FAQ Updated Pinned Content API
-        // api/updated-pinned-contents/en/faq.
-      case 'rest_export_21':
-        $view->result = $dedupe($view->result, 'node_field_data_node__field_pinned_article_nid');
-        break;
-
-      // Child Development Girl Pinned Content API
-      // api/pinned-contents/en/child_development/41.
-      case 'rest_export_16':
-        $view->result = $dedupe($view->result, 'node_field_data_node__field_pinned_article_for_girl_nid');
-        break;
-
-      // Vaccinations Pinned Content API.
-      case 'rest_export_12':
-        // Not able to test this as the data is empty.
-        break;
-
-      // Child Development Boy Pinned Content API
-      // api/pinned-contents/en/child_development/40.
-      case 'rest_export_19':
-        $view->result = $dedupe($view->result, 'node_field_data_node__field_pinned_article_for_boy_nid');
-        break;
-
-      // Case 'rest_export_2': // Article API.
-      default:
-    }
   }
 }
 
