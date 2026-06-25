@@ -19,3 +19,9 @@ bebbo_serializer.v2_check_update:
     # the path matches the protected /v2/api/* pattern.
     _access: 'TRUE'
   methods: [GET]
+  options:
+    # JWT-gated: never serve from the internal page cache. Otherwise a valid
+    # token's 200 would be cached by URL and replayed to unauthenticated
+    # requests, bypassing the bebbo_api_security subscriber (which runs after
+    # the page-cache middleware).
+    no_cache: TRUE
