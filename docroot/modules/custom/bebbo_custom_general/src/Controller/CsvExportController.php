@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pb_custom_form\Controller;
+namespace Drupal\bebbo_custom_general\Controller;
 
 use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Component\Utility\UrlHelper;
@@ -104,7 +104,7 @@ class CsvExportController extends ControllerBase {
     $this->entityTypeManager = $entity_type_manager;
     $this->remoteManager = $remote_manager;
     // Get a logger channel specific to this module.
-    $this->logger = $logger_factory->get('pb_custom_form');
+    $this->logger = $logger_factory->get('bebbo_custom_general');
     $this->messenger = $messenger;
     $this->requestStack = $request_stack;
     $this->fileSystem = $file_system;
@@ -203,7 +203,7 @@ class CsvExportController extends ControllerBase {
       $remote_base = $this->getRemoteBaseUrl($selected_remote, $channel_url);
 
       // Store parameters in temp store for batch operations.
-      $temp_store = $this->tempStoreFactory->get('pb_custom_form_csv_export');
+      $temp_store = $this->tempStoreFactory->get('bebbo_custom_general_csv_export');
       $temp_store->set('export_params', [
         'channel_id' => $channel_id,
         'remote_id' => $remote_id,
@@ -249,7 +249,7 @@ class CsvExportController extends ControllerBase {
       batch_set($batch_builder->toArray());
 
       // Redirect to batch processing page.
-      return batch_process('pb_custom_form.csv_export_download');
+      return batch_process('bebbo_custom_general.csv_export_download');
 
     }
     catch (\Exception $e) {
@@ -741,7 +741,7 @@ class CsvExportController extends ControllerBase {
    *   The batch context.
    */
   public function batchFetchData($page, $batch_size, &$context) {
-    $temp_store = $this->tempStoreFactory->get('pb_custom_form_csv_export');
+    $temp_store = $this->tempStoreFactory->get('bebbo_custom_general_csv_export');
     $export_params = $temp_store->get('export_params');
 
     if (empty($export_params)) {
@@ -799,7 +799,7 @@ class CsvExportController extends ControllerBase {
    *   The batch context.
    */
   public function batchCreateCsv(&$context) {
-    $temp_store = $this->tempStoreFactory->get('pb_custom_form_csv_export');
+    $temp_store = $this->tempStoreFactory->get('bebbo_custom_general_csv_export');
     $export_params = $temp_store->get('export_params');
 
     if (empty($export_params)) {
@@ -853,7 +853,7 @@ class CsvExportController extends ControllerBase {
   public function batchFinished($success, $results, $operations) {
     if ($success && isset($results['csv_content']) && isset($results['filename'])) {
       // Store the CSV content and filename in temp store for download.
-      $temp_store = $this->tempStoreFactory->get('pb_custom_form_csv_export');
+      $temp_store = $this->tempStoreFactory->get('bebbo_custom_general_csv_export');
       $temp_store->set('csv_content', $results['csv_content']);
       $temp_store->set('csv_filename', $results['filename']);
 
@@ -868,7 +868,7 @@ class CsvExportController extends ControllerBase {
    * Downloads the completed CSV file after batch processing.
    */
   public function downloadCompleted() {
-    $temp_store = $this->tempStoreFactory->get('pb_custom_form_csv_export');
+    $temp_store = $this->tempStoreFactory->get('bebbo_custom_general_csv_export');
     $csv_content = $temp_store->get('csv_content');
     $filename = $temp_store->get('csv_filename');
 
@@ -900,7 +900,7 @@ class CsvExportController extends ControllerBase {
    *   The export parameters.
    */
   protected function initializeCsvFile($export_params) {
-    $temp_store = $this->tempStoreFactory->get('pb_custom_form_csv_export');
+    $temp_store = $this->tempStoreFactory->get('bebbo_custom_general_csv_export');
 
     // Define specific headers as requested.
     $headers = [
@@ -940,7 +940,7 @@ class CsvExportController extends ControllerBase {
    *   The current page number.
    */
   protected function processAndAppendCsvData($data, $export_params, $page) {
-    $temp_store = $this->tempStoreFactory->get('pb_custom_form_csv_export');
+    $temp_store = $this->tempStoreFactory->get('bebbo_custom_general_csv_export');
     $temp_file_path = $temp_store->get('csv_file_path');
 
     if (empty($temp_file_path) || !file_exists($temp_file_path)) {
