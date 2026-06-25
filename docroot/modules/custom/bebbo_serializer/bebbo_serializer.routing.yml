@@ -1,0 +1,21 @@
+bebbo_serializer.v1_check_update:
+  path: '/v1/api/check-update/{country}'
+  defaults:
+    _controller: '\Drupal\bebbo_serializer\Controller\CheckUpdateController::checkUpdate'
+    _title: 'Check Update (V1)'
+  requirements:
+    # Public endpoint for the legacy app. Not under /v2/api, so the
+    # bebbo_api_security JWT subscriber never matches it.
+    _access: 'TRUE'
+  methods: [GET]
+
+bebbo_serializer.v2_check_update:
+  path: '/v2/api/check-update/{country}'
+  defaults:
+    _controller: '\Drupal\bebbo_serializer\Controller\CheckUpdateController::checkUpdate'
+    _title: 'Check Update (V2)'
+  requirements:
+    # Public route; the bebbo_api_security subscriber enforces JWT because
+    # the path matches the protected /v2/api/* pattern.
+    _access: 'TRUE'
+  methods: [GET]
