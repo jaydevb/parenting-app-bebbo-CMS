@@ -1,0 +1,6 @@
+bebbo_custom_general.mobile_app_share_link_form:
+  title: 'Manage Mobile APP Javascript'
+  route_name: bebbo_custom_general.mobile_app_share_link_form
+  parent: pb_custom_form.admin_config_parent_buddy
+  description: 'Configure the Mobile APP share link javascript.'
+  weight: 101

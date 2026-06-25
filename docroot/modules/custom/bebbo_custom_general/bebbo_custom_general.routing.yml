@@ -1,0 +1,31 @@
+bebbo_custom_general.mobile_app_share_link_form:
+  path: '/admin/config/parent-buddy/mobile-javascript'
+  defaults:
+    _form: '\Drupal\bebbo_custom_general\Form\MobileAppShareLinkForm'
+    _title: 'Manage Mobile APP Javascript'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+bebbo_custom_general.pb_mobile:
+  path: '/share/{param1}/{param2}/{param3}'
+  defaults:
+    _controller: '\Drupal\bebbo_custom_general\Controller\PbMobile::render'
+    param1: ''
+    param2: ''
+    param3: ''
+    _title_callback: '\Drupal\bebbo_custom_general\Controller\PbMobile::getDynamicTitle'
+  requirements:
+    _permission: 'manage mobile javascript'
+
+bebbo_custom_general.kosovo_pb_mobile:
+  path: '/foleja/share/{param1}/{param2}/{param3}'
+  defaults:
+    _controller: '\Drupal\bebbo_custom_general\Controller\PbMobile::kosovorender'
+    param1: ''
+    param2: ''
+    param3: ''
+    _title: 'Bebbo'
+  requirements:
+    _permission: 'manage mobile javascript'

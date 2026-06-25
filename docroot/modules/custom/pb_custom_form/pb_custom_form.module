@@ -171,24 +171,6 @@ function pb_custom_form_views_query_alter(ViewExecutable $view, QueryPluginBase 
 }
 
 /**
- * Implements hook_theme().
- */
-function pb_custom_form_theme($existing, $type, $theme, $path) {
-  $config = \Drupal::config('pb_custom_form.mobile_app_share_link_form');
-
-  return [
-    'pb-mobile' => [
-      'variables' => ['app_share_script' => $config->get('mobile_app_share_link')],
-    ],
-    'kosovo-mobile' => [
-      'variables' => [
-        'kosovo_app_share_script' => $config->get('kosovo_mobile_app_share_link'),
-      ],
-    ],
-  ];
-}
-
-/**
  * Implements hook_query_TAG_alter() for tmgmt_entity_get_translatable_entities.
  */
 function pb_custom_form_query_tmgmt_entity_get_translatable_entities_alter($query) {

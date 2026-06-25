@@ -1,0 +1,5 @@
+name: Bebbo Custom General
+description: 'Common Bebbo utilities that have no dedicated module (mobile-JS share pages, and more to follow).'
+type: module
+package: custom
+core_version_requirement: ^10 || ^11

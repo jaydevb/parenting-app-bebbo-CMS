@@ -1,12 +1,12 @@
 <?php
 
-namespace Drupal\pb_custom_form\Form;
+namespace Drupal\bebbo_custom_general\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * {@inheritdoc}
+ * Admin form to manage the inline JS injected into mobile share pages.
  */
 class MobileAppShareLinkForm extends ConfigFormBase {
 
@@ -16,7 +16,7 @@ class MobileAppShareLinkForm extends ConfigFormBase {
   protected function getEditableConfigNames() {
 
     return [
-      'pb_custom_form.mobile_app_share_link_form',
+      'bebbo_custom_general.mobile_app_share_link_form',
     ];
   }
 
@@ -32,7 +32,7 @@ class MobileAppShareLinkForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('pb_custom_form.mobile_app_share_link_form');
+    $config = $this->config('bebbo_custom_general.mobile_app_share_link_form');
     $form['mobile_app_share_link'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Manage Mobile APP Javascript'),
@@ -56,7 +56,7 @@ class MobileAppShareLinkForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
-    $this->config('pb_custom_form.mobile_app_share_link_form')
+    $this->config('bebbo_custom_general.mobile_app_share_link_form')
       ->set('mobile_app_share_link', $form_state->getValue('mobile_app_share_link'))
       ->set('kosovo_mobile_app_share_link', $form_state->getValue('kosovo_mobile_app_share_link'))
       ->save();

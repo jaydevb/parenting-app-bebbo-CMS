@@ -1,30 +1,35 @@
 <?php
 
-namespace Drupal\pb_custom_form\Controller;
+namespace Drupal\bebbo_custom_general\Controller;
 
-use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Defines PbMobile class.
+ * Renders the mobile app-share landing pages.
  */
 class PbMobile extends ControllerBase {
 
   /**
-   * {@inheritDoc}
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
 
   /**
-   * {@inheritDoc}
+   * Constructs a PbMobile controller.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    */
   public function __construct(ConfigFactoryInterface $config_factory) {
     $this->configFactory = $config_factory;
   }
 
   /**
-   * {@inheritDoc}
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static(
@@ -33,10 +38,10 @@ class PbMobile extends ControllerBase {
   }
 
   /**
-   * Display the pb-mobile.
+   * Displays the pb-mobile share page.
    *
    * @return array
-   *   Return pb-mobile array.
+   *   The pb-mobile render array.
    */
   public function render($param1, $param2, $param3) {
     return [
@@ -45,10 +50,10 @@ class PbMobile extends ControllerBase {
   }
 
   /**
-   * Display the Kosovo-mobile.
+   * Displays the Kosovo mobile share page.
    *
    * @return array
-   *   Return kosovo-mobile array.
+   *   The kosovo-mobile render array.
    */
   public function kosovorender($param1, $param2, $param3) {
     return [
@@ -57,7 +62,7 @@ class PbMobile extends ControllerBase {
   }
 
   /**
-   * Function to generate dynamic title.
+   * Generates the dynamic page title.
    */
   public function getDynamicTitle() {
     $site_name = $this->configFactory->get('system.site')->get('name');

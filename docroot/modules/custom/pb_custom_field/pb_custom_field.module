@@ -1777,7 +1777,7 @@ function pb_custom_field_preprocess_html(&$variables) {
     }
   }
   $route_name = \Drupal::routeMatch()->getRouteName();
-  if ($route_name == "pb_custom_form.kosovo_pb_mobile") {
+  if ($route_name == "bebbo_custom_general.kosovo_pb_mobile") {
     /* Load the favicon ico for kosovo landing pages */
     $media_entity = Media::load(35386);
     if (!empty($media_entity)) {

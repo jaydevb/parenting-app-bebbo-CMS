@@ -15,6 +15,7 @@ module:
   automated_cron: 0
   basic_auth: 0
   bebbo_api_security: 0
+  bebbo_custom_general: 0
   bebbo_serializer: 0
   better_exposed_filters: 0
   big_pipe: 0

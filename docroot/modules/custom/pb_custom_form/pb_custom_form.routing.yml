@@ -26,40 +26,6 @@ pb_custom_form.admin_settings_form:
   options:
     _admin_route: TRUE
 
-pb_custom_form.mobile_app_share_link_form:
-  path: '/admin/config/parent-buddy/mobile-javascript'
-  defaults:
-    _form: '\Drupal\pb_custom_form\Form\MobileAppShareLinkForm'
-    _title: 'Manage Mobile APP Javascript'
-  requirements:
-    _permission: 'administer site configuration'
-  options:
-    _admin_route: TRUE
-
-pb_custom_form.pb_mobile:
-  path: '/share/{param1}/{param2}/{param3}'
-  defaults:
-    _controller:  '\Drupal\pb_custom_form\Controller\PbMobile::render'
-    param1: ''
-    param2: ''
-    param3: ''
-    _title_callback: '\Drupal\pb_custom_form\Controller\PbMobile::getDynamicTitle'
-  requirements:
-    _permission: 'manage mobile javascript'
-
-
-pb_custom_form.kosovo_pb_mobile:
-  path: '/foleja/share/{param1}/{param2}/{param3}'
-  defaults:
-    _controller:  '\Drupal\pb_custom_form\Controller\PbMobile::kosovorender'
-    param1: ''
-    param2: ''
-    param3: ''
-    _title: 'Bebbo'
-  requirements:
-    _permission: 'manage mobile javascript'
-
-
 pb_custom_form.ForceUpdateCheckForm:
   path: '/forcefull-update-check'
   defaults:

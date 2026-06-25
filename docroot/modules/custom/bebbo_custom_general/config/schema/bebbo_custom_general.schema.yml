@@ -1,0 +1,10 @@
+bebbo_custom_general.mobile_app_share_link_form:
+  type: config_object
+  label: 'Mobile APP share link JavaScript'
+  mapping:
+    mobile_app_share_link:
+      type: text
+      label: 'Mobile APP share link JavaScript'
+    kosovo_mobile_app_share_link:
+      type: text
+      label: 'Kosovo mobile APP share link JavaScript'

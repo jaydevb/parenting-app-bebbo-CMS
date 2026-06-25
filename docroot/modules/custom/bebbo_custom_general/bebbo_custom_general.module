@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Common Bebbo utilities with no dedicated module.
+ */
+
+/**
+ * Implements hook_theme().
+ *
+ * Defines the mobile app-share landing page themes. The inline share scripts
+ * are sourced from the per-site bebbo_custom_general.mobile_app_share_link_form
+ * config (managed via the Manage Mobile APP Javascript admin form).
+ */
+function bebbo_custom_general_theme($existing, $type, $theme, $path) {
+  $config = \Drupal::config('bebbo_custom_general.mobile_app_share_link_form');
+
+  return [
+    'pb-mobile' => [
+      'variables' => ['app_share_script' => $config->get('mobile_app_share_link')],
+    ],
+    'kosovo-mobile' => [
+      'variables' => [
+        'kosovo_app_share_script' => $config->get('kosovo_mobile_app_share_link'),
+      ],
+    ],
+  ];
+}
