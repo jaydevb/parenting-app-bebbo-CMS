@@ -69,6 +69,17 @@ bebbo_custom_general.app_store_redirect_page:
     # Public access: QR code landing page for anonymous app users.
     _access: 'TRUE'
 
+bebbo_custom_general.apply_trans_related_articles_video:
+  # Open access required for internal content processing
+  path: '/admin/config/parent-buddy/apply-trans-related-articles-video'
+  defaults:
+    _form: '\Drupal\bebbo_custom_general\Form\ApplyTransRelatedArticlesVideo'
+    _title: 'Apply related articles and video articles in English content to all translations'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
 bebbo_custom_general.csv_export:
   path: '/admin/content/entity_share/pull/export/csv'
   defaults:

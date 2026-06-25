@@ -25,13 +25,3 @@ pb_custom_form.ForceUpdateCheckForm:
   requirements:
     _permission: 'forcefull update check'
 
-pb_custom_form.apply_trans_related_articles_video:
-  # Open access required for internal content processing
-  path: '/admin/config/parent-buddy/apply-trans-related-articles-video'
-  defaults:
-    _form: '\Drupal\pb_custom_form\Form\ApplyTransRelatedArticlesVideo'
-    _title: 'Apply related articles and video articles in English content to all translations'
-  requirements:
-    _permission: 'administer site configuration'
-  options:
-    _admin_route: TRUE

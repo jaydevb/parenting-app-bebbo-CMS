@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pb_custom_form;
+namespace Drupal\bebbo_custom_general;
 
 use Drupal\node\Entity\Node;
 

@@ -1,20 +1,13 @@
 <?php
 
-namespace Drupal\pb_custom_form\Form;
+namespace Drupal\bebbo_custom_general\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\pb_custom_form\ApplyNodeTranslations;
+use Drupal\bebbo_custom_general\ApplyNodeTranslations;
 
 /**
- * Action description.
- *
- * @Action(
- *   id = "apply_trans_related_articles_video",
- *   label = @Translation("Force Update Check"),
- *   type = "node",
- *   confirm = FALSE
- * )
+ * Admin form to propagate related articles/videos across node translations.
  */
 class ApplyTransRelatedArticlesVideo extends FormBase {
 

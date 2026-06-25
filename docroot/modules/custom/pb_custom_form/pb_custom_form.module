@@ -214,7 +214,7 @@ function pb_custom_form_form_alter(&$form, FormStateInterface $form_state, $form
     }
     /* $form['#attached']['js'][] = drupal_get_path('module', 'pb_custom_field') . '/js/homepage.js'; */
     $form['#attached']['library'][] = 'pb_custom_field/mylib';
-    $form['actions']['submit']['#submit'][] = 'pb_custom_form_group_country_save';
+    $form['actions']['submit']['#submit'][] = 'bebbo_custom_general_group_country_save';
   }
   if (strpos($form_id, 'edit_form') !== FALSE && strpos($form_id, 'node') !== FALSE) {
     $form['#validate'][] = 'pb_custom_form_node_validate';
@@ -595,49 +595,6 @@ function pb_custom_form_process_tmgmt_overview_form($element, FormStateInterface
   }
 
   return $element;
-}
-
-/**
- * Custom submit handler for group country save.
- */
-function pb_custom_form_group_country_save($form, FormStateInterface $form_state) {
-  $field_make_available_for_mobiles = $form_state->getValue('field_make_available_for_mobile');
-  $field_make_available_for_mobile = $field_make_available_for_mobiles['value'];
-  if ($field_make_available_for_mobile == 1) {
-    $country_language = $form_state->getValue('field_language');
-    $country_languages_arry = [];
-    if (!empty($country_language)) {
-      foreach ($country_language as $value) {
-        $country_languages_arry[] = $value['value'];
-      }
-    }
-    $langcodess = [];
-    $resultss = \Drupal::database()->select('node_field_data', 't')
-      ->fields('t')
-      ->condition('langcode', $country_languages_arry, 'IN')
-      ->execute()
-      ->fetchAll();
-    if (!empty($resultss)) {
-      foreach ($resultss as $val) {
-        $langcode = $val->langcode;
-        $nid = $val->nid;
-        $nids[$langcode] = $val->nid;
-        $langcodess[$nid][] = $val->langcode;
-      }
-    }
-    $batch = [
-      'title' => t('change status'),
-      'operations' => [
-      [
-        '\Drupal\pb_custom_form\ChangeNodeStatus::offLoadCountryProcess',
-        [$langcodess],
-      ],
-      ],
-      'finished' => '\Drupal\pb_custom_form\ChangeNodeStatus::offLoadCountryProcessFinishedCallback',
-    ];
-    batch_set($batch);
-  }
-
 }
 
 /**

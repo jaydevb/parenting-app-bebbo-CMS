@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pb_custom_form;
+namespace Drupal\bebbo_custom_general;
 
 use Drupal\node\Entity\Node;
 
@@ -20,12 +20,12 @@ class ApplyNodeTranslations {
     }
     // Start a batch process.
     $operation_callback = [
-          ['\Drupal\pb_custom_form\ApplyNodeTranslations::operationCallback', [$items]],
+          ['\Drupal\bebbo_custom_general\ApplyNodeTranslations::operationCallback', [$items]],
     ];
     $batch = [
       'title' => t('Applying related articles and video articles in English content to all translations'),
       'operations' => $operation_callback,
-      'finished' => '\Drupal\pb_custom_form\ApplyNodeTranslations::FinishedCallback',
+      'finished' => '\Drupal\bebbo_custom_general\ApplyNodeTranslations::FinishedCallback',
     ];
 
     batch_set($batch);

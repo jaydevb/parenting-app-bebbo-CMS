@@ -213,3 +213,49 @@ function bebbo_custom_general_csv_download_redirect($form, FormStateInterface $f
     $form_state->setRedirect('<current>');
   }
 }
+
+/**
+ * Submit handler for the group country edit form (Country Offload).
+ *
+ * When a country group is made unavailable for mobile, batch-archives all
+ * node translations in that country's languages.
+ */
+function bebbo_custom_general_group_country_save($form, FormStateInterface $form_state) {
+  $field_make_available_for_mobiles = $form_state->getValue('field_make_available_for_mobile');
+  $field_make_available_for_mobile = $field_make_available_for_mobiles['value'];
+  if ($field_make_available_for_mobile == 1) {
+    $country_language = $form_state->getValue('field_language');
+    $country_languages_arry = [];
+    if (!empty($country_language)) {
+      foreach ($country_language as $value) {
+        $country_languages_arry[] = $value['value'];
+      }
+    }
+    $langcodess = [];
+    $resultss = \Drupal::database()->select('node_field_data', 't')
+      ->fields('t')
+      ->condition('langcode', $country_languages_arry, 'IN')
+      ->execute()
+      ->fetchAll();
+    if (!empty($resultss)) {
+      foreach ($resultss as $val) {
+        $langcode = $val->langcode;
+        $nid = $val->nid;
+        $nids[$langcode] = $val->nid;
+        $langcodess[$nid][] = $val->langcode;
+      }
+    }
+    $batch = [
+      'title' => t('change status'),
+      'operations' => [
+      [
+        '\Drupal\bebbo_custom_general\ChangeNodeStatus::offLoadCountryProcess',
+        [$langcodess],
+      ],
+      ],
+      'finished' => '\Drupal\bebbo_custom_general\ChangeNodeStatus::offLoadCountryProcessFinishedCallback',
+    ];
+    batch_set($batch);
+  }
+
+}

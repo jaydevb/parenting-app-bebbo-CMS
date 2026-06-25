@@ -16,6 +16,12 @@ bebbo_custom_general.admin_settings_form:
   parent: pb_custom_form.admin_config_parent_buddy
   description: 'Configure the Master langauage for notification.'
   weight: 103
+bebbo_custom_general.apply_trans_related_articles_video:
+  title: 'Updating translations for articles and video articles'
+  route_name: bebbo_custom_general.apply_trans_related_articles_video
+  parent: pb_custom_form.admin_config_parent_buddy
+  description: 'Apply related articles and video articles in English content to all translations'
+  weight: 104
 bebbo_custom_general.app_store_redirect:
   title: 'App Store Redirect Settings'
   route_name: bebbo_custom_general.app_store_redirect
