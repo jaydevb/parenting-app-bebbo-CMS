@@ -4,3 +4,9 @@ bebbo_custom_general.mobile_app_share_link_form:
   parent: pb_custom_form.admin_config_parent_buddy
   description: 'Configure the Mobile APP share link javascript.'
   weight: 101
+bebbo_custom_general.redirect_management:
+  title: 'Redirect Management'
+  route_name: bebbo_custom_general.redirect_management
+  parent: pb_custom_form.admin_config_parent_buddy
+  description: 'Manage language redirects and landing pages'
+  weight: 105

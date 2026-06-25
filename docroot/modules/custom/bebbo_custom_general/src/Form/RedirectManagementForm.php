@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pb_custom_form\Form;
+namespace Drupal\bebbo_custom_general\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -15,8 +15,8 @@ class RedirectManagementForm extends ConfigFormBase {
    */
   protected function getEditableConfigNames() {
     return [
-      'pb_custom_form.language_redirects',
-      'pb_custom_form.landing_pages',
+      'bebbo_custom_general.language_redirects',
+      'bebbo_custom_general.landing_pages',
     ];
   }
 
@@ -31,8 +31,8 @@ class RedirectManagementForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $language_config = $this->config('pb_custom_form.language_redirects');
-    $landing_config = $this->config('pb_custom_form.landing_pages');
+    $language_config = $this->config('bebbo_custom_general.language_redirects');
+    $landing_config = $this->config('bebbo_custom_general.landing_pages');
 
     $form['#tree'] = TRUE;
 
@@ -389,12 +389,12 @@ class RedirectManagementForm extends ConfigFormBase {
     }
 
     // Save language redirects.
-    $this->config('pb_custom_form.language_redirects')
+    $this->config('bebbo_custom_general.language_redirects')
       ->set('redirect_urls', implode("\n", $redirect_lines))
       ->save();
 
     // Save landing pages.
-    $this->config('pb_custom_form.landing_pages')
+    $this->config('bebbo_custom_general.landing_pages')
       ->set('landing_pages', implode("\n", $page_lines))
       ->save();
 

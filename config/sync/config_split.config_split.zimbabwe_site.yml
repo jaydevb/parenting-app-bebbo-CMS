@@ -52,8 +52,8 @@ complete_list:
   - language/en/system.menu.main
   - mobile_app_links.android_packages
   - mobile_app_links.ios
-  - pb_custom_form.landing_pages
-  - pb_custom_form.language_redirects
+  - bebbo_custom_general.landing_pages
+  - bebbo_custom_general.language_redirects
   - workflows.workflow.group_workflow
 partial_list:
   - gin.settings

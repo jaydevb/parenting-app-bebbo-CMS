@@ -61,8 +61,8 @@ complete_list:
   - entity_share_server.channel.taxonomy_type_of_support_tr
   - mobile_app_links.android_packages
   - mobile_app_links.ios
-  - pb_custom_form.landing_pages
-  - pb_custom_form.language_redirects
+  - bebbo_custom_general.landing_pages
+  - bebbo_custom_general.language_redirects
   - shortcut.set.default
   - system.site
   - taxonomy.vocabulary.type_of_article

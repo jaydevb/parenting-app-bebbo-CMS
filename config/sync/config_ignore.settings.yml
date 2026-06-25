@@ -4,13 +4,13 @@ mode: simple
 ignored_config_entities:
   - admin_toolbar.settings
   - bebbo_api_security.settings
+  - bebbo_custom_general.landing_pages
+  - bebbo_custom_general.language_redirects
   - bebbo_custom_general.mobile_app_share_link_form
   - 'entity_share_client.remote*'
   - mobile_app_links.android_packages
   - mobile_app_links.ios
   - pb_content_analytics.settings
-  - pb_custom_form.landing_pages
-  - pb_custom_form.language_redirects
   - purge.logger_channels
   - symfony_mailer.mailer_transport.office_365_oauth
   - symfony_mailer_office365.config

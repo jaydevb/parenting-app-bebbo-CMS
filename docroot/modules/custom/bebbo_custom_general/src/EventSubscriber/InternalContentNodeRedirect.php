@@ -1,17 +1,17 @@
 <?php
 
-namespace Drupal\pb_custom_form\EventSubscriber;
+namespace Drupal\bebbo_custom_general\EventSubscriber;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManager;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Path\CurrentPathStack;
-use Drupal\path_alias\AliasManagerInterface;
 use Drupal\Core\Routing\CurrentRouteMatch;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\node\NodeInterface;
+use Drupal\path_alias\AliasManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -146,7 +146,7 @@ class InternalContentNodeRedirect implements EventSubscriberInterface {
     $current_lang = $this->languageManager->getCurrentLanguage()->getId();
 
     // Get landing pages from configuration.
-    $landing_pages_config = $this->configFactory->get('pb_custom_form.landing_pages');
+    $landing_pages_config = $this->configFactory->get('bebbo_custom_general.landing_pages');
     $landing_pages = $this->parseLandingPages($landing_pages_config->get('landing_pages'));
 
     if (!$this->isNodeRoute($request)) {
@@ -161,7 +161,7 @@ class InternalContentNodeRedirect implements EventSubscriberInterface {
     }
 
     // Get redirect URLs from configuration.
-    $redirect_config = $this->configFactory->get('pb_custom_form.language_redirects');
+    $redirect_config = $this->configFactory->get('bebbo_custom_general.language_redirects');
     $redirect_urls_raw = $redirect_config->get('redirect_urls');
     $redirect_urls = $this->parseRedirectUrls($redirect_urls_raw);
 

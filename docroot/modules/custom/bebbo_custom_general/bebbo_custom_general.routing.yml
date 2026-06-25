@@ -29,3 +29,13 @@ bebbo_custom_general.kosovo_pb_mobile:
     _title: 'Bebbo'
   requirements:
     _permission: 'manage mobile javascript'
+
+bebbo_custom_general.redirect_management:
+  path: '/admin/config/parent-buddy/redirect-management'
+  defaults:
+    _form: 'Drupal\bebbo_custom_general\Form\RedirectManagementForm'
+    _title: 'Redirect Management'
+  requirements:
+    _permission: 'manage redirect settings'
+  options:
+    _admin_route: TRUE
