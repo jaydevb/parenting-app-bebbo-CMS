@@ -111,7 +111,6 @@ module:
   pb_custom_field: 0
   pb_custom_form: 0
   pb_custom_migrate: 0
-  pb_custom_rest_api: 0
   pb_custom_standard_deviation: 0
   pb_strings: 0
   phpass: 0
