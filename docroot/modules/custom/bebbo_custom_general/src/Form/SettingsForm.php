@@ -1,12 +1,12 @@
 <?php
 
-namespace Drupal\pb_custom_form\Form;
+namespace Drupal\bebbo_custom_general\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * {@inheritdoc}
+ * Admin form for the per-site master-language setting.
  */
 class SettingsForm extends ConfigFormBase {
 
@@ -16,7 +16,7 @@ class SettingsForm extends ConfigFormBase {
   protected function getEditableConfigNames() {
 
     return [
-      'pb_custom_form.adminsettings',
+      'bebbo_custom_general.adminsettings',
     ];
   }
 
@@ -32,7 +32,7 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('pb_custom_form.adminsettings');
+    $config = $this->config('bebbo_custom_general.adminsettings');
     $form['master_language'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Master language'),
@@ -48,7 +48,7 @@ class SettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
-    $this->config('pb_custom_form.adminsettings')
+    $this->config('bebbo_custom_general.adminsettings')
       ->set('master_language', $form_state->getValue('master_language'))
       ->save();
   }

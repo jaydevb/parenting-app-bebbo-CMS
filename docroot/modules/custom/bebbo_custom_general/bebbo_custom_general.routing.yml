@@ -39,3 +39,32 @@ bebbo_custom_general.redirect_management:
     _permission: 'manage redirect settings'
   options:
     _admin_route: TRUE
+
+bebbo_custom_general.admin_settings_form:
+  path: '/admin/config/parent-buddy/admin-parent-buddy'
+  defaults:
+    _form: '\Drupal\bebbo_custom_general\Form\SettingsForm'
+    _title: 'Adminster Parent Buddy'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+bebbo_custom_general.app_store_redirect:
+  path: '/admin/config/parent-buddy/app-store-redirect'
+  defaults:
+    _form: '\Drupal\bebbo_custom_general\Form\AppStoreRedirectForm'
+    _title: 'App Store Redirect Settings'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+bebbo_custom_general.app_store_redirect_page:
+  path: '/downloadapp.html'
+  defaults:
+    _controller: '\Drupal\bebbo_custom_general\Controller\AppStoreRedirectController::render'
+    _title: 'Download App'
+  requirements:
+    # Public access: QR code landing page for anonymous app users.
+    _access: 'TRUE'

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pb_custom_form\Form;
+namespace Drupal\bebbo_custom_general\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -14,7 +14,7 @@ class AppStoreRedirectForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   protected function getEditableConfigNames() {
-    return ['pb_custom_form.app_store_redirect'];
+    return ['bebbo_custom_general.app_store_redirect'];
   }
 
   /**
@@ -28,7 +28,7 @@ class AppStoreRedirectForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('pb_custom_form.app_store_redirect');
+    $config = $this->config('bebbo_custom_general.app_store_redirect');
 
     $form['app_store_url'] = [
       '#type' => 'url',
@@ -53,7 +53,7 @@ class AppStoreRedirectForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->config('pb_custom_form.app_store_redirect')
+    $this->config('bebbo_custom_general.app_store_redirect')
       ->set('app_store_url', $form_state->getValue('app_store_url'))
       ->set('google_play_url', $form_state->getValue('google_play_url'))
       ->save();

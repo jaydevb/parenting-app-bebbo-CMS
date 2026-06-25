@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pb_custom_form\Controller;
+namespace Drupal\bebbo_custom_general\Controller;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheableMetadata;
@@ -19,7 +19,7 @@ class AppStoreRedirectController extends ControllerBase {
    * Renders the redirect HTML page.
    */
   public function render(): Response {
-    $config = $this->config('pb_custom_form.app_store_redirect');
+    $config = $this->config('bebbo_custom_general.app_store_redirect');
     $app_store_url = $config->get('app_store_url') ?: '';
     $google_play_url = $config->get('google_play_url') ?: '';
 
@@ -27,7 +27,7 @@ class AppStoreRedirectController extends ControllerBase {
 
     $cache_metadata = new CacheableMetadata();
     $cache_metadata->addCacheTags([
-      'config:pb_custom_form.app_store_redirect',
+      'config:bebbo_custom_general.app_store_redirect',
       'config:system.site',
     ]);
     $cache_metadata->setCacheMaxAge(3600);

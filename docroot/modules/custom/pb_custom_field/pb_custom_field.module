@@ -2008,7 +2008,7 @@ function pb_custom_field_content_moderation_notification_mail_data_alter(EntityI
     }
     $body = str_replace("[link]", $nid_with_link, $body_old);
     // Get master value from settings form.
-    $config = \Drupal::config('pb_custom_form.adminsettings');
+    $config = \Drupal::config('bebbo_custom_general.adminsettings');
     $master = $config->get('master_language');
     $master_language = explode(',', $master);
     if (in_array($node_language, $master_language)) {

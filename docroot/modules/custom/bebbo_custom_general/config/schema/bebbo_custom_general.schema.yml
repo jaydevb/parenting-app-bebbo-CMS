@@ -24,3 +24,22 @@ bebbo_custom_general.landing_pages:
     landing_pages:
       type: text
       label: 'Landing pages that bypass redirects'
+
+bebbo_custom_general.app_store_redirect:
+  type: config_object
+  label: 'App Store Redirect URLs'
+  mapping:
+    app_store_url:
+      type: string
+      label: 'App Store listing URL'
+    google_play_url:
+      type: string
+      label: 'Google Play listing URL'
+
+bebbo_custom_general.adminsettings:
+  type: config_object
+  label: 'Administer Parent Buddy settings'
+  mapping:
+    master_language:
+      type: string
+      label: 'Master language for the countries'
