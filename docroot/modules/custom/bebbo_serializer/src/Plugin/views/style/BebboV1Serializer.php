@@ -226,9 +226,27 @@ class BebboV1Serializer extends Serializer {
       );
     }
 
+    // Displays whose transform de-duplicates rows: total must reflect the
+    // final (deduped) row count, not the view's pre-dedup total_rows.
+    $deduped_displays = [
+      'v1_pinned_faq_rest_export',
+      'v1_pinned_vaccinations_rest_export',
+      'v1_pinned_health_checkup_rest_export',
+      'v1_pinned_child_growth_rest_export',
+      'v1_related_milestone_rest_export',
+      'v1_updated_pinned_faq_rest_export',
+      'v1_child_dev_boy_rest_export',
+      'v1_child_dev_girl_rest_export',
+      'v1_health_checkup_rest_export',
+    ];
+
     // Archive returns a grouped structure — total is the sum of all IDs.
     if ($displayId === 'v1_archive_rest_export') {
       $total = array_sum(array_map('count', $rows));
+    }
+    elseif (in_array($displayId, $deduped_displays, TRUE)) {
+      // Count the transformed (deduplicated) rows to match the legacy API.
+      $total = count($rows);
     }
     else {
       // Use the view's own total_rows (set by the pager during query
@@ -810,6 +828,27 @@ class BebboV1Serializer extends Serializer {
       return TRUE;
     }));
 
+    // The pinned displays expose cover media as raw media IDs (through the
+    // field_pinned_article relationship), so batch-resolve those IDs to
+    // {url, name, alt} (with WebP) instead of parsing embedded view HTML.
+    // embedded_images is not a view field here, so batch-load it from the
+    // pinned article nodes (the row id is the pinned article nid).
+    $imageMediaIds = [];
+    $nids = [];
+    foreach ($rows as $row) {
+      if (!empty($row['id']) && is_numeric($row['id'])) {
+        $nids[] = (int) $row['id'];
+      }
+      foreach (['cover_image', 'cover_video_image'] as $key) {
+        if (!empty($row[$key]) && is_numeric($row[$key])) {
+          $imageMediaIds[] = (int) $row[$key];
+        }
+      }
+    }
+    $resolvedMedia = $this->resolveMediaIds($imageMediaIds);
+    $embeddedByNid = $this->resolveEmbeddedImagesByNid($nids, $this->resolveLangcode());
+    $emptyMedia = ['url' => '', 'name' => '', 'alt' => ''];
+
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
@@ -821,19 +860,73 @@ class BebboV1Serializer extends Serializer {
       $this->decodeHtmlEntities($row, ['title']);
       $this->cleanSummary($row);
 
-      if (array_key_exists('cover_video', $row)) {
-        $row['cover_video'] = $this->parseViewVideoMedia($row['cover_video'] ?? NULL);
+      $row['embedded_images'] = $embeddedByNid[(int) ($row['id'] ?? 0)] ?? [];
+
+      // Type-specific cover media, matching the legacy API: Article pins
+      // expose only cover_image; Video Article pins only the video fields.
+      if (($row['type'] ?? '') === 'Video Article') {
+        if (array_key_exists('cover_video', $row)) {
+          $row['cover_video'] = $this->parseViewVideoMedia($row['cover_video'] ?? NULL);
+        }
+        if (array_key_exists('cover_video_image', $row)) {
+          $mid = (int) ($row['cover_video_image'] ?? 0);
+          $row['cover_video_image'] = $resolvedMedia[$mid] ?? $emptyMedia;
+        }
+        unset($row['cover_image']);
       }
-      if (array_key_exists('cover_image', $row)) {
-        $row['cover_image'] = $this->parseViewCoverImage($row['cover_image'] ?? NULL);
-      }
-      if (array_key_exists('cover_video_image', $row)) {
-        $row['cover_video_image'] = $this->parseViewCoverImage($row['cover_video_image'] ?? NULL);
+      else {
+        if (array_key_exists('cover_image', $row)) {
+          $mid = (int) ($row['cover_image'] ?? 0);
+          $row['cover_image'] = $resolvedMedia[$mid] ?? $emptyMedia;
+        }
+        unset($row['cover_video'], $row['cover_video_image']);
       }
     }
     unset($row);
 
     return $rows;
+  }
+
+  /**
+   * Batch-loads embedded image URLs for the given node IDs and language.
+   *
+   * Reads field_embedded_images (auto-populated on node save from the body),
+   * preserving delta order. Falls back to the English value when the
+   * requested language has no row.
+   *
+   * @param int[] $nids
+   *   Node IDs.
+   * @param string $langcode
+   *   The requested language code.
+   *
+   * @return array<int, string[]>
+   *   Map of node ID to an ordered list of embedded image URLs.
+   */
+  private function resolveEmbeddedImagesByNid(array $nids, string $langcode): array {
+    $nids = array_values(array_unique(array_filter($nids)));
+    if (empty($nids)) {
+      return [];
+    }
+
+    $records = $this->database->select('node__field_embedded_images', 'e')
+      ->fields('e', ['entity_id', 'langcode', 'delta', 'field_embedded_images_value'])
+      ->condition('entity_id', $nids, 'IN')
+      ->condition('langcode', [$langcode, 'en'], 'IN')
+      ->orderBy('delta')
+      ->execute()
+      ->fetchAll();
+
+    // Prefer the requested language; fall back to English per node.
+    $byLang = [];
+    foreach ($records as $r) {
+      $byLang[(int) $r->entity_id][$r->langcode][] = (string) $r->field_embedded_images_value;
+    }
+
+    $result = [];
+    foreach ($byLang as $nid => $langs) {
+      $result[$nid] = $langs[$langcode] ?? $langs['en'] ?? [];
+    }
+    return $result;
   }
 
   /**
