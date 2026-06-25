@@ -7,6 +7,7 @@
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\taxonomy\Entity\Term;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
@@ -34,7 +35,8 @@ function bebbo_custom_general_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_form_alter().
  *
- * Adds the CSV Download button to the Entity Share pull form.
+ * - Adds the CSV Download button to the Entity Share pull form.
+ * - Wires the category -> subcategory AJAX cascade on article edit forms.
  */
 function bebbo_custom_general_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if ($form_id == 'entity_share_client_pull_form') {
@@ -43,6 +45,137 @@ function bebbo_custom_general_form_alter(&$form, FormStateInterface $form_state,
     // Add after_build callback to ensure button is added after AJAX rebuilds.
     $form['#after_build'][] = 'bebbo_custom_general_entity_share_after_build';
   }
+
+  // node_article_edit_form //node_article_form.
+  if ($form_id == 'node_article_edit_form' || $form_id == 'node_article_form') {
+    // Attach the AJAX behavior to the 'field_subject_area'.
+    if (isset($form['field_type_of_article'])) {
+      $form['field_type_of_article']['widget']['#ajax'] = [
+        'callback' => 'bebbo_custom_general_custom_article_filter_categories',
+        'wrapper' => 'category-wrapper',
+        'event' => 'change',
+      ];
+    }
+    // Wrap the field_category field in a div so we can replace it via AJAX.
+    $form['field_content_category']['#prefix'] = '<div id="category-wrapper">';
+    $form['field_content_category']['#suffix'] = '</div>';
+    if (isset($form['field_content_category'])) {
+      $form['field_content_category']['widget']['#ajax'] = [
+        'callback' => 'bebbo_custom_general_dynamic_category_ajax_callback',
+        'wrapper' => 'subcategory-wrapper',
+        'event' => 'change',
+      ];
+    }
+    if (isset($form['field_subcategory'])) {
+      $form['field_subcategory']['#prefix'] = '<div id="subcategory-wrapper">';
+      $form['field_subcategory']['#suffix'] = '</div>';
+    }
+    $form['field_content_category']['widget']['#attributes']['disabled'] =
+      'disabled';
+    $form['field_subcategory']['widget']['#attributes']['disabled'] =
+      'disabled';
+  }
+}
+
+/**
+ * AJAX callback to filter Subcategory options.
+ */
+function bebbo_custom_general_dynamic_category_ajax_callback(array &$form, FormStateInterface $form_state) {
+  $selected_category = $form_state->getValue(['field_content_category', 0, 'target_id']);
+  // Logic to fetch subcategory options based on the selected category.
+  $subcategory_options = bebbo_custom_general_get_subcategory_options($selected_category);
+  // Update the options of the subcategory select field.
+  if (count($subcategory_options) > 1) {
+    $form['field_subcategory']['widget']['#options'] = $subcategory_options;
+    $form['field_subcategory']['widget']['#attributes']['disabled'] = NULL;
+  }
+  else {
+    $form['field_subcategory']['widget']['#options'] = $subcategory_options;
+    $form['field_subcategory']['widget']['#attributes']['disabled'] = NULL;
+    $form['field_subcategory']['widget']['#default_value'] = NULL;
+  }
+  // Return the updated subcategory field element.
+  return $form['field_subcategory'];
+}
+
+/**
+ * AJAX callback to filter Category options.
+ *
+ * Based on selected, Subject Area and Type of Article.
+ */
+function bebbo_custom_general_custom_article_filter_categories(array &$form, FormStateInterface $form_state) {
+  // Get the selected subject area and type of article.
+  $type_of_article = $form_state->getValue(['field_type_of_article', 0, 'target_id']);
+  $options = bebbo_custom_general_get_content_category_option($type_of_article);
+  if (count($options) > 1) {
+    $form['field_content_category']['widget']['#options'] = $options;
+    $form['field_content_category']['widget']['#attributes']['disabled'] = NULL;
+  }
+  else {
+    $form['field_content_category']['widget']['#default_value'] = NULL;
+  }
+  return $form['field_content_category'];
+}
+
+/**
+ * Get content category options.
+ */
+function bebbo_custom_general_get_content_category_option($type_of_article) {
+  if ($type_of_article) {
+    // Load categories and filter them based on the selected subject area and
+    // type of article.
+    $categories = \Drupal::entityTypeManager()->getStorage('taxonomy_term')
+      ->loadTree('category');
+    $options = ['_none' => '- Select a value -'];
+    foreach ($categories as $category) {
+      $term = Term::load($category->tid);
+      $category_type_of_article = $term->get('field_type_of_article')->target_id;
+      // Only include categories that match  type of article.
+      if ($category_type_of_article == $type_of_article) {
+        $options[$category->tid] = $category->name;
+      }
+    }
+    return $options;
+  }
+}
+
+/**
+ * Get subcategory options.
+ */
+function bebbo_custom_general_get_subcategory_options($category_id) {
+  // This is a placeholder function; replace with actual logic.
+  $options = ['_none' => '- Select a value -'];
+  // Replace with your vocabulary machine name.
+  $vid = 'subcategory';
+  $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+  $matched_terms = [];
+  foreach ($terms as $term) {
+    // Load the full term entity.
+    $term_entity = Term::load($term->tid);
+    // Check if the term has field_category with the specified ID.
+    if ($term_entity->hasField('field_category') && !$term_entity->get('field_category')->isEmpty()) {
+      $field_category = $term_entity->get('field_category')->getValue();
+      foreach ($field_category as $value) {
+        if ($value['target_id'] == $category_id) {
+          $matched_terms[] = $term->tid;
+          break;
+        }
+      }
+    }
+  }
+
+  if ($matched_terms) {
+    // Initialize an empty array to store term IDs and names.
+    $terms = Term::loadMultiple($matched_terms);
+    foreach ($terms as $term_id => $term) {
+      // Check if the term is loaded successfully.
+      if ($term) {
+        // Get the name of the term.
+        $options[$term_id] = $term->getName();
+      }
+    }
+  }
+  return $options;
 }
 
 /**
