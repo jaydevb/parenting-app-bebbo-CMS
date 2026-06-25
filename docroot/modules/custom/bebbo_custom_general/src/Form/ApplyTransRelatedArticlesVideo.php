@@ -28,11 +28,28 @@ class ApplyTransRelatedArticlesVideo extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
+    $form['help'] = [
+      '#type' => 'details',
+      '#title' => $this->t('How this works'),
+      '#open' => TRUE,
+      'body' => [
+        '#markup' => '<p>' . $this->t('This tool copies the <em>Related articles</em> and <em>Related video articles</em> set on the <strong>English</strong> version of a node onto <strong>all of its translations</strong>.') . '</p>'
+        . '<ul>'
+        . '<li>' . $this->t('It runs over <strong>every</strong> node of the selected content type — there is no per-node selection.') . '</li>'
+        . '<li>' . $this->t('For each English node, every related (video) article reference that is missing on a translation is appended to that translation. Existing references are left untouched and nothing is removed.') . '</li>'
+        . '<li>' . $this->t('Translations that already match English are skipped, so it is safe to run more than once.') . '</li>'
+        . '<li>' . $this->t('Processing happens in a batch and may take a while on large sites. A new revision is saved on each translation that is updated.') . '</li>'
+        . '</ul>'
+        . '<p>' . $this->t('Pick the content type below and select <em>Apply</em> to start.') . '</p>',
+      ],
+    ];
+
     $content_types = ['article' => 'Article', 'video_article' => 'Video Article'];
     /* Dropdown Select. */
     $form['content_types'] = [
       '#type' => 'select',
       '#title' => $this->t('Content type'),
+      '#description' => $this->t('Choose which content type to sync related references for across all translations.'),
       '#options' => $content_types,
     ];
 
