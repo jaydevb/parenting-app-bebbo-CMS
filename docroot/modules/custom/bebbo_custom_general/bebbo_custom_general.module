@@ -46,6 +46,10 @@ function bebbo_custom_general_form_alter(&$form, FormStateInterface $form_state,
     $form['#after_build'][] = 'bebbo_custom_general_entity_share_after_build';
   }
 
+  if (strpos($form_id, 'edit_form') !== FALSE && strpos($form_id, 'node') !== FALSE) {
+    $form['#validate'][] = 'bebbo_custom_general_node_validate';
+  }
+
   // node_article_edit_form //node_article_form.
   if ($form_id == 'node_article_edit_form' || $form_id == 'node_article_form') {
     // Attach the AJAX behavior to the 'field_subject_area'.
@@ -391,4 +395,30 @@ function bebbo_custom_general_group_country_save($form, FormStateInterface $form
     batch_set($batch);
   }
 
+}
+
+/**
+ * Validation handler: require a revision log when non-admins archive a node.
+ */
+function bebbo_custom_general_node_validate($form, FormStateInterface $form_state) {
+  $user = \Drupal::currentUser();
+  $roles = $user->getRoles();
+
+  $roles_arr = [
+    'administrator',
+    'global_admin',
+  ];
+
+  if ($form_state->getValue('moderation_state')[0]['value'] == 'archive') {
+    if (!array_intersect($roles_arr, $roles)) {
+      if (empty($form_state->getValue('revision_log')[0]['value'])) {
+        $form_state->setErrorByName('revision_log', t('Revision log message is required when archiving.'));
+      }
+      elseif (!empty($form_state->getValue('revision_log')[0]['value']) &&
+              strlen(trim($form_state->getValue('revision_log')[0]['value'])) < 3) {
+        $form_state->setErrorByName('revision_log',
+          t('Revision log message is required when archiving.'));
+      }
+    }
+  }
 }
