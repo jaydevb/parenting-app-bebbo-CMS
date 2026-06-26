@@ -2605,7 +2605,7 @@ display:
         filter_groups: false
       display_description: ''
       display_extenders: {  }
-      path: v1/api/country-groups/%
+      path: api/country-groups/%
     cache_metadata:
       max-age: -1
       contexts:

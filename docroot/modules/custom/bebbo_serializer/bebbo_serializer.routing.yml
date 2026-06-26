@@ -1,5 +1,5 @@
 bebbo_serializer.v1_check_update:
-  path: '/v1/api/check-update/{country}'
+  path: '/api/check-update/{country}'
   defaults:
     _controller: '\Drupal\bebbo_serializer\Controller\CheckUpdateController::checkUpdate'
     _title: 'Check Update (V1)'

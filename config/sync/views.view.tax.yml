@@ -1258,7 +1258,7 @@ display:
       group_by: true
       display_description: ''
       display_extenders: {  }
-      path: v1/api/taxonomies/%/%
+      path: api/taxonomies/%/%
       auth: {  }
     cache_metadata:
       max-age: -1
@@ -1397,7 +1397,7 @@ display:
       group_by: true
       display_description: ''
       display_extenders: {  }
-      path: v1/api/vocabularies/%
+      path: api/vocabularies/%
       auth: {  }
     cache_metadata:
       max-age: -1

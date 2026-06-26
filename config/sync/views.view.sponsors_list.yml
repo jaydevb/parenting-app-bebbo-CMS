@@ -1420,7 +1420,7 @@ display:
         fields: false
       display_description: ''
       display_extenders: {  }
-      path: v1/api/sponsors/%
+      path: api/sponsors/%
       auth: {  }
     cache_metadata:
       max-age: -1
