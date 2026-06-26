@@ -13,7 +13,7 @@ dependencies:
     - taxonomy
     - user
 id: tax
-label: tax
+label: 'Taxonomy, Vocabulary & Strings APIs'
 module: views
 description: ''
 tag: ''
