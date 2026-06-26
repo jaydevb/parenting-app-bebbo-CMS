@@ -13,7 +13,6 @@ folder: ../config/pakistan
 module: {  }
 theme: {  }
 complete_list:
-  - ai_translate.settings
   - block.block.claro_help_search
   - entity_share_client.import_config.config_production
   - field.field.group.country.field_app_name
@@ -25,6 +24,7 @@ complete_list:
   - bebbo_custom_general.language_redirects
   - system.site
 partial_list:
+  - ai_translate.settings
   - core.date_format.long
   - core.date_format.medium
   - core.date_format.short

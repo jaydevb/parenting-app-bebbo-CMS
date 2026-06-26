@@ -12,5 +12,5 @@ language_settings:
   es:
     model: ''
     prompt: ai_translate__ai_translate_default
-translation_status: keep_original
+translation_status: create_draft
 redirect_after_create: list
