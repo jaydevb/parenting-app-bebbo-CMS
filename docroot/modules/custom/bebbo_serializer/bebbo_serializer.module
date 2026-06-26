@@ -55,8 +55,6 @@ function bebbo_serializer_views_query_alter(ViewExecutable $view, QueryPluginBas
   $article_displays = [
     'bebbo_v2_apis' => 'articles_rest_export',
     'bebbo_v1_apis' => 'v1_articles_rest_export',
-    // Legacy /api/ article endpoint (old articles view).
-    'articles' => 'rest_export_2',
   ];
   if (!isset($article_displays[$view->id()]) || $view->current_display !== $article_displays[$view->id()]) {
     return;
@@ -496,67 +494,4 @@ function _bebbo_serializer_truncate_decimal($value): ?string {
   }
 
   return substr($str, 0, $dot + 3);
-}
-
-/**
- * Implements hook_views_post_execute().
- *
- * Avoids duplicate node entries in the legacy /api/ articles view displays
- * (pinned / related content), de-duplicating by the relevant relationship
- * field so the API output stays optimized.
- */
-function bebbo_serializer_views_post_execute(ViewExecutable $view) {
-  if ($view->id() == 'articles') {
-    $display = $view->getDisplay()->display['id'];
-    $dedupe = function (array $rows, string $field_name) {
-      $seen = [];
-      $result = [];
-      foreach ($rows as $row) {
-        $id = $row->{$field_name} ?? NULL;
-        if ($id && !in_array($id, $seen, TRUE)) {
-          $seen[] = $id;
-          $result[] = $row;
-        }
-      }
-      return $result;
-    };
-    switch ($display) {
-      // Child Growth Pinned Content API.
-      case 'rest_export_18':
-        // Milestone Related Content API.
-      case 'rest_export_20':
-        $view->result = $dedupe($view->result, 'node_field_data_node__field_related_articles_nid');
-        break;
-
-      // Health Check-Ups Pinned Content API.
-      case 'rest_export_17':
-        // FAQ Pinned Content API  // api/pinned-contents/en/faq.
-      case 'rest_export_1':
-        // FAQ Updated Pinned Content API
-        // api/updated-pinned-contents/en/faq.
-      case 'rest_export_21':
-        $view->result = $dedupe($view->result, 'node_field_data_node__field_pinned_article_nid');
-        break;
-
-      // Child Development Girl Pinned Content API
-      // api/pinned-contents/en/child_development/41.
-      case 'rest_export_16':
-        $view->result = $dedupe($view->result, 'node_field_data_node__field_pinned_article_for_girl_nid');
-        break;
-
-      // Vaccinations Pinned Content API.
-      case 'rest_export_12':
-        // Not able to test this as the data is empty.
-        break;
-
-      // Child Development Boy Pinned Content API
-      // api/pinned-contents/en/child_development/40.
-      case 'rest_export_19':
-        $view->result = $dedupe($view->result, 'node_field_data_node__field_pinned_article_for_boy_nid');
-        break;
-
-      // Case 'rest_export_2': // Article API.
-      default:
-    }
-  }
 }
