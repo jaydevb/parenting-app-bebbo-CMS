@@ -16,6 +16,7 @@ function bebbo_custom_general_update_10001(): string {
   $removed = [];
   $modules_to_remove = [
     'custom_serialization',
+    'pb_custom_rest_api',
     'pb_custom_standard_deviation',
   ];
 
