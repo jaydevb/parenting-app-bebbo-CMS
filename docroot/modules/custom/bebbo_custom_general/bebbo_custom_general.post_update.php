@@ -85,6 +85,67 @@ function bebbo_custom_general_post_update_remove_defunct_modules(): string {
 }
 
 /**
+ * Delete stale REST resource configs from removed modules.
+ *
+ * The pb_custom_rest_api module provided custom_rest_resource and
+ * v2_custom_rest_resource plugins. Their rest.resource.* configs crash
+ * cache rebuild after the module is removed. Also cleans up orphaned
+ * pb_custom_form configs whose module was merged into bebbo_custom_general.
+ */
+function bebbo_custom_general_post_update_remove_stale_rest_configs(): string {
+  $config_factory = \Drupal::configFactory();
+  $deleted = [];
+
+  $stale_configs = [
+    'rest.resource.custom_rest_resource',
+    'rest.resource.v2_custom_rest_resource',
+    'pb_custom_form.mobile_app_share_link_form',
+    'pb_custom_form.language_redirects',
+    'pb_custom_form.landing_pages',
+    'pb_custom_form.app_store_redirect',
+    'pb_custom_form.adminsettings',
+  ];
+
+  foreach ($stale_configs as $config_name) {
+    $config = $config_factory->getEditable($config_name);
+    if (!$config->isNew()) {
+      $config->delete();
+      $deleted[] = $config_name;
+    }
+  }
+
+  // Also catch any sites where the first post_update was auto-skipped:
+  // re-run the module removal from core.extension as a safety net.
+  $modules_to_remove = [
+    'custom_serialization',
+    'pb_custom_rest_api',
+    'pb_custom_standard_deviation',
+  ];
+  $config = $config_factory->getEditable('core.extension');
+  $module_list = $config->get('module') ?? [];
+  $extra_removed = [];
+  foreach ($modules_to_remove as $module) {
+    if (array_key_exists($module, $module_list)) {
+      unset($module_list[$module]);
+      $extra_removed[] = $module;
+    }
+  }
+  if ($extra_removed) {
+    $config->set('module', $module_list)->save();
+    \Drupal::database()->delete('key_value')
+      ->condition('collection', 'system.schema')
+      ->condition('name', $modules_to_remove, 'IN')
+      ->execute();
+  }
+
+  $log = $deleted ? 'Deleted stale configs: ' . implode(', ', $deleted) . '. ' : 'No stale configs found. ';
+  if ($extra_removed) {
+    $log .= 'Also removed missed modules: ' . implode(', ', $extra_removed) . '.';
+  }
+  return $log;
+}
+
+/**
  * Removes content stored in languages that are not configured on this site.
  *
  * The Entity Share content pull imported entity translations (and whole
