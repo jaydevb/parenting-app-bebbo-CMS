@@ -795,6 +795,45 @@ All notify the role only (author + site_mail notifications off).
 
 > ⚠️ **Stale permission string:** `country-member` carries `view group_membership content` — a leftover Group 1.x name. The Group 3.x equivalent is `view group_membership relationship`. Known issue, fix deferred (see project memory).
 
+### Groups & app names per site (DB-verified 2026-06-29)
+
+Each site holds one or more `country` group entities. The **group id is the "country ID"** consumed by the API: it is the `{country}` argument in `/api/check-update/{country}` (and the V2 variant) and the country whose content the `country-groups` / `country_listing` view serves. The **app name** comes from the group's `field_app_name` field. Group ids are local to each site's database (they restart at 1 on the country sites).
+
+**Default (Bebbo) — 18 groups** (there is **no** group `156`/Türkiye on the default site; Türkiye is the separate `turkey` site):
+
+| Group ID | Group | app_name |
+|---|---|---|
+| 6 | Albania | Bebbo |
+| 11 | Bulgaria | Bebbo |
+| 16 | Greece | Bebbo |
+| 21 | Kosovo | Foleja |
+| 26 | Kyrgyzstan | Bebbo |
+| 31 | Montenegro | Bebbo |
+| 36 | North Macedonia | Bebbo |
+| 41 | Serbia | Bebbo |
+| 46 | Tajikistan | Bebbo |
+| 51 | Uzbekistan | Bebbo |
+| 106 | Belarus | Bebbo |
+| 126 | Global - English | Bebbo |
+| 131 | Global - Russian | Bebbo |
+| 136 | Ukraine | Bebbo |
+| 141 | Romania | Bebbo |
+| 146 | Moldova | Bebbo |
+| 151 | Slovakia | Bebbo |
+| 161 | India | Bebbo |
+
+**Country sites** (each group id is local to its own site's DB):
+
+| Site | Group ID | Group | app_name |
+|---|---|---|---|
+| Bangladesh | 1 | Bangladesh | Babuni |
+| Turkey | 1 | Türkiye | merhababebek |
+| Ecuador | 1 | Ecuador | Wawamor |
+| Pakistan | 1 | Pakistan | pakistan |
+| Pacific Islands (somoa) | 1 | Samoa | BebboPacific |
+| Pacific Islands (somoa) | 6 | Fiji | BebboPacific |
+| Zimbabwe | 1 | Zimbabwe | reraiumntwana |
+
 ---
 
 ## 9. Languages & Translation
@@ -816,6 +855,22 @@ All notify the role only (author + site_mail notifications off).
 | Pacific Islands (Bebbo Pacific) | fj-en, fj-fj, ws-en, ws-sm |
 | Turkey | tr |
 | Zimbabwe | zw-en, zw-nd, zw-sn |
+
+### Per-site enabled languages (DB-verified 2026-06-29 — total 46)
+
+This table reflects the languages **actually enabled in each site's live database** (includes the shared base `en`), and is the authoritative per-site count. It can differ from the config-folder list above, which may carry staged or inactive language entities.
+
+| Site | Count | Languages (code — label) |
+|---|---|---|
+| Default (Bebbo) | 28 | en English · ru Russian · sq Albanian · al-sq Albania-Albanian · by-be Belarus-Belarusian · by-ru Belarus-Russian · bg-bg Bulgaria-Bulgarian · gr-el Greek · xk-sq Kosovo-Albanian · xk-rs Kosovo-Serbian · kg-ky Kyrgyzstan-Kyrgyz · kg-ru Kyrgyzstan-Russian · md-ro Moldova-Romanian · me-cnr Montenegro-Montenegrin · mk-mk North Macedonia-Macedonian · mk-sq North Macedonia-Albanian · ro Romanian · ro-ro Romania-Romanian · sr Serbian · rs-sr Serbia-Serbian · rs-en Serbia-English · sk Slovak · tj-tg Tajikistan-Tajik · tj-ru Tajikistan-Russian · uk Ukrainian · uz-uz Uzbekistan-Uzbek · uz-ru Uzbekistan-Russian · uz-kaa Uzbekistan-Karakalpak |
+| Bangladesh | 2 | en English · bn Bengali |
+| Turkey | 2 | en English · tr Turkish |
+| Ecuador | 3 | en English · es Spanish · ec-es Ecuador-Spanish |
+| Pakistan | 2 | en English · ur Urdu |
+| Pacific Islands (somoa) | 5 | en Global English · fj-fj Fijian · fj-en Fiji-English · ws-sm Samoan · ws-en Samoa-English |
+| Zimbabwe | 4 | en Global English · zw-en Zimbabwe-English · zw-sn Zimbabwe-Shona · zw-nd Zimbabwe-Ndebele |
+
+> Zimbabwe has **4** enabled languages including `zw-sn` Zimbabwe-Shona.
 
 ### Negotiation & locale
 | File | Setting | Value |
@@ -1015,7 +1070,7 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 | sme_review_pending | SME Review Pending | node_field_data |
 | sponsors_list | Sponsors List | groups_field_data |
 | standard_deviation_page | Standard Deviation | taxonomy_term_field_data |
-| tax | tax | taxonomy_term_field_data |
+| tax | Taxonomy, Vocabulary & Strings APIs | taxonomy_term_field_data |
 | taxonomy_export | Taxonomy Export | taxonomy_term_field_data |
 | taxonomy_export_standard_deviation | Taxonomy Export - Standard Deviation | taxonomy_term_field_data |
 | taxonomy_term | Taxonomy term | node_field_data |
@@ -1037,6 +1092,8 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 
 **Custom base tables** (from custom modules): `bebbo_api_challenges`, `bebbo_api_devices`, `bebbo_api_refresh_tokens`, `bebbo_api_security_log`, `pb_analytics_sync_log`, `forcefull_check_update_api`, `entity_import_status`.
 
+> The `tax` view (machine name `tax`) was relabelled "Taxonomy, Vocabulary & Strings APIs" (commit `a38edc6d1`); it serves the V1 `api/taxonomies/%/%`, `api/strings/%`, `api/vocabularies/%` and V2 `v2/api/...` displays.
+
 ---
 
 ## 16. Config Split Architecture
@@ -1053,7 +1110,9 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 | `turkey_site` | Turkey Site | `../config/turkey` | 134 |
 | `zimbabwe_site` | Zimbabwe Site | `../config/zimbabwe` | 84 |
 
-> **No split declares any extra `module:` or `theme:`.** All per-site customization is done via complete_list / partial_list config overrides.
+> **No split declares any extra `module:` or `theme:`** (verified: every split's `module:` and `theme:` field is `{ }`). All per-site customization is currently done via complete_list / partial_list config overrides.
+
+> **Module-installation rule (non-negotiable):** `core.extension.yml` lives **exclusively** in `config/sync/` and is the single source of truth for all 7 sites. **Never** add `core.extension` to a split's `complete_list` and **never** create `core.extension.yml` in a split folder. If a site needs a module the others don't, declare it in the `module:` field of that site's `config_split.config_split.{site}_site.yml`, then place that module's config YAML under the site's folder (`config/{folder}/`) and run `drush cim -y` on that site only.
 
 **Override categories per site:**
 - **All sites:** block, language entities, mobile_app_links, pb_custom_form, system.site
@@ -1062,6 +1121,11 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 - **Field overrides:** bangla, pakistan, somoa, turkey
 - **entity_share_server channels (~30):** somoa, zimbabwe (+ turkey, ecuador)
 - **workflows.workflow.group_workflow:** somoa, turkey, zimbabwe (complete_list)
+- **`views.view.bebbo_v1_apis`:** per-site split patches override the "Pregnancy" `child_age` TID used by the V1 articles/taxonomies pregnancy filter, since the TID differs per site (commit `5661b330f`).
+
+**Recent split-config changes:**
+- Per-site `child_age` TID patches added to `bebbo_v1_apis` so each site's pregnancy filter resolves the correct local term (`5661b330f`).
+- Ecuador `country_listing` View sort split-patch removed — the partial/stale removal of `sorts.label` left a Views sort handler stub missing its `table` key, crashing the ec-dev country-groups API; the Ecuador split patch now matches sync (`305f94702`).
 
 ### `config_ignore.settings.yml` — never imported/exported
 `admin_toolbar.settings`, `bebbo_api_security.settings`, `entity_share_client.remote*`, `mobile_app_links.android_packages`, `mobile_app_links.ios`, `pb_content_analytics.settings`, `pb_custom_form.landing_pages`, `pb_custom_form.language_redirects`, `pb_custom_form.mobile_app_share_link_form`, `purge.logger_channels`, `symfony_mailer.mailer_transport.office_365_oauth`, `symfony_mailer_office365.config`, `tmgmt.translator.*`, `tmgmt_memsource.settings`, `views.view.entity_share_client_entity_import_status`.
@@ -1073,3 +1137,5 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 ---
 
 *Generated from `config/sync/` and per-site split folders. All values read from actual YAML — no defaults assumed. Counts: 1,576 shared config files, 18 node types, 22 vocabularies, 4 media types, 68 views, 42 entity-share channels, 43 feed types, 207 migrations, 7 config splits.*
+
+*Verified 2026-06-29: config-split entity→folder mappings and empty `module:`/`theme:` fields confirmed against `config/sync/config_split.config_split.*.yml`; per-site enabled-language counts (total 46) and group/app-name tables DB-verified.*

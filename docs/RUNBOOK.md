@@ -2,7 +2,7 @@
 
 > **Audience:** developers and operators running, maintaining, and troubleshooting Bebbo locally and on Acquia.
 > **Scope:** day-to-day operational procedures — local lifecycle, per-site Drush, config import/export, code-quality gate, custom Drush commands, maintenance scripts, deploy steps, troubleshooting.
-> **Verified against:** repository `HEAD` (branch `develop`). Every command, alias, script path, and binary below was confirmed in the repo. Items that do **not** work as a naive reader might expect are flagged ⚠️. Deep dives live in the sibling docs linked in [§12](#12-related-docs).
+> **Verified against:** repository `HEAD` (branch `develop`), **Verified 2026-06-29**. Every command, alias, script path, and binary below was confirmed in the repo. Items that do **not** work as a naive reader might expect are flagged ⚠️. Deep dives live in the sibling docs linked in [§17](#17-related-docs).
 
 ---
 
@@ -190,7 +190,7 @@ Full pipeline walkthrough: [`CICD_DEPLOYMENT.md`](CICD_DEPLOYMENT.md). Operator 
 | To deploy to… | Do this | Result |
 |---------------|---------|--------|
 | **Dev** | push / merge to `develop` | CI runs, then `acli push:artifact @parentbuddy2.dev` (PHP 8.4) |
-| **Stage** | push / merge to `stage` | CI runs, then `acli push:artifact @parentbuddy2.test` (PHP 8.4) |
+| **Stage** | push / merge to `stage` | CI runs, then `acli push:artifact @parentbuddy2.test` (PHP 8.3) |
 | **Prod** | **manual only** | no `deploy-prod` job; cloud hook **skips** DB/config on prod |
 
 - `main` is **not** a deploy trigger.
@@ -486,13 +486,63 @@ Email TFA depends on working email delivery. If Symfony Mailer / OAuth is not co
 | `@ddev.<site>` "alias not found" | Both short keys and directory names are defined in `drush/sites/ddev.site.yml`. If still failing, run from project root and check the alias file (see [§3](#3-site--alias-map)). |
 | `composer post-create-project-cmd` fails: `blt: command not found` | ⚠️ Expected — `acquia/blt` is **not installed** (legacy). Don't run the create-project script. `composer nuke` is fine (it does not call blt). |
 | Config keeps re-importing / drift after `cim` | Confirm you exported from `@ddev.bebbo` and committed only the intended YAML; check the change belongs to `config/sync` vs the right `config/<folder>` split. |
+| Country API 500s with `Undefined array key "table"` (Views handler) | A config_split partial `removing:` block applied as a stale partial removal, leaving a Views handler (sort/filter/field) stub with no `table` key — e.g. the Ecuador `country_listing` sort patch crashing `/v2/api/country-groups/wawamor` (fixed in `305f94702`). **Fix:** drop the offending split patch and re-import that site's config so the split matches `config/sync` (handler then inherits the complete definition). Re-import: `ddev drush @ddev.<alias> cim -y && ddev drush @ddev.<alias> cr`. See [§16](#16-api-quick-reference-operators). |
 | Custom Drush command "writes nothing" | Most are dry-run by default — add `--execute` (file-sanitizer/rm-tr) once verified. |
 | `file-paths:fix` refuses to run | By design it will not run on the default site — target a country alias. |
 | Container / port issues | `ddev restart`, then `ddev poweroff && ddev start`. Check `ddev describe`. |
 
 ---
 
-## 15. Related Docs
+## 15. Site URLs Reference
+
+Per-site domains by environment (verified from `docroot/sites/sites.php`). Use these when checking a specific country site or pointing an Acquia `-l <site_name>` Drush call at the right environment.
+
+| Site | Prod | Stage | Dev | DDEV local |
+|------|------|-------|-----|------------|
+| Default (Bebbo) | bebbo.app | (bare Acquia env URL) | (bare Acquia env URL) | bebbo.app.ddev.site |
+| Bangladesh | babuni.app · bangla.bebbo.app | bangla-stage.bebbo.app | bangla-dev.bebbo.app | bangla.bebbo.app.ddev.site |
+| Turkey | merhababebek.app · tr.bebbo.app | tr-stage.bebbo.app | tr-dev.bebbo.app | tr.bebbo.app.ddev.site |
+| Ecuador | wawamor.ec · ec.bebbo.app | ec-stage.bebbo.app | ec-dev.bebbo.app | ec.bebbo.app.ddev.site |
+| Pakistan | pk.bebbo.app | pk-stage.bebbo.app | pk-dev.bebbo.app | pk.bebbo.app.ddev.site |
+| Pacific Islands (Bebbo Pacific) | ws.bebbo.app · bebbopacific.app | ws-stage.bebbo.app | ws-dev.bebbo.app | ws.bebbo.app.ddev.site |
+| Zimbabwe | umntwana.app · zw.bebbo.app · rerai.umntwana.app | zw-stage.bebbo.app | zw-dev.bebbo.app | zw.bebbo.app.ddev.site |
+
+> The **Default (Bebbo)** site has no `-stage`/`-dev` vanity host in `sites.php` — it resolves via the bare Acquia environment URL. Stage/Dev hosts for the country sites follow the pattern `<slug>-{stage,dev}.bebbo.app` (slugs `bangla tr ec pk ws zw`).
+
+---
+
+## 16. API Quick Reference (operators)
+
+Two REST surfaces are served by the `bebbo_serializer` module across all 7 sites. Full reference: [`API_REFERENCE.md`](API_REFERENCE.md) and [`API_SECURITY.md`](API_SECURITY.md).
+
+| Surface | Path prefix | Auth | Notes |
+|---------|-------------|------|-------|
+| **V1** | `/api/*` | **Public** (no JWT) | Serializer style `bebbo_v1_serializer`; view `bebbo_v1_apis` (22 displays) |
+| **V2** | `/v2/api/*` | **JWT** (Bearer) | Serializer style `bebbo_serializer`; view `bebbo_v2_apis` (20 displays) |
+
+JWT enforcement: the `bebbo_api_security` event subscriber protects **only** `/v2/api/*`. Clients obtain the token via the public device-security POST endpoints under `/api/security/*` (`register`, `device/register`, `device/verify`, `refresh`, `revoke`).
+
+**Common operator endpoints:**
+
+| Endpoint | Auth | Backing |
+|----------|------|---------|
+| `/api/check-update/{country}` | Public | `CheckUpdateController` (route `bebbo_serializer.v1_check_update`) |
+| `/v2/api/check-update/{country}` | JWT | Same controller; route has `no_cache: TRUE` (JWT page-cache bypass fix, `13ddbdcb7`) |
+| `/api/country-groups/{slug}` | Public | View `country_listing`; `{slug}` is an app/site slug (e.g. `wawamor`), **not** a language |
+| `/v2/api/country-groups/{slug}` | JWT | Same view, V2 display |
+| `/api/taxonomies/{lang}/all` | Public | View `tax`; `all` returns terms for every vocabulary |
+
+> `{country}` for check-update is a numeric group/country id (e.g. `126`). `{lang}` is a language code (`en`, `bn`, …).
+
+**When a country API 500s:**
+
+1. **`Undefined array key "table"`** (Views handler stub) → a config_split partial `removing:` block left a sort/filter/field handler without its `table` key. This is the recurring class of bug — e.g. the Ecuador `country_listing` sort patch crashing `/v2/api/country-groups/wawamor` (`305f94702`). **Fix:** delete the stale split patch and re-import that site's config so the split matches `config/sync` (`ddev drush @ddev.<alias> cim -y && cr`). See [§14](#14-troubleshooting).
+2. **Orphan group translations** → enabling Group translations produced duplicate/orphan rows that surface as 500s or duplicated `country-groups` output; the `country_listing` default display now carries a `default_langcode = 1` filter and an orphan-translation purge (`498ea5aaf`). If a fresh DB regresses, confirm that filter is present and re-import config.
+3. **Check the dblog first:** `ddev drush @ddev.<alias> ws --count=50` (or `/admin/reports/dblog`) to see the exact handler/route that threw.
+
+---
+
+## 17. Related Docs
 
 | Topic | Doc |
 |-------|-----|
@@ -502,3 +552,5 @@ Email TFA depends on working email delivery. If Symfony Mailer / OAuth is not co
 | Dependencies & third-party services | [`DEPENDENCIES.md`](DEPENDENCIES.md) |
 | Custom modules reference | [`MODULES.md`](MODULES.md) |
 | System architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| REST API endpoints (V1/V2) | [`API_REFERENCE.md`](API_REFERENCE.md) |
+| API auth, JWT, device security | [`API_SECURITY.md`](API_SECURITY.md) |

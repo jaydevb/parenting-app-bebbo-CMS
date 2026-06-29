@@ -1,5 +1,7 @@
 # CI/CD & Deployment
 
+> **Verified 2026-06-29** against `.github/workflows/pipelines.yml` and `hooks/common/code-deploy.sh`.
+
 Reference for the build, test, and deploy pipeline. Every claim below is sourced **directly from the files in the repo** — `.github/workflows/pipelines.yml`, the Acquia Cloud hooks under `hooks/`, `blt/`, `drush/sites/`, `buildspec.yml`, `composer.json`, and `phpcs.xml.dist`. Nothing is inferred from convention; where the repo contradicts itself (stale comments, version drift), that is called out explicitly.
 
 ---
@@ -58,7 +60,7 @@ All three quality gates must pass; both deploy jobs declare `needs: ci-checks`.
 
 ### Job 3 — `deploy-stage`
 - **Condition:** `github.event_name == 'push' && github.ref == 'refs/heads/stage'`
-- PHP **8.4**
+- PHP **8.3** (note: lower than `ci-checks`/`deploy-dev`, which use 8.4)
 - No composer step (acli builds the artifact; `ci-checks` already validated/installed)
 - Same Acquia CLI install / SSH / auth steps as `deploy-dev`
 - Clean state: `git reset --hard` + `git clean -fd` (note: **no `-x`**, unlike dev — open, see §10)
@@ -181,7 +183,7 @@ Per-environment module enable/uninstall lists (`modules:` in `blt.yml`) — woul
 ## 9. Platform Facts
 
 - **Drupal core:** `drupal/core-recommended: ^11.2` (`composer.json`)
-- **PHP:** 8.4 across CI and deploy jobs
+- **PHP:** 8.4 for `ci-checks` and `deploy-dev`; **8.3** for `deploy-stage` (`pipelines.yml` line 109)
 - **Hosting:** Acquia Cloud, application `parentbuddy2`, realm `devcloud`
 - **Multisite:** 7 sites (`hooks/sites.sh`): default, bangladesh, ecuador, pakistan, somoa, turkey, zimbabwe
 - **Artifact deploy:** Acquia CLI `acli push:artifact` (builds a deploy artifact and pushes to the Acquia Git env)

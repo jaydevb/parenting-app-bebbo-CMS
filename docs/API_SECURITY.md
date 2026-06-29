@@ -2,7 +2,7 @@
 
 > **Audience:** backend maintainers, mobile-integration engineers, security reviewers, operations.
 > **Scope:** the `bebbo_api_security` custom module end-to-end — device attestation, JWT issuance/validation, request enforcement, data model, configuration, admin UI, and operations.
-> **Verified against:** `docroot/modules/custom/bebbo_api_security/` at repository `HEAD` (branch `feature/group3-manage-users`). Every endpoint, field, default, and behavior below was read from the module source, not from prior documentation. Where a config key or method exists but is **not wired into runtime behavior**, that is called out explicitly (see [§13 Known gaps](#13-known-gaps--not-wired)).
+> **Verified against:** `docroot/modules/custom/bebbo_api_security/` at repository `HEAD` (branch `bug/issue-fixes`), **verified 2026-06-29**. Every endpoint, field, default, and behavior below was read from the module source, not from prior documentation. Where a config key or method exists but is **not wired into runtime behavior**, that is called out explicitly (see [§13 Known gaps](#13-known-gaps--not-wired)).
 > **No GraphQL.** This module protects REST only. See `ARCHITECTURE.md`.
 
 ---
@@ -17,6 +17,8 @@ The V2 content API (`/v2/api/*`) returns public content and historically had **n
 4. Tokens are refreshed before expiry; devices re-attest after the refresh token expires.
 
 There are **no end-user accounts** — authentication is per device. The module is **backend-only**; the mobile team builds the client side.
+
+> **Out of scope (related control):** this module guards the *read* API only. File-upload security — SVG sanitization and filename validation on CMS uploads — is a separate concern owned by the `file_sanitizer` module, not `bebbo_api_security`.
 
 - **Module:** `docroot/modules/custom/bebbo_api_security/`
 - **Info:** `name: Bebbo API Security`, `core_version_requirement: ^10 || ^11`, dependencies `drupal:key`, `drupal:views`, `view_custom_table:view_custom_table`.
@@ -312,6 +314,24 @@ So out of the box: **`/v2/api/*` is protected (this covers `/v2/api/check-update
 > The `/api/check-update/` pattern was removed from the protected set (commit `ba49af17a`); `isProtectedPath()` start-anchors each pattern, so it would otherwise have JWT-gated the public V1 `/api/check-update/` path on a fresh install. The V2 path stays protected via the `/v2/api/` prefix.
 
 Rollout: `disabled` → `grace_period` (monitor) → `enforced`. Rollback is a config flip, no deploy.
+
+### 5.2 Page-cache bypass on `/v2/api/check-update/` (`no_cache: TRUE`)
+
+`isProtectedPath()` runs in this subscriber at `KernelEvents::REQUEST` priority **300**, but Drupal's internal **page-cache middleware runs earlier**, before the kernel dispatches that event. A cacheable `200` produced by one authenticated request is therefore stored by URL and can be replayed from the page cache to later *anonymous* requests for the same path — never reaching the subscriber. On a JWT-gated route that is a silent auth bypass.
+
+The fix (commit `13ddbdcb7`) marks the **V2** check-update route `no_cache: TRUE`, so the page-cache middleware never stores or serves it; every request falls through to the kernel and the subscriber enforces JWT. The **V1** route stays page-cacheable because it is public by design (it carries no `options`).
+
+```yaml
+# bebbo_serializer.routing.yml
+bebbo_serializer.v1_check_update:        # /api/check-update/{country}
+  requirements: { _access: 'TRUE' }      # public, no options → page-cacheable
+bebbo_serializer.v2_check_update:        # /v2/api/check-update/{country}
+  requirements: { _access: 'TRUE' }      # public route; JWT enforced by subscriber
+  options:
+    no_cache: TRUE                        # JWT-gated: never page-cache (bypass fix)
+```
+
+The same `no_cache: TRUE` guard is set on all five `/api/security/*` routes (§4): they are excluded from JWT enforcement, but each issues per-device tokens and must never be cached.
 
 ---
 

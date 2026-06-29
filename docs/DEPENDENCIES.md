@@ -2,7 +2,8 @@
 
 > **Audience:** maintainers, code reviewers, onboarding developers, operations.
 > **Scope:** every Composer-managed dependency (runtime + dev), version constraints, applied patches, Composer tooling configuration, and the external services the codebase talks to.
-> **Verified against:** repository `HEAD` (branch `feature/group3-manage-users`). Declared constraints were read from `composer.json`; locked versions were read from `composer.lock`. Patch file existence was confirmed on disk. Nothing below is copied from older documentation — where this doc disagrees with any older note, the live files (`composer.json` / `composer.lock`) win.
+> **Verified against:** repository `HEAD`. Declared constraints were read from `composer.json`; locked versions were read from `composer.lock`. Patch file existence was confirmed on disk. Nothing below is copied from older documentation — where this doc disagrees with any older note, the live files (`composer.json` / `composer.lock`) win.
+> **Verified 2026-06-29** (branch `bug/issue-fixes`): composer facts re-confirmed and custom-module `dependencies:` re-read from each `.info.yml`.
 
 ---
 
@@ -10,7 +11,7 @@
 
 | Property | Value | Source |
 |----------|-------|--------|
-| Drupal core | **11.3.11** | `composer.lock` (`drupal/core`) |
+| Drupal core | **11.3.12** | `composer.lock` (`drupal/core`) |
 | Core constraint | `drupal/core-recommended ^11.2` | `composer.json` `require` |
 | PHP | **>= 8.4** (platform pinned `8.4`) | `composer.json` `require.php`, `config.platform.php` |
 | Drush | **13.7.3** (constraint `^13`) | `composer.lock`, `composer.json` |
@@ -18,7 +19,7 @@
 | Locked dev packages | **55** (incl. transitive) | `composer.lock` `packages-dev` |
 | Stability | `minimum-stability: dev`, `prefer-stable: true` | `composer.json` |
 | Patches applied | **22** entries (19 local files + 3 remote URLs) | `composer.json` `extra.patches` |
-| Content hash | `db599aab400f1adbaec3e943065422d4` | `composer.lock` |
+| Content hash | `282c6de1fb5369ec6f58aedad960587a` | `composer.lock` |
 
 > **Counts are total locked packages** (direct + transitive dependencies), not the count of `require` entries. `composer.json` directly declares ~122 runtime + 11 dev packages; Composer resolves the rest.
 
@@ -293,11 +294,12 @@ Exact strings from `composer.lock`. These are the **installed** versions, not th
 | `drupal/views_data_export` | `1.10.0` |
 | `drupal/feeds` | `3.2.0` |
 | `drupal/migrate_plus` | `6.0.10` |
-| `drupal/ai` | `1.4.1` |
+| `drupal/ai` | `1.4.2` |
 | `drupal/webp` | `1.0.0-rc2` |
 | `drupal/imagemagick` | `5.0.1` |
 | `drupal/csv_serialization` | `4.0.1` |
-| `firebase/php-jwt` | `v7.0.5` |
+| `drupal/google_analytics` | `4.0.3` |
+| `firebase/php-jwt` | `v7.1.0` |
 | `enshrined/svg-sanitize` | `0.22.0` |
 | `spomky-labs/cbor-php` | `3.2.3` |
 
@@ -383,7 +385,24 @@ What the codebase reaches out to over the network, and which dependency drives i
 | OpenAI | `ai` + `ai_provider_openai` | AI API | AI-assisted translation/content |
 | BigQuery | **custom** `pb_content_analytics` | HTTP analytics | No contrib package — custom HTTP sync (see `MODULES.md`) |
 | Apple App Attest / Google Play Integrity | **custom** `bebbo_api_security` | Device attestation | Uses `firebase/php-jwt` + `spomky-labs/cbor-php` + OpenSSL; not a contrib integration package (see `API_SECURITY.md`) |
-| Microsoft 365 (Office 365 OAuth mail) | `symfony_mailer` + `symfony_mailer_office365` | Mail | OAuth 2.0 (Authorization Code) via `smtp.office365.com:587`; sends as `admin@bebbo.app`. Replaced `drupal/smtp` (Basic Auth blocked by M365 Security Defaults). OAuth credentials managed per-environment via `config_ignore`. See [`CONFIGURATION.md`](CONFIGURATION.md) §1 and [`RUNBOOK.md`](RUNBOOK.md) §14 |
+| Microsoft 365 (Office 365 OAuth mail) | `symfony_mailer` + `symfony_mailer_office365` | Mail | OAuth 2.0 (Authorization Code) via `smtp.office365.com:587`; sends as `admin@bebbo.app`. Intended to supersede `drupal/smtp` (Basic Auth blocked by M365 Security Defaults), but **both `drupal/smtp ^1.0` and `drupal/symfony_mailer ^1.4` remain declared in `composer.json`** (smtp not yet removed). OAuth credentials managed per-environment via `config_ignore`. See [`CONFIGURATION.md`](CONFIGURATION.md) §1 and [`RUNBOOK.md`](RUNBOOK.md) §14 |
 | Acquia Cloud (Varnish/CDN, memcache) | `acquia_connector` · `acquia_purge` · `memcache` · `acquia/memcache-settings` | Hosting/cache | Production platform |
+
+---
+
+## 9. Custom Module Dependencies
+
+There are **13** custom modules under `docroot/modules/custom/`, all enabled (full inventory + functionality in [`MODULES.md`](MODULES.md)). The table below lists only the `dependencies:` each declares in its `.info.yml` — i.e. what each module pulls in beyond core. Modules with no `dependencies:` key (`bebbo_custom_general`, `custom_article`, `file_sanitizer`, `group_country_field`, `pb_content_analytics`, `pb_custom_field`, `pb_custom_form`) are omitted.
+
+| Module | Declared `dependencies:` |
+|--------|--------------------------|
+| `bebbo_api_security` | `drupal:key` · `drupal:views` · `view_custom_table:view_custom_table` |
+| `bebbo_serializer` | `drupal:rest` · `drupal:serialization` · `language_visibility_control:language_visibility_control` |
+| `language_custom_field` | `field:field` · `field:field_ui` |
+| `language_visibility_control` | `group:group` · `drupal:language` |
+| `pb_custom_migrate` | `drupal:system (>=8.3)` · `drupal:migrate` · `drupal:migrate_drupal` · `drupal:migrate_plus` · `drupal:migrate_tools` · `drupal:migrate_source_csv` · `drupal:node` · `drupal:taxonomy` · `drupal:content_translation` |
+| `pb_strings` | `drupal:taxonomy` · `drupal:content_translation` |
+
+> **New in the V1/V2 API + device-security work:** `bebbo_api_security` introduced the hard `drupal:key` dependency (JWT signing key + Google service-account key) and `view_custom_table` (its 4 storage views); `bebbo_serializer` depends on `language_visibility_control` for API language filtering. The Composer-level libraries these use — `firebase/php-jwt`, `spomky-labs/cbor-php`, plus the `drupal/mobile_app_links` `.well-known` files — are listed in [§3.14](#314-security--auth-primitives)/[§3.15](#315-mail--mobile). `bebbo_serializer` supersedes the removed `pb_custom_rest_api` + `custom_serialization` + `pb_custom_standard_deviation` modules.
 
 ---

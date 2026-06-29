@@ -2,7 +2,7 @@
 
 > **Audience:** new developers, maintainers, support, and operations.
 > **Scope:** high-level architecture, multisite topology, configuration layering, request/serving flow, and access model. Deep dives live in the sibling docs referenced throughout.
-> **Verified against:** repository `HEAD` on branch `feature/group3-manage-users`. All version numbers and structural facts below were read directly from the codebase, not copied from older documentation.
+> **Verified against:** repository `HEAD` on branch `bug/issue-fixes`, **verified 2026-06-29**. All version numbers and structural facts below were read directly from the codebase, not copied from older documentation.
 
 ---
 
@@ -12,7 +12,7 @@ Bebbo (a.k.a. *Parent Buddy*) is the **headless Drupal CMS** behind UNICEF's par
 
 | Property | Value | Source |
 |----------|-------|--------|
-| Drupal core | **11.3.11** | `composer.lock` (`drupal/core`) |
+| Drupal core | **11.3.12** | `composer.lock` (`drupal/core`) |
 | PHP | **>= 8.4** | `composer.json` `require.php`; DDEV `php_version: "8.4"` |
 | Database | MariaDB (DDEV local; **10.11**) | `.ddev/config.yaml` |
 | CLI tooling | **Drush ^13** | `composer.json` |
@@ -224,20 +224,21 @@ The codebase is standard Drupal layering: **core + contrib + custom**, plus comp
 |-------|-------|---------------|
 | Drupal core | `docroot/core` | 11.3.11 |
 | Contrib modules | `docroot/modules/contrib` | ~100+ packages (full list + versions in `DEPENDENCIES.md`) |
-| Custom modules | `docroot/modules/custom` | **15 modules** (below) |
+| Custom modules | `docroot/modules/custom` | **13 modules** (below) — _Verified 2026-06-29_ |
 | Custom themes | `docroot/themes/custom` | none — admin/default theme is contrib **Gin** |
 | Patches | `patches/` + `composer.json` `extra.patches` | core, content_moderation, tmgmt, group, lang_dropdown, etc. |
 
-### 6.1 Custom modules (verified by `*.info.yml`)
+### 6.1 Custom modules (verified by `*.info.yml` + `core.extension.yml`, _Verified 2026-06-29_)
+
+The **13** custom modules below were verified on disk in `docroot/modules/custom/` and in `config/sync/core.extension.yml`. The former `custom_serialization` (V1 serializer), `pb_custom_rest_api` (force/check-update REST resource), and `pb_custom_standard_deviation` modules have been **removed** — their logic was consolidated into `bebbo_serializer` (V1+V2 serialization, `standard_deviation`, check-update controller). The two primary API/utility modules are now `bebbo_serializer` and `bebbo_custom_general`.
 
 | Module | Role (one line) |
 |--------|-----------------|
-| `bebbo_serializer` | V2 REST API — Views style plugin, serialization/transform engine, pre-computed fields, Course/Quiz form logic; also serves the Strings API (`/api/strings`, `/v2/api/strings`) and the Force-Update / check-update endpoint (`/api/check-update`, `/v2/api/check-update` via `CheckUpdateController`) |
-| `custom_serialization` | V1 REST API — legacy serializer style plugin |
-| `pb_custom_standard_deviation` | Standard deviation validation API |
-| `bebbo_api_security` | Device attestation (Apple/Google/sideloaded) + JWT issuance & enforcement for the API |
+| `bebbo_serializer` | **Primary API module** — V1 **and** V2 REST serialization via two Views style plugins (`bebbo_v1_serializer` for `/api/*`, `bebbo_serializer` for `/v2/api/*`): transform engine, pre-computed fields, image/media + WebP resolution, `?pregnancy` / `?datetime` query handling; also serves the Strings API and the Force-Update / check-update endpoints (`/api/check-update`, `/v2/api/check-update` via `CheckUpdateController`). Supersedes the removed `custom_serialization` + `pb_custom_rest_api` + `pb_custom_standard_deviation`. |
+| `bebbo_custom_general` | **Extracted-utilities module** — catch-all for logic decomposed out of `pb_custom_form`: Entity Share CSV export, TMGMT overview/cart UX, app-store QR redirect + master-language settings, redirect management, mobile-JS share pages, node-action helpers, article category AJAX cascade, `group_country` form_alter, archive-validation, orphan-language `post_update`. |
+| `bebbo_api_security` | **JWT / device-auth layer for V2** — device attestation (Apple/Google/sideloaded EC pubkey) + JWT issuance & enforcement; `ApiSecuritySubscriber` gates `/v2/api/*`; public POST `/api/security/{register,device/register,device/verify,refresh,revoke}` bootstrap auth and mint the JWT. |
 | `pb_custom_field` | Field alterations, content workflow actions, group-based node access, admin-route subscriber, RTL admin CSS |
-| `pb_custom_form` | Admin config pages: Force Update API, Mobile JS, Master Languages, App Store Redirect |
+| `pb_custom_form` | Admin config pages: Force Update API table; now reduced to `my_goto` helper after the `bebbo_custom_general` extraction |
 | `pb_content_analytics` | BigQuery engagement sync (like/read counts), analytics reports, CSV export UI |
 | `group_country_field` | Group-based country field, View query/exposed-form alters, moderated-content report |
 | `language_visibility_control` | Per-group language visibility rules for the mobile API |
@@ -280,14 +281,27 @@ flowchart TB
 
 ## 8. Request / Serving Flow (Mobile API)
 
-How a content request from the app becomes JSON.
+Bebbo exposes **two parallel REST API surfaces** — both implemented as Drupal **Views REST exports** with custom serializer **style plugins**, plus a handful of controller routes. _Verified 2026-06-29 from view `path:` values, view `style:` plugins, and the `bebbo_serializer` / `bebbo_api_security` routing files._
+
+| | **V1** | **V2** |
+|---|--------|--------|
+| Path prefix | `/api/*` | `/v2/api/*` |
+| Auth | **Public** (no JWT) | **JWT-protected** (Bearer) |
+| Serializer style plugin | `bebbo_v1_serializer` | `bebbo_serializer` |
+| Content view | `bebbo_v1_apis` (22 displays) | `bebbo_v2_apis` (20 displays) |
+| Taxonomy / vocab / strings view | `tax` (V1 displays) | `tax` (V2 displays) |
+| Country-groups view | `country_listing` (V1 display) | `country_listing` (V2 display) |
+| Sponsors view | `sponsors_list` → `/api/sponsors/%` | _(none — V1 only)_ |
+| Controller routes | `CheckUpdateController` → `/api/check-update/{country}` | `CheckUpdateController` → `/v2/api/check-update/{country}` (`no_cache: TRUE` — JWT-bypass fix) |
+
+Both serializer plugins share the `BebboSerializerHelpers` trait and emit the same `{status,total,langcode,datetime,data}` envelope; `bebbo_v1_serializer` emits plain (escaped) JSON for byte-parity with the legacy V1 contract. V2 adds `course`, `guide`, `quiz`, and `weekly-overview`; V1 keeps the fuller pinned/related-content set. Device-security bootstrapping lives in `bebbo_api_security` controller routes — five public POST endpoints (`no_cache`): `/api/security/register`, `/api/security/device/register`, `/api/security/device/verify`, `/api/security/refresh`, `/api/security/revoke` — through which a device obtains the JWT used for `/v2/api/*`.
 
 ```mermaid
 sequenceDiagram
     participant App as Mobile App
     participant Sec as bebbo_api_security<br/>(KernelEvents::REQUEST)
     participant Route as Drupal routing / Views
-    participant Ser as Serializer plugin<br/>(bebbo_serializer / custom_serialization)
+    participant Ser as Serializer style plugin<br/>(bebbo_v1_serializer / bebbo_serializer)
     participant DB as MariaDB
     participant MC as Memcache
 
