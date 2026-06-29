@@ -990,13 +990,24 @@ class BebboSerializer extends Serializer {
     $toUniqueName = [];
     $toBasic      = [];
 
-    foreach ($rows as $row) {
-      $vocabInfo    = explode(',', $row['vid'] ?? '', 2);
-      $vocabMachine = trim($vocabInfo[0]);
-      if ($vocabMachine === '' || $vocabMachine === 'keywords') {
-        // Skip empty entries and the keywords vocab (matches V1 behaviour).
+    // Derive vocabulary machine names from the view's result rows via the vid
+    // field handler rather than the rendered "vid" row output. The display's
+    // vid field uses an alter_text template ({{ vid__target_id }},{{ vid }})
+    // whose tokens resolve under Drupal 10 but return an empty string under
+    // Drupal 11, which would otherwise skip every vocabulary here. getValue()
+    // reads the raw bundle value directly and is token-independent.
+    $vidField = $this->view->field['vid'] ?? NULL;
+    $seen = [];
+    foreach ($this->view->result as $resultRow) {
+      $vocabMachine = $vidField !== NULL
+        ? trim((string) $vidField->getValue($resultRow))
+        : '';
+      if ($vocabMachine === '' || $vocabMachine === 'keywords' || isset($seen[$vocabMachine])) {
+        // Skip empty entries, the keywords vocab (matches V1 behaviour), and
+        // duplicates.
         continue;
       }
+      $seen[$vocabMachine] = TRUE;
 
       if (in_array($vocabMachine, $specialtyVocabs, TRUE)) {
         $toSpecialty[] = $vocabMachine;
