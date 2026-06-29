@@ -24,4 +24,3 @@ pb_custom_form.ForceUpdateCheckForm:
     _title: 'Force Update Settings'
   requirements:
     _permission: 'forcefull update check'
-
