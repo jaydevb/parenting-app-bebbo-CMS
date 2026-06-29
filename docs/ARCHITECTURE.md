@@ -182,7 +182,7 @@ flowchart TB
 
 ### 4.1 Module installation rule (critical)
 
-`core.extension.yml` lives **only** in `config/sync` and is the single source of truth for enabled modules across all 7 sites (**171 modules + 2 themes enabled** at `HEAD`). A site needing an extra module declares it in the `module:` field of its split entity — **never** by adding `core.extension` to a split. Details and the editing workflow are in **`CONFIGURATION.md`**.
+`core.extension.yml` lives **only** in `config/sync` and is the single source of truth for enabled modules across all 7 sites (**169 modules + 2 themes enabled** at `HEAD`). A site needing an extra module declares it in the `module:` field of its split entity — **never** by adding `core.extension` to a split. Details and the editing workflow are in **`CONFIGURATION.md`**.
 
 ---
 
@@ -222,7 +222,7 @@ The codebase is standard Drupal layering: **core + contrib + custom**, plus comp
 
 | Layer | Where | Count / notes |
 |-------|-------|---------------|
-| Drupal core | `docroot/core` | 11.3.11 |
+| Drupal core | `docroot/core` | 11.3.12 |
 | Contrib modules | `docroot/modules/contrib` | ~100+ packages (full list + versions in `DEPENDENCIES.md`) |
 | Custom modules | `docroot/modules/custom` | **13 modules** (below) — _Verified 2026-06-29_ |
 | Custom themes | `docroot/themes/custom` | none — admin/default theme is contrib **Gin** |

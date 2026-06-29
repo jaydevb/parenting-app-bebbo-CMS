@@ -115,7 +115,6 @@ Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API**
 | `hook_node_presave` | Populates `field_number_of_modules` (course), `field_number_of_questions` (quiz), truncates height/weight decimals (pregnancy_weekly_overview), auto-populates `field_embedded_images` and `field_body_rendered` for published nodes |
 | `hook_node_predelete` | Deletes orphaned quiz_questions nodes when quiz node deleted |
 | `hook_views_query_alter` | Adds Pregnancy term to child_age filter when `?pregnancy=true` on the V1 + V2 articles endpoints |
-| `hook_views_post_execute` | De-duplicates pinned/related rows on migrated displays |
 | `hook_form_alter` | Makes module/question count fields readonly on course/quiz forms; validates course expiry, passing score, question count |
 | `hook_inline_entity_form_translation_restrict_alter` | Allows adding new course modules on translation forms |
 | `hook_inline_entity_form_entity_form_alter` | Renames IEF "Add another item" → "Add another answer" on quiz forms |
@@ -147,7 +146,7 @@ Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API**
 
 - `10001`: Deletes orphaned paragraph and consumer entities
 - `10002`: Migrates `field_content_toggle` value `ai_chatbot` → `chatbot`
-- `10003`: Migrates `field_content_toggle` allowed values to machine names, sets canonical field storage config
+- `10003`: Migrates `field_content_toggle` data values (`chatbot`/`Chatbot` → `ai_chatbot`, etc.) to machine names and sets the canonical field storage `allowed_values` (this reverses the intermediate `ai_chatbot` → `chatbot` of `10002`; the canonical machine value is `ai_chatbot`)
 
 > **Supersedes** the removed `pb_custom_rest_api` (check-update), `custom_serialization` (V1 serialization), and `pb_custom_standard_deviation` (V1 standard-deviation transform) — see [Removed modules](#removed-modules).
 
@@ -198,7 +197,7 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 | `hook_query_TAG_alter` (`tmgmt_entity_get_translatable_entities`) | Node ID filter/sort on the translatable-entities query |
 | `hook_menu_local_tasks_alter` | Adds TMGMT Job Items/Jobs/Sources/Cart/Providers/Settings local tasks |
 | `hook_preprocess_page` | TMGMT route cache context |
-| `hook_node_validate` | Requires a revision log when a non-admin sets a node to the archive moderation state |
+| `bebbo_custom_general_node_validate` (form `#validate` handler) | Attached to node edit/add forms via `hook_form_alter`; requires a revision log when a non-admin sets a node to the archive moderation state |
 
 > **Dead-code note:** `bebbo_custom_general_pb_custom_field_preprocess_views_view_field()` was moved verbatim from `pb_custom_form` (slice 4/5). Its name does not match the `{module}_preprocess_{hook}` pattern, so the theme registry never registers it — it remains a no-op, with a `@todo` documenting how to enable it.
 
@@ -221,6 +220,8 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 
 ### Post-Update Hooks
 
+- `remove_defunct_modules`: uninstalls/removes modules no longer in use before config import.
+- `remove_stale_rest_configs`: removes stale REST resource config entities.
 - `clean_orphan_language_content`: per-site, runs on `drush updb` — discovers content in non-configured languages (Entity Share import leftovers) and triages each (remove orphan translation / delete entirely-foreign entity / re-langcode to site default). Idempotent.
 
 ---
@@ -354,6 +355,8 @@ Now a small module after most of its grab-bag was decomposed into [`bebbo_custom
 
 The module-level hooks were moved to `bebbo_custom_general` / `bebbo_serializer`. The only remaining `.module` code is the helper `pb_custom_form_my_goto()` (a redirect utility used by the force-update forms).
 
+> **Dead-code note:** `pb_custom.links.action.yml` declares an action link referencing routes `pb_custom_redirects.add` / `pb_custom_redirects.list`, which exist in no module — these action links are orphaned and non-functional.
+
 ### Database Table
 
 **`forcefull_check_update_api`** — stores force-update flags per country per update type. Read by `bebbo_serializer`'s `CheckUpdateController`. Schema details in [`API_REFERENCE.md` §9.1](API_REFERENCE.md#91-forcefull_check_update_api-table-schema).
@@ -479,7 +482,7 @@ Controls which languages appear in the mobile app API per country group. Adds a 
 
 ### Install
 
-Creates `field_language_visibility_in_app` (string field, unlimited cardinality, max_length 32) on group entities.
+Creates `field_language_visibility_in_app` (string field, unlimited cardinality, max_length 32) on the `country` group bundle.
 
 ### Key Methods (`LanguageVisibilityService`)
 

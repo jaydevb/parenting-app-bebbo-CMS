@@ -15,13 +15,13 @@
 | Core constraint | `drupal/core-recommended ^11.2` | `composer.json` `require` |
 | PHP | **>= 8.4** (platform pinned `8.4`) | `composer.json` `require.php`, `config.platform.php` |
 | Drush | **13.7.3** (constraint `^13`) | `composer.lock`, `composer.json` |
-| Locked runtime packages | **256** (incl. transitive) | `composer.lock` `packages` |
-| Locked dev packages | **55** (incl. transitive) | `composer.lock` `packages-dev` |
+| Locked runtime packages | **262** (incl. transitive) | `composer.lock` `packages` |
+| Locked dev packages | **52** (incl. transitive) | `composer.lock` `packages-dev` |
 | Stability | `minimum-stability: dev`, `prefer-stable: true` | `composer.json` |
-| Patches applied | **22** entries (19 local files + 3 remote URLs) | `composer.json` `extra.patches` |
-| Content hash | `282c6de1fb5369ec6f58aedad960587a` | `composer.lock` |
+| Patches applied | **30** entries (22 local files + 8 remote URLs) | `composer.json` `extra.patches` |
+| Content hash | `afe646e7271863fec441f548a24a4208` | `composer.lock` |
 
-> **Counts are total locked packages** (direct + transitive dependencies), not the count of `require` entries. `composer.json` directly declares ~122 runtime + 11 dev packages; Composer resolves the rest.
+> **Counts are total locked packages** (direct + transitive dependencies), not the count of `require` entries. `composer.json` directly declares 120 runtime + 11 dev packages; Composer resolves the rest.
 
 ---
 
@@ -221,6 +221,7 @@ Grouped by function for readability. **Constraint** is the exact string from `co
 | `drupal/lang_dropdown` | `^2.4` |
 | `drupal/menu_link_attributes` | `^1.7` |
 | `drupal/menu_export` | `^1.7` |
+| `drupal/google_analytics` | `^4.0` |
 
 ### 3.13 Admin UI & developer tools
 
@@ -252,6 +253,7 @@ Grouped by function for readability. **Constraint** is the exact string from `co
 
 | Package | Constraint | Role |
 |---------|-----------|------|
+| `drupal/smtp` | `^1.0` | SMTP mail transport (Basic Auth; superseded by Symfony Mailer O365, not yet removed) |
 | `drupal/symfony_mailer` | `^1.4` | Symfony Mailer framework (mail transport layer) |
 | `drupal/symfony_mailer_office365` | `^1.0@alpha` | Office 365 OAuth (XOAUTH2) transport for Symfony Mailer |
 | `drupal/mobile_app_links` | `^2.0` | `.well-known` deep-link files |
@@ -277,7 +279,7 @@ Exact strings from `composer.lock`. These are the **installed** versions, not th
 
 | Package | Locked version |
 |---------|----------------|
-| `drupal/core` / `drupal/core-recommended` | `11.3.11` |
+| `drupal/core` / `drupal/core-recommended` | `11.3.12` |
 | `drush/drush` | `13.7.3` |
 | `drupal/group` | `3.3.5` |
 | `drupal/access_policy` | `2.0.0-rc1` |
@@ -329,7 +331,7 @@ The CI quality gate (`.github/workflows/pipelines.yml`) runs `composer validate`
 
 ## 6. Patches (`extra.patches`)
 
-Applied by `cweagans/composer-patches`. `composer-exit-on-patch-failure: true` â€” a failed patch aborts install. `patchLevel` for `drupal/core` is `-p2`. **All 19 local patch files were confirmed present on disk**; 3 patches are fetched from drupal.org URLs.
+Applied by `cweagans/composer-patches`. `composer-exit-on-patch-failure: true` â€” a failed patch aborts install. `patchLevel` for `drupal/core` is `-p2`. **All 22 local patch files were confirmed present on disk**; 8 patches are fetched from drupal.org URLs.
 
 | Target package | Fix | Source |
 |----------------|-----|--------|
@@ -344,6 +346,7 @@ Applied by `cweagans/composer-patches`. `composer-exit-on-patch-failure: true` â
 | `drupal/tmgmt` | Custom source-page filter (node id + country) | local |
 | `drupal/tmgmt` | Entity author details | local |
 | `drupal/tmgmt` | JobType grouped-filter `escapeLike` array fix | local |
+| `drupal/tmgmt_memsource` | PHP 8.4: explicit nullable param in `createFileTranslation` | local |
 | `drupal/imagemagick` | Preserve URL-encoded filenames | local |
 | `drupal/date_popup` | Include selected end date (+1 day, 2983680-7) | remote URL |
 | `drupal/mobile_app_links` | `.well-known` controller for android/ios | local |
@@ -361,6 +364,7 @@ Applied by `cweagans/composer-patches`. `composer-exit-on-patch-failure: true` â
 | `drupal/autocomplete_id` | Filter unpublished entities from ID autocomplete | local |
 | `drupal/contextual_range_filter` | PHP 8.4 implicit-nullable in `DateRange::init()` (3521312) | local |
 | `drupal/menu_export` | Drush command calling protected `exportMenus` | local |
+| `drupal/symfony_mailer_office365` | Pass event dispatcher to ESMTP transport factory + transport (SendAsDenied fix) | local |
 
 ---
 

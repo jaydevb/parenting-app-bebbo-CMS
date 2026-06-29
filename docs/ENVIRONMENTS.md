@@ -140,11 +140,12 @@ include site.splits.php;                              // activate split
 
 Source: `docroot/sites/common_settings/post.settings.php`.
 
+- `ini_set('memory_limit', '-1')` runs **unconditionally** at the top of `post.settings.php` (first line of the file), **before** the Acquia block opens — it is not gated by env detection.
 - Detection reads env vars: `AH_SITE_GROUP` and `AH_SITE_ENVIRONMENT`. The Acquia block runs only `if ($ah_group && $ah_env)`.
-- **No per-environment branching** on `prod`/`test`/`dev`/`ode` inside this file — it does the same for every Acquia env. (The per-site `*.inc` name is hardcoded in each site's `settings.php`, e.g. `prod_pbturkey-settings.inc`.)
+- **No per-environment branching** on `prod`/`test`/`dev`/`ode` inside this file — it does the same for every Acquia env. (The per-site `*.inc` name is hardcoded in each site's `settings.php`, e.g. `prod_pbturkey-settings.inc`; if a site leaves `$acquia_settings_file_name` unset, it falls back to `AH_SITE_GROUP . '-settings.inc'`.)
 - Sets within the Acquia block:
-  - `ini_set('memory_limit', '-1')` (first line of file).
   - Acquia include: `require_once "/var/www/site-php/{group}/{settings_file}"` if readable.
+  - MySQL 5.7 backport: `require modules/contrib/mysql57/settings.inc` if it exists (after the Acquia include populates `$databases`).
   - DB: `acquia_hosting_settings_autoconnect = FALSE`, `READ-COMMITTED` transaction isolation, `acquia_hosting_db_choose_active()`.
   - Memcache: `require_once common_settings/cloud-memcache-d8+.php` if readable.
   - `file_private_path = /mnt/files/{group}.{env}/{site_path}/files-private`.
@@ -239,6 +240,8 @@ Entity Share exposes per-site channels and pulls content over JSON:API from a re
 ## 10. Post-Deployment: Email OAuth Setup
 
 Email delivery via Symfony Mailer + Office 365 OAuth requires per-environment configuration after deploy. OAuth credentials are managed via the admin UI and protected by `config_ignore` — they are **not** in Git.
+
+All outgoing emails are sent as `admin@bebbo.app` regardless of the per-site `system.site.mail` address. The `MailerSenderOverride` event subscriber (in `bebbo_custom_general`) reads the address from `symfony_mailer_office365.config` → `mail` and forces it as From / Sender / Envelope sender. The original per-site address is preserved as Reply-To. This is required because the O365 mailbox only has SendAs permission for `admin@bebbo.app` — sending as any other address (e.g. `info@babuni.app`) triggers a `SendAsDeniedException`.
 
 After deploying to a new environment:
 1. Microsoft Entra app registration (client's M365 admin)
