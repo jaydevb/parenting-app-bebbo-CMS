@@ -277,6 +277,9 @@
             },
             "drupal/contextual_range_filter": {
                 "Fix PHP 8.4 implicit nullable deprecation in DateRange::init() (https://www.drupal.org/i/3521312)": "patches/contextual_range_filter/3521312-implicit-nullable-php84.patch"
+            },
+            "drupal/symfony_mailer_office365": {
+                "Pass event dispatcher to EsmtpTransport so MessageEvent fires (SendAsDenied fix)": "patches/symfony_mailer_office365-pass-event-dispatcher.patch"
             }
         },
         "drupal-lenient": {
