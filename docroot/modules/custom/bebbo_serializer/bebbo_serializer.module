@@ -52,7 +52,11 @@ function bebbo_serializer_views_query_alter(ViewExecutable $view, QueryPluginBas
   if (!$query instanceof Sql) {
     return;
   }
-  if ($view->id() !== 'bebbo_v2_apis' || $view->current_display !== 'articles_rest_export') {
+  $article_displays = [
+    'bebbo_v2_apis' => 'articles_rest_export',
+    'bebbo_v1_apis' => 'v1_articles_rest_export',
+  ];
+  if (!isset($article_displays[$view->id()]) || $view->current_display !== $article_displays[$view->id()]) {
     return;
   }
 

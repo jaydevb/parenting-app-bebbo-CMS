@@ -85,9 +85,8 @@ complete_list:
   - language/uk/filter.format.plain_text
   - mobile_app_links.android_packages
   - mobile_app_links.ios
-  - pb_custom_form.landing_pages
-  - pb_custom_form.language_redirects
-  - views.view.duplicate_of_tax_test
+  - bebbo_custom_general.landing_pages
+  - bebbo_custom_general.language_redirects
 partial_list:
   - ai_translate.settings
   - block.block.languagedropdownswitcher

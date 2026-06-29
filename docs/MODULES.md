@@ -21,7 +21,7 @@
 | 9 | [`language_custom_field`](#9-language_custom_field) | Language | Custom fields on language entities (locale, luxon, plural) | Low |
 | 10 | [`custom_article`](#10-custom_article) | Content | Batch keyword lowercasing, cross-translation field copy, Drush utilities | Low |
 | 11 | [`file_sanitizer`](#11-file_sanitizer) | Media | Filename sanitization on upload, MIME mismatch scanning | Low |
-| 12 | [`pb_custom_rest_api`](#12-pb_custom_rest_api) | API | Force-update check REST resource (`/api/check-update/{country}`) | Low |
+| 12 | [`pb_custom_rest_api`](#12-pb_custom_rest_api-removed) | API | **Removed** — force-update check now in `bebbo_serializer` (`CheckUpdateController`) | — |
 | 13 | [`pb_custom_standard_deviation`](#13-pb_custom_standard_deviation) | API | V1 standard deviation Views style plugin | Low |
 | 14 | [`pb_custom_migrate`](#14-pb_custom_migrate) | Migration | 207 CSV-based content migration configs | Low |
 | 15 | [`pb_strings`](#15-pb_strings) | Content | Strings taxonomy management, unique name enforcement, bulk translate UI | Low |
@@ -95,6 +95,8 @@ Device authentication for the V2 content API. Apps prove authenticity via platfo
 
 V2 REST API serialization. Provides the `bebbo_serializer` Views style plugin that transforms Views REST export rows into the Bebbo JSON envelope (`{status, total, langcode, datetime, data}`), the `bebbo_json` encoder, ETag support, and presave logic for computed fields.
 
+Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API** (`/api/strings/%` and `/v2/api/strings/%`, served by the `string_rest_export` / `v2_string_rest_export` displays of the `tax` view using this module's style plugin) and the **Force-Update / check-update** endpoint (`/api/check-update/{country}` and `/v2/api/check-update/{country}`, served by `CheckUpdateController` via `bebbo_serializer.routing.yml`). Both V1/V2 pairs return identical responses.
+
 ### Services
 
 | Service ID | Class | Role |
@@ -119,7 +121,9 @@ V2 REST API serialization. Provides the `bebbo_serializer` Views style plugin th
 
 | Class | Type | Role |
 |-------|------|------|
-| `BebboSerializer` | Views style plugin | 20+ `transformX()` methods for per-endpoint row transformation |
+| `BebboSerializer` | Views style plugin | 20+ `transformX()` methods for per-endpoint row transformation (V2 + Strings) |
+| `BebboV1Serializer` | Views style plugin | V1 counterpart style plugin (`bebbo_v1_serializer`) for the V1 displays |
+| `CheckUpdateController` | Controller | Force-update / check-update endpoint, shared by the V1 and V2 routes |
 | `BebboEncoder` | Encoder | `bebbo_json` format encoding |
 | `BodyImageProcessor` | Service | Presave body HTML → image URL extraction |
 | `QuizAnswerItem` | Field type | Custom compound field (value + is_correct) |
@@ -586,42 +590,20 @@ Sanitizes filenames on upload (transliteration, unsafe character removal, lowerc
 
 ---
 
-## 12. `pb_custom_rest_api`
+## 12. `pb_custom_rest_api` (removed)
 
-**Name:** Custom REST API
-**Core:** `^9.2 || ^10 || ^11`
+**Status:** Removed. The module and its `custom_rest_resource` / `v2_custom_rest_resource` REST resource configs no longer exist.
 
-### Purpose
+The force-update / check-update endpoint now lives in **`bebbo_serializer`** as `CheckUpdateController`, served by plain routes (`bebbo_serializer.routing.yml`) instead of REST resource plugins:
 
-Single REST resource plugin for the force-update check endpoint.
+| Route | Path | Access |
+|-------|------|--------|
+| `bebbo_serializer.v1_check_update` | `/api/check-update/{country}` | Public (`_access: 'TRUE'`) |
+| `bebbo_serializer.v2_check_update` | `/v2/api/check-update/{country}` | `_access: 'TRUE'`; JWT-gated via the `/v2/api/` protected pattern; `no_cache: TRUE` |
 
-### REST Resources
+Both routes call the same `CheckUpdateController::checkUpdate` method, querying the `forcefull_check_update_api` table (owned by `pb_custom_form`) for the latest `content_update` and `app_update` records by country group ID. The two responses are identical.
 
-**V1 — `CustomRestResource`**
-
-| Property | Value | Source |
-|----------|-------|--------|
-| Plugin ID | `custom_rest_resource` | `@RestResource` annotation |
-| Path | `/api/check-update/{country}` | annotation `uri_paths.canonical` |
-| Method | GET | `config/sync/rest.resource.custom_rest_resource.yml` |
-| Auth | `basic_auth` | `config/sync/rest.resource.custom_rest_resource.yml` |
-
-The plugin annotation declares only `id`, `label`, and `uri_paths`. Enabled methods, formats, and authentication are defined in the REST resource config (`rest.resource.custom_rest_resource.yml`), which lives in shared base config (`config/sync/`), not in this module.
-
-`CustomRestResource::get($country)` queries the `forcefull_check_update_api` table (owned by `pb_custom_form`) for the latest `content_update` and `app_update` records by country group ID.
-
-**V2 — `V2CustomRestResource`**
-
-| Property | Value | Source |
-|----------|-------|--------|
-| Plugin ID | `v2_custom_rest_resource` | `@RestResource` annotation |
-| Path | `/v2/api/check-update/{country}` | annotation `uri_paths.canonical` |
-| Method | GET | `config/sync/rest.resource.v2_custom_rest_resource.yml` |
-| Auth | `basic_auth` | `config/sync/rest.resource.v2_custom_rest_resource.yml` |
-
-Extends `CustomRestResource` with zero logic changes — identical response at a V2 URL path. Added to support the second app version.
-
-Full response shape documented in [`API_REFERENCE.md` §9](API_REFERENCE.md#9-force-update-rest-resource).
+Full response shape documented in [`API_REFERENCE.md` §9](API_REFERENCE.md#9-force-update--check-update-endpoint).
 
 ---
 
@@ -709,13 +691,12 @@ Manages the `strings` taxonomy vocabulary with UI for bulk translation and enfor
 ```
 bebbo_serializer ──→ language_visibility_control ──→ group (contrib)
                                                   ──→ drupal:language
+                 ──→ pb_custom_form (CheckUpdateController uses its forcefull_check_update_api table)
 custom_serialization ──→ language_visibility_control
 
 bebbo_api_security ──→ drupal:key
                    ──→ drupal:views
                    ──→ view_custom_table (contrib)
-
-pb_custom_rest_api ──→ pb_custom_form (uses its DB table)
 
 pb_custom_migrate ──→ migrate, migrate_plus, migrate_tools, migrate_source_csv
 

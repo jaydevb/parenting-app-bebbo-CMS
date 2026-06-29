@@ -1,0 +1,45 @@
+bebbo_custom_general.mobile_app_share_link_form:
+  type: config_object
+  label: 'Mobile APP share link JavaScript'
+  mapping:
+    mobile_app_share_link:
+      type: text
+      label: 'Mobile APP share link JavaScript'
+    kosovo_mobile_app_share_link:
+      type: text
+      label: 'Kosovo mobile APP share link JavaScript'
+
+bebbo_custom_general.language_redirects:
+  type: config_object
+  label: 'Language Redirect URLs'
+  mapping:
+    redirect_urls:
+      type: text
+      label: 'Language redirect URLs configuration'
+
+bebbo_custom_general.landing_pages:
+  type: config_object
+  label: 'Landing Pages Configuration'
+  mapping:
+    landing_pages:
+      type: text
+      label: 'Landing pages that bypass redirects'
+
+bebbo_custom_general.app_store_redirect:
+  type: config_object
+  label: 'App Store Redirect URLs'
+  mapping:
+    app_store_url:
+      type: string
+      label: 'App Store listing URL'
+    google_play_url:
+      type: string
+      label: 'Google Play listing URL'
+
+bebbo_custom_general.adminsettings:
+  type: config_object
+  label: 'Administer Parent Buddy settings'
+  mapping:
+    master_language:
+      type: string
+      label: 'Master language for the countries'

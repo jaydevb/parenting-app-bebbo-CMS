@@ -303,11 +303,13 @@ Both pattern lists are newline-separated regex prefixes, matched as `#^<pattern>
 Defaults (`config/install/bebbo_api_security.settings.yml`):
 
 ```yaml
-protected_api_patterns: "/v2/api/\n/api/check-update/"
+protected_api_patterns: "/v2/api/"
 excluded_api_patterns:  "/api/security/"
 ```
 
-So out of the box: **`/v2/api/*` and `/api/check-update/*` are protected; `/api/security/*` is excluded (chicken-and-egg); the V1 `/api/*` content endpoints are NOT protected.** Editable in the admin form (each line is validated as a regex).
+So out of the box: **`/v2/api/*` is protected (this covers `/v2/api/check-update/`); `/api/security/*` is excluded (chicken-and-egg); the V1 `/api/*` endpoints — content *and* the public `/api/check-update/` — are NOT protected.** Editable in the admin form (each line is validated as a regex).
+
+> The `/api/check-update/` pattern was removed from the protected set (commit `ba49af17a`); `isProtectedPath()` start-anchors each pattern, so it would otherwise have JWT-gated the public V1 `/api/check-update/` path on a fresh install. The V2 path stays protected via the `/v2/api/` prefix.
 
 Rollout: `disabled` → `grace_period` (monitor) → `enforced`. Rollback is a config flip, no deploy.
 
@@ -421,7 +423,7 @@ Config object `bebbo_api_security.settings` (schema in `config/schema/`, default
 | `challenge_expiry_seconds` | `120` | 30–600 | Sideloaded challenge TTL |
 | `revoked_token_retention_days` | `7` | 1–90 | Cron purge |
 | `security_log_max_entries` | `10000` | 1000–100000 | Cron/purge trim |
-| `protected_api_patterns` | `/v2/api/`, `/api/check-update/` | each line valid regex | Subscriber |
+| `protected_api_patterns` | `/v2/api/` | each line valid regex | Subscriber |
 | `excluded_api_patterns` | `/api/security/` | each line valid regex | Subscriber |
 
 ### 9.1 Keys & secrets (never committed)
@@ -470,7 +472,7 @@ All security endpoints return **real HTTP status codes** (unlike the content API
 
 ### 13.1 Request enforcement errors (`ApiSecuritySubscriber`)
 
-These apply to **protected content paths** (`/v2/api/*`, `/api/check-update/*`) when `enforcement_mode` is `enforced`. All include the `WWW-Authenticate: Bearer realm="Bebbo API"` header.
+These apply to **protected paths** (`/v2/api/*`, which covers `/v2/api/check-update/`) when `enforcement_mode` is `enforced`. All include the `WWW-Authenticate: Bearer realm="Bebbo API"` header.
 
 | HTTP Status | Response body | Condition |
 |-------------|---------------|-----------|

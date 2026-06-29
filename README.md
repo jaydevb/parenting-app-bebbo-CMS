@@ -13,7 +13,7 @@
 * [Community](#community)
 
 ## Introduction
-Parent Buddy CMS application is a headless implementation of Drupal 10 CMS where the content is added through the web interface and serves as REST APIs for a mobile app. This application assists editors in adding different types of content under various content types and taxonomies configured in Drupal CMS. Go through the [onboarding document](./docs/ONBOARDING.md) before continuing with the Installation guidelines below.
+Parent Buddy CMS application is a headless implementation of Drupal 11 CMS where the content is added through the web interface and serves as REST APIs for a mobile app. This application assists editors in adding different types of content under various content types and taxonomies configured in Drupal CMS. Go through the [onboarding document](./docs/ONBOARDING.md) before continuing with the Installation guidelines below.
 
 For more information on setup and getting started, check out our [guidelines for contributors](./docs/CONTRIBUTING.md).
 
@@ -22,7 +22,7 @@ For more information on setup and getting started, check out our [guidelines for
 ### Pre-requisites
 Before installing the Bebbo CMS application, ensure that you have the following software installed on your development machine:
 
-- **DDEV with PHP 8.3 runtime**: The recommended local environment is [DDEV](https://docs.ddev.com/en/stable/) running PHP 8.3. Install DDEV following the official instructions for your platform, making sure PHP 8.3 is selected in `.ddev/config.yaml` (or via `ddev config global --php-version 8.3`).
+- **DDEV with PHP 8.4 runtime**: The recommended local environment is [DDEV](https://docs.ddev.com/en/stable/) running PHP 8.4 with MariaDB 10.11. Install DDEV following the official instructions for your platform, making sure PHP 8.4 is selected in `.ddev/config.yaml` (or via `ddev config global --php-version 8.4`). The committed `.ddev/config.yaml` already pins `php_version: "8.4"`.
   - **Windows**: Requires Windows 10/11 Pro, [WSL2](https://learn.microsoft.com/windows/wsl/install), [Docker Desktop](https://www.docker.com/products/docker-desktop/), [mkcert](https://github.com/FiloSottile/mkcert) and the [DDEV Windows prerequisites](https://docs.ddev.com/en/stable/users/install/ddev-installation/#windows). Install mkcert via Chocolatey (`choco install mkcert`) and trust certificates with `mkcert -install`.
   - **macOS**: Install [Homebrew](https://brew.sh/), [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or [Colima](https://docs.ddev.com/en/stable/users/install/docker-installation/#colima) on Apple Silicon), and mkcert (`brew install mkcert nss && mkcert -install`). Follow the [macOS DDEV guide](https://docs.ddev.com/en/stable/users/install/ddev-installation/#macos).
   - **Linux (Ubuntu/Debian)**: Install Docker Engine, Docker Compose, mkcert, and inotify tools per the [Linux setup guide](https://docs.ddev.com/en/stable/users/install/ddev-installation/#linux). For Ubuntu you can run `sudo apt install mkcert libnss3-tools` and then `mkcert -install`. Ensure your user is added to the `docker` group.
@@ -141,36 +141,41 @@ The automated pipeline defined in [.github/workflows/pipelines.yml](.github/work
 
 - **Credentials isolation**: Acquia API keys, SSH keys, and host fingerprints are consumed exclusively via encrypted GitHub Secrets (`ACQUIA_API_KEY_ID`, `ACQUIA_API_KEY_SECRET`, `ACQUIA_SSH_PRIVATE_KEY`, `ACQUIA_SSH_KNOWN_HOSTS`). Secrets are injected only into the relevant deploy jobs.
 - **Hardening SSH connectivity**: The workflow provisions SSH access using `webfactory/ssh-agent` with the private key from secrets and explicitly pins the Acquia Git host fingerprint via `ssh-keyscan` before any remote interaction.
-- **Clean build environments**: Every job starts from a fresh `ubuntu-latest` runner, pins PHP 8.3 via `shivammathur/setup-php`, and performs `git reset --hard` / `git clean -fd` prior to artifact pushes to avoid leaking untracked files.
+- **Clean build environments**: Every job starts from a fresh `ubuntu-latest` runner and pins PHP via `shivammathur/setup-php` (PHP 8.4 for CI checks and the Dev deploy, PHP 8.3 for the Stage deploy), then performs `git reset --hard` / `git clean -fd` prior to artifact pushes to avoid leaking untracked files.
 - **Dependency and code integrity checks**: `composer validate`, `composer install --no-interaction`, PHPCS, `drupal-check`, and `phplint` run on each push/PR to catch tampered dependencies or insecure code patterns before deployment.
-- **Scoped deployments**: Deploy jobs only run for specific branch patterns (feature/* to Dev, `main` to Stage) after CI checks pass (`needs: ci-checks`) ensuring only vetted code can reach Acquia environments.
+- **Scoped deployments**: Deploy jobs only run for specific branches — a push to `develop` deploys to Acquia Dev, a push to `stage` deploys to Acquia Stage — after CI checks pass (`needs: ci-checks`), ensuring only vetted code can reach Acquia environments. `main` is not a deploy trigger; Prod is deployed manually.
 - **Auditable automation account**: Git author identity for automated commits to Acquia Git is consistently set to `github-actions+bebbo@unicef.org`, making bot activity traceable in repository history.
 
 ## Branching Strategy
-Follow these guidelines to keep work streams predictable and in sync with the Acquia environments:
+Follow these guidelines to keep work streams predictable and in sync with the Acquia environments. Deployments are driven by **branch pushes**, not by merges into `main`:
+
+- Push to **`develop`** → deploys to **Acquia Dev** (`@parentbuddy2.dev`, PHP 8.4).
+- Push to **`stage`** → deploys to **Acquia Stage** (`@parentbuddy2.test`, PHP 8.3).
+- **`main` is not a deploy trigger.** Production is released manually (no automated job).
+
+CI checks (`composer validate`, PHPCS, `drupal-check`, `phplint`) run on every push to `develop`/`stage` and on every PR targeting `feature/**`, `bug/**`, `hotfix/**`, `develop`, and `stage`.
 
 1. **Create branches from issues**
    - Open the relevant GitHub issue and use the “Create a branch” shortcut in the bottom-right panel.
-   - Set **Branch Source** to `main`.
+   - Set **Branch Source** to `develop`.
    - Use a descriptive name matching the work type:
      - `feature/<short-description>` for new features/enhancements.
      - `bug/<short-description>` for defects discovered during testing.
      - `hotfix/<short-description>` for urgent fixes targeting production/UAT.
-2. **Fork and develop**
-   - Fork the repo, fetch the newly created branch, and push commits to your fork.
-   - Keep your fork in sync by regularly pulling from `upstream` `main` (and rebasing your working branch) to minimize conflicts.
+2. **Develop**
+   - Push commits to your working branch and open a PR against `develop`. CI runs on the PR.
+   - Keep your branch in sync by regularly rebasing onto the latest `develop` to minimize conflicts.
 3. **Commit hygiene**
    - Write meaningful commit messages using the convention `BEBBOAPPDR#<ticket-no> : <short description>`.
    - Squash/fixup locally if you created noisy commits before opening a PR.
-4. **Pull requests per branch type**
-   - **Feature branches**: open a PR from your fork’s `feature/*` branch back to the same `feature/*` branch in the canonical repo. Reviews happen there and, once approved, the CI pipeline deploys to Acquia Dev.
-   - **Bug branches**: follow the same flow as features, ensuring the PR references the bug issue and includes any regression tests or reproduction steps.
-   - **Hotfix branches**: coordinate with the release owner. Hotfix PRs target `main` directly once validation on a staging environment is complete.
-5. **Promotion to main**
-   - After a feature/bug branch passes QA on Acquia Dev and is ready for UAT, open a PR into `main`. This will trigger the Stage deployment after CI passes.
-6. **Release readiness**
-   - Before any merge to `main`, pull the latest changes from upstream and resolve conflicts locally.
-   - Verify CI (linting/tests) succeeds. Only approved, green PRs are merged.
+4. **Pull requests by branch type**
+   - **Feature / bug branches**: open a PR into `develop`. Once approved and merged, the push to `develop` deploys the build to Acquia Dev. Bug PRs should reference the bug issue and include any regression tests or reproduction steps.
+   - **Hotfix branches**: coordinate with the release owner. Hotfix PRs also merge into `develop` (then promote through `stage`); only the release owner cuts production.
+5. **Promotion to Stage**
+   - After changes pass QA on Acquia Dev and are ready for UAT, open a PR from `develop` into `stage`. Merging it pushes `stage` and deploys to Acquia Stage.
+6. **Release to Production**
+   - Production is **not** deployed by any branch push. After Stage UAT sign-off, the release owner promotes the vetted build to Prod manually.
+   - Before any promotion, pull the latest changes, resolve conflicts locally, and verify CI is green. Only approved, green PRs are merged.
 
 ![Branching strategy diagram](docs/BranchingStrategy.png)
 
