@@ -10,3 +10,16 @@ index 1234567..abcdefg 100644
        authenticators: [$this->authenticator],
      );
      $transport->setUsername($dsn->getOption('user'));
+diff --git a/symfony_mailer_office365.services.yml b/symfony_mailer_office365.services.yml
+index 2345678..bcdefgh 100644
+--- a/symfony_mailer_office365.services.yml
++++ b/symfony_mailer_office365.services.yml
+@@ -1,7 +1,7 @@
+ services:
+   symfony_mailer_office365.esmtp_transport_factory:
+     class: Drupal\symfony_mailer_office365\Office365EsmtpTransportFactory
+-    arguments: ['@symfony_mailer_office365.xoauth2_authenticator']
++    arguments: ['@symfony_mailer_office365.xoauth2_authenticator', '@event_dispatcher']
+     tags:
+       - { name: mailer.transport_factory }
+
