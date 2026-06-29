@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ * Install and update hooks for Bebbo Custom General.
+ */
+
+/**
+ * Remove defunct custom_serialization and pb_custom_standard_deviation modules.
+ *
+ * These modules were deleted from disk but may still be registered in the
+ * active core.extension config and system.schema key_value store. Running
+ * this during updb (before cim) prevents the "module does not exist" crash.
+ */
+function bebbo_custom_general_update_10001(): string {
+  $removed = [];
+  $modules_to_remove = [
+    'custom_serialization',
+    'pb_custom_standard_deviation',
+  ];
+
+  $config = \Drupal::configFactory()->getEditable('core.extension');
+  $module_list = $config->get('module') ?? [];
+
+  foreach ($modules_to_remove as $module) {
+    if (array_key_exists($module, $module_list)) {
+      unset($module_list[$module]);
+      $removed[] = $module;
+    }
+  }
+
+  if ($removed) {
+    $config->set('module', $module_list)->save();
+  }
+
+  // Clean up schema entries.
+  \Drupal::database()->delete('key_value')
+    ->condition('collection', 'system.schema')
+    ->condition('name', $modules_to_remove, 'IN')
+    ->execute();
+
+  if ($removed) {
+    return 'Removed defunct modules from core.extension: ' . implode(', ', $removed);
+  }
+  return 'No defunct modules found in core.extension; schema entries cleaned.';
+}
