@@ -2,7 +2,7 @@
 
 > **Audience:** developers, maintainers, operations, release managers.
 > **Scope:** the four environments (Local / Dev / Stage / Prod), how Drupal settings resolve per environment, multisite domains per environment, the deploy pipeline + Acquia cloud hooks, and cross-site content sync.
-> **Verified against:** repository `HEAD` (branch `feature/group3-manage-users`). Every value below was read from the live files named in each section — `.ddev/config.yaml`, `docroot/sites/`, `hooks/`, `.github/workflows/pipelines.yml`. Where a setting lives on Acquia's servers (outside this repo) it is marked as such and **not** guessed.
+> **Verified against:** repository `HEAD` (branch `bug/issue-fixes`), **verified 2026-06-29**. Every value below was read from the live files named in each section — `.ddev/config.yaml`, `docroot/sites/`, `hooks/`, `.github/workflows/pipelines.yml` — and the per-site language/group tables (§11–§12) were DB-verified on that date. Where a setting lives on Acquia's servers (outside this repo) it is marked as such and **not** guessed.
 
 ---
 
@@ -14,7 +14,7 @@
 | **Dev** | Acquia Cloud | **8.4** | push to `develop` | `@parentbuddy2.dev` | `config/sync` + active split |
 
 > Acquia Dev runs MySQL 5.7.44 — below Drupal 11's MySQL 8.0 minimum. The `drupal/mysql57` contrib module backports the database driver. Its settings include is loaded in `post.settings.php` after the Acquia include so `$databases` is already populated.
-| **Stage** | Acquia Cloud | **8.4** | push to `stage` | `@parentbuddy2.test` | `config/sync` + active split |
+| **Stage** | Acquia Cloud | **8.3** | push to `stage` | `@parentbuddy2.test` | `config/sync` + active split |
 | **Prod** | Acquia Cloud | **8.4**¹ | **manual only** | `@parentbuddy2.prod`¹ | `config/sync` + active split |
 
 ¹ There is **no** `deploy-prod` job and **no** `@parentbuddy2.prod` reference in `pipelines.yml`. Prod is deployed manually; the cloud hook explicitly **skips** DB/config steps on prod (see [§6](#6-acquia-cloud-hooks)).
@@ -57,6 +57,22 @@ The **default (bebbo)** site uses DDEV's base `db` database (no override). Each 
 ## 3. Multisite Domains per Environment
 
 Source: `docroot/sites/sites.php` (`$sites` map: domain → site directory). The **default** site (`bebbo.app`) has **no** entry — it falls through to `sites/default/`.
+
+### 3.0 Complete per-site URL map (all environments)
+
+Verified against `docroot/sites/sites.php` lines 58–93 on **2026-06-29**. PROD = vanity domains; STAGE/DEV/DDEV follow the fixed per-site slug.
+
+| Site (dir / config folder) | PROD | STAGE | DEV | DDEV (local) |
+|----------------------------|------|-------|-----|--------------|
+| Default (`default` / `bebbo`) | `bebbo.app` | — (main env URL)* | — (main env URL)* | `bebbo.app.ddev.site` |
+| Bangladesh (`bangladesh` / `bangla`) | `babuni.app`, `bangla.bebbo.app` | `bangla-stage.bebbo.app` | `bangla-dev.bebbo.app` | `bangla.bebbo.app.ddev.site` |
+| Turkey (`turkey` / `turkey`) | `merhababebek.app`, `tr.bebbo.app` | `tr-stage.bebbo.app` | `tr-dev.bebbo.app` | `tr.bebbo.app.ddev.site` |
+| Ecuador (`ecuador` / `ecuador`) | `wawamor.ec`, `ec.bebbo.app` | `ec-stage.bebbo.app` | `ec-dev.bebbo.app` | `ec.bebbo.app.ddev.site` |
+| Pakistan (`pakistan` / `pakistan`) | `pk.bebbo.app` | `pk-stage.bebbo.app` | `pk-dev.bebbo.app` | `pk.bebbo.app.ddev.site` |
+| Pacific Islands (`somoa` / `somoa`) | `ws.bebbo.app`, `bebbopacific.app` | `ws-stage.bebbo.app` | `ws-dev.bebbo.app` | `ws.bebbo.app.ddev.site` |
+| Zimbabwe (`zimbabwe` / `zimbabwe`) | `umntwana.app`, `zw.bebbo.app`, `rerai.umntwana.app` | `zw-stage.bebbo.app` | `zw-dev.bebbo.app` | `zw.bebbo.app.ddev.site` |
+
+> *The **default (bebbo)** site has **no** dedicated stage/dev subdomain entry in `sites.php` — it resolves via the bare Acquia environment URL / `bebbo.app`.
 
 ### 3.1 Production domains (verified, exact)
 
@@ -173,7 +189,7 @@ Source: `.github/workflows/pipelines.yml`. Triggers (`on:`): push to `develop` /
 |-----|--------------|-----|--------|
 | `ci-checks` | every push + PR | 8.4 | `composer validate --no-check-all` → `composer install` → `phpcs` → `drupal-check -d docroot/modules/custom` → `phplint` |
 | `deploy-dev` | `push` && `refs/heads/develop` | 8.4 | `acli push:artifact @parentbuddy2.dev --no-interaction -vvv` |
-| `deploy-stage` | `push` && `refs/heads/stage` | 8.4 | `acli push:artifact @parentbuddy2.test --no-interaction` |
+| `deploy-stage` | `push` && `refs/heads/stage` | 8.3 | `acli push:artifact @parentbuddy2.test --no-interaction` |
 
 - **Branch → env:** `develop` → Dev; `stage` → Stage/Test. `main` is **not** a trigger anywhere.
 - Deploy jobs `needs: ci-checks` (CI must pass first).
@@ -234,7 +250,66 @@ Full step-by-step procedure: [`RUNBOOK.md`](RUNBOOK.md) §12.
 
 ---
 
-## 11. Related Docs
+## 11. Per-Site Languages
+
+DB-verified **2026-06-29**. Total across all sites: **46** distinct language entries.
+
+| Site | Count | Languages (code — name) |
+|------|-------|-------------------------|
+| Default (Bebbo) | 28 | `en` English · `ru` Russian · `sq` Albanian · `al-sq` Albania-Albanian · `by-be` Belarus-Belarusian · `by-ru` Belarus-Russian · `bg-bg` Bulgaria-Bulgarian · `gr-el` Greek · `xk-sq` Kosovo-Albanian · `xk-rs` Kosovo-Serbian · `kg-ky` Kyrgyzstan-Kyrgyz · `kg-ru` Kyrgyzstan-Russian · `md-ro` Moldova-Romanian · `me-cnr` Montenegro-Montenegrin · `mk-mk` North Macedonia-Macedonian · `mk-sq` North Macedonia-Albanian · `ro` Romanian · `ro-ro` Romania-Romanian · `sr` Serbian · `rs-sr` Serbia-Serbian · `rs-en` Serbia-English · `sk` Slovak · `tj-tg` Tajikistan-Tajik · `tj-ru` Tajikistan-Russian · `uk` Ukrainian · `uz-uz` Uzbekistan-Uzbek · `uz-ru` Uzbekistan-Russian · `uz-kaa` Uzbekistan-Karakalpak |
+| Bangladesh | 2 | `en` English · `bn` Bengali |
+| Turkey | 2 | `en` English · `tr` Turkish |
+| Ecuador | 3 | `en` English · `es` Spanish · `ec-es` Ecuador-Spanish |
+| Pakistan | 2 | `en` English · `ur` Urdu |
+| Pacific Islands (`somoa`) | 5 | `en` Global English · `fj-fj` Fijian · `fj-en` Fiji-English · `ws-sm` Samoan · `ws-en` Samoa-English |
+| Zimbabwe | 4 | `en` Global English · `zw-en` Zimbabwe-English · `zw-sn` Zimbabwe-Shona · `zw-nd` Zimbabwe-Ndebele |
+
+---
+
+## 12. Per-Site Groups / App Names
+
+DB-verified **2026-06-29**. The group `id` equals the in-app "CountryID"; each non-default site numbers its groups locally.
+
+### 12.1 Default (Bebbo) — 18 groups
+
+| id | Group | App name |
+|----|-------|----------|
+| 6 | Albania | Bebbo |
+| 11 | Bulgaria | Bebbo |
+| 16 | Greece | Bebbo |
+| 21 | Kosovo | Foleja |
+| 26 | Kyrgyzstan | Bebbo |
+| 31 | Montenegro | Bebbo |
+| 36 | North Macedonia | Bebbo |
+| 41 | Serbia | Bebbo |
+| 46 | Tajikistan | Bebbo |
+| 51 | Uzbekistan | Bebbo |
+| 106 | Belarus | Bebbo |
+| 126 | Global - English | Bebbo |
+| 131 | Global - Russian | Bebbo |
+| 136 | Ukraine | Bebbo |
+| 141 | Romania | Bebbo |
+| 146 | Moldova | Bebbo |
+| 151 | Slovakia | Bebbo |
+| 161 | India | Bebbo |
+
+> The default site has **no** group `156`/Türkiye — Türkiye is the separate `turkey` site (group 1, app `merhababebek`).
+
+### 12.2 Other sites
+
+| Site | id | Group | App name |
+|------|----|-------|----------|
+| Bangladesh | 1 | Bangladesh | Babuni |
+| Turkey | 1 | Türkiye | merhababebek |
+| Ecuador | 1 | Ecuador | Wawamor |
+| Pakistan | 1 | Pakistan | pakistan |
+| Pacific Islands | 1 | Samoa | BebboPacific |
+| Pacific Islands | 6 | Fiji | BebboPacific |
+| Zimbabwe | 1 | Zimbabwe | reraiumntwana |
+
+---
+
+## 13. Related Docs
 
 | Topic | Doc |
 |-------|-----|

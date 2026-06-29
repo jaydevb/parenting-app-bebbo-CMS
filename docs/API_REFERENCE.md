@@ -2,7 +2,9 @@
 
 > **Audience:** mobile-integration engineers, backend maintainers, support, QA.
 > **Scope:** every HTTP API the CMS exposes to clients — the legacy **V1 REST** (`/api/*`), the current **V2 REST** (`/v2/api/*`), the **Force-Update / check-update endpoint** (`/api/check-update/{country}` + `/v2/api/check-update/{country}`), and **JSON:API** (`/jsonapi/*`). Field shapes, envelopes, query params, auth, and the V1→V2 changes.
-> **Verified against:** repository `HEAD` (branch `feature/group3-manage-users`). Endpoint paths come from the Views configs; envelopes/field transforms from the serializer source. Items that could not be confirmed in code are flagged inline. **No GraphQL exists** (see `ARCHITECTURE.md`).
+> **Verified against codebase on 2026-06-29** (repository `HEAD`). Endpoint paths come from the Views configs; envelopes/field transforms from the serializer source. Items that could not be confirmed in code are flagged inline. **No GraphQL exists** (see `ARCHITECTURE.md`).
+>
+> **V1 implementation note (2026-06):** V1 `/api/*` is now served by the **`bebbo_v1_serializer`** Views style (class `BebboV1Serializer`) on the **`bebbo_v1_apis`** view — it shares the `BebboSerializerHelpers` trait with V2's `bebbo_serializer`, dispatches via `match()` on the Views display id, and uses the same batched media resolution. It emits plain `json` (escaped slashes/unicode) to preserve the legacy V1 byte-for-byte JSON contract. The old `custom_serialization`, `pb_custom_standard_deviation`, and `pb_custom_rest_api` modules (and the `views.view.articles.yml` view) have been **removed**. The V1 endpoints were also cut over from the interim `/v1/api/*` paths to the canonical **`/api/*`** (commit `199a0b06e`).
 
 ---
 
@@ -10,8 +12,8 @@
 
 | Surface | Base | Served by | Status |
 |---------|------|-----------|--------|
-| **V1 REST** | `/api/*` | `custom_serialization` Views style (+ `bebbo_serializer` for `/api/strings`, `pb_custom_standard_deviation` for `/api/standard_deviation`) | Legacy — still live |
-| **V2 REST** | `/v2/api/*` | `bebbo_serializer` Views style | Current |
+| **V1 REST** | `/api/*` | `bebbo_v1_serializer` Views style (`bebbo_v1_apis` view; `/api/strings` is served by `bebbo_serializer`) | Live — public (legacy JSON contract) |
+| **V2 REST** | `/v2/api/*` | `bebbo_serializer` Views style (`bebbo_v2_apis` view) | Current — JWT-gated |
 | **Force-Update** | `/api/check-update/{country}` + `/v2/api/check-update/{country}` | `bebbo_serializer` `CheckUpdateController` (routes `bebbo_serializer.v1_check_update` / `.v2_check_update`) | Live |
 | **Device Security** | `/api/security/*` | `bebbo_api_security` (`SecurityController`) | Live — attestation + JWT issuance (see [§13.1](#131-device-security--attestation-api-apisecurity)) |
 | **App-links** | `/.well-known/*` | `mobile_app_links` (`WellKnownController`) | Live — deep-link domain verification (see [§13.2](#132-app-link-well-known-endpoints)) |
@@ -30,8 +32,8 @@ The V1 and V2 content endpoints are **Drupal Views REST/page displays**, not RES
 ```
 The trailing path arg is the **langcode** (e.g. `en`, `bn`, `ur`). Taxonomy adds a vocabulary slug: `/v2/api/taxonomies/{langcode}/{vocab}`.
 
-- **V1 langcode resolution:** `CustomSerializer::render()` splits the request path and uses the langcode segment; it is validated against enabled languages **and** per-group mobile language visibility (`language_visibility_control`). Invalid → `{status:400,"message":"Request language is wrong"}`; not visible in any country group → `{status:403,"message":"Language not available"}`.
-- **V2 langcode resolution:** `resolveLangcode()` takes the view arg if it is a valid language, else the current language; same visibility validation via `checkLanguageVisibility()` (skipped for country-groups).
+- **V1 langcode resolution:** `BebboV1Serializer::resolveLangcode()` takes the view arg if it is a valid language, else the current language; validated against enabled languages **and** per-group mobile language visibility (`language_visibility_control`) via `checkLanguageVisibility()`. Invalid → `{status:400,"message":"Request language is wrong"}`; not visible in any country group → `{status:403,"message":"Language not available"}`. Skipped for the country-groups display (`v1_country_listing_rest_export`).
+- **V2 langcode resolution:** `BebboSerializer::resolveLangcode()` works identically; same visibility validation via `checkLanguageVisibility()` (skipped for country-groups).
 
 ### Standard response envelope
 ```json
@@ -43,7 +45,7 @@ The trailing path arg is the **langcode** (e.g. `en`, `bn`, `ur`). Taxonomy adds
   "data": [ ... ]
 }
 ```
-- `datetime` is **server-generated** (not a request echo), formatted `Y-m-d H:i` in timezone **`Asia/Kolkata`** (both V1 `CustomSerializerHelper` and V2 `BebboSerializer::render()`).
+- `datetime` is **server-generated** (not a request echo), formatted `Y-m-d H:i` in timezone **`Asia/Kolkata`** (both V1 `BebboV1Serializer::render()` and V2 `BebboSerializer::render()`, via the shared `BebboSerializerHelpers` trait).
 - **Empty result:** `{status:204,"message":"No Records Found","datetime":"…"}` — no `data`/`total`/`langcode`. (Note: `204` is a JSON body field; the HTTP status is not necessarily 204.)
 - Envelope variants per endpoint family are listed in their sections below.
 
@@ -60,79 +62,89 @@ Only those two flags. **No pretty-print, and no `&nbsp;` substitution** — earl
 
 ---
 
-## 3. V1 → V2: What Changed
+## 3. V1 ↔ V2: Implementation & Endpoint Asymmetry
 
-| Aspect | V1 (`custom_serialization`) | V2 (`bebbo_serializer`) |
+V1 (`bebbo_v1_serializer`) and V2 (`bebbo_serializer`) now share the **same architecture** — both dispatch via `transformRows()` `match()` on the Views display id, share the `BebboSerializerHelpers` trait (batched media/file/term loading, type-cast helpers, pre-computed `field_body_rendered`/`field_embedded_images`, `parseViewCoverImage()`), and produce the standard envelope. The differences are the **JSON contract** and the **set of endpoints**, not the internals:
+
+| Aspect | V1 (`bebbo_v1_serializer`) | V2 (`bebbo_serializer`) |
 |--------|-----------------------------|--------------------------|
-| Dispatch | `render()` branches by **`strpos()` substring** on the request path | `transformRows()` `match()` on **Views display id** → per-endpoint `transformX()` method |
-| Body/media | Runtime DOMDocument parsing, per-row `customMediaFormatter()` (N+1 entity loads) | Pre-computed `field_body_rendered` / `field_embedded_images`; `parseViewCoverImage()` parses embedded view HTML (batched) |
-| `total` | `count($data)` (rendered row count) | `$this->view->total_rows` (query count, filters applied; falls back to `count($rows)` if unavailable) |
-| Type casting | inline `(int)`, comma-split | helper methods `castToInt/castToBool/castToNumber/toIntArray/toStringArray` |
-| New content types | — | **Course** (`/v2/api/course`), **Quiz** (`/v2/api/quiz`) |
-| New endpoints | — | **`/v2/api/guide`**, **`/v2/api/weekly-overview`** |
-| Dropped in V2 | `sponsors`, `related-article-contents/*/milestone`, `updated-pinned-contents/*/faq`, the `pinned-contents/*/faq|child_growth|health_check_ups|vaccinations` variants | (not re-implemented) |
-| New V2 aliases | — | `/v2/api/strings/%` (same as V1 `/api/strings/%`) and `/v2/api/check-update/{country}` (same as V1 `/api/check-update/{country}`) — identical responses at V2 URL paths |
+| Output encoder | plain `json` (escaped slashes/unicode — byte-parity with the legacy V1 contract) | `bebbo_json` (`JSON_UNESCAPED_SLASHES` + `JSON_UNESCAPED_UNICODE`) |
+| `total` | deduped `count($rows)` for de-duplicating displays, else `view->total_rows` | `view->total_rows` (falls back to `count($rows)`) |
+| ETag / 304 | not implemented | 5 displays (see §5.6) |
 | Engagement counts | — | `read_count`, `love_count` on activities/articles/video-articles/course |
+| V2-only content types | — | **Course** (`/v2/api/course`), **Quiz** (`/v2/api/quiz`), **Guide** (`/v2/api/guide`), **Weekly-overview** (`/v2/api/weekly-overview`) |
+| V1-only endpoints | full **pinned-contents** set (`child_growth`, `faq`, `health_check_ups`, `vaccinations`) + `related-article-contents/*/milestone` + `updated-pinned-contents/*/faq` + `sponsors` | — (not re-implemented in V2) |
+| V2 URL aliases | — | `/v2/api/strings/%` and `/v2/api/check-update/{country}` — same view/controller as the V1 paths, identical responses |
 
-\* `/api/strings/%` is served by the **`bebbo_serializer`** style (not `custom_serialization`), even though it sits under `/api/`. A V2 alias at `/v2/api/strings/%` now exists as well (same view, `v2_string_rest_export` display).
+**Endpoint asymmetry (verified):**
+- **V2 adds** `course`, `guide`, `quiz`, `weekly-overview`; V2 has **only** the two `child_development/40` & `/41` pinned displays.
+- **V1 has** the full pinned-contents set (`child_growth`, `faq`, `health_check_ups`, `vaccinations`), plus `related-article-contents/*/milestone`, `updated-pinned-contents/*/faq`, and `sponsors` — none of which exist in V2.
 
-> Both V1 and V2 remain live. The mobile app migrated to V2; V1 is retained for backward compatibility.
+\* `/api/strings/%` is served by the **`bebbo_serializer`** style (not `bebbo_v1_serializer`), even though it sits under `/api/`. A V2 alias at `/v2/api/strings/%` exists as well (same `tax` view, `v2_string_rest_export` display).
+
+> Both V1 and V2 remain live. The mobile app migrated to V2; V1 (`/api/*`) is retained, public, and backward-compatible.
 
 ---
 
 ## 4. V1 REST Endpoints (`/api/*`)
 
-**Dispatch:** a single Views style plugin (`custom_serialization`) serves all `api/*` displays in `views.view.articles.yml`. `render()` reads the current path, JSON-renders each row (the row already carries **short keys** — `id`, `type`, `title`, `body`, `cover_image`, …), then post-processes by substring-matched endpoint type.
+**Dispatch:** the `bebbo_v1_serializer` Views style plugin serves all `api/*` displays in `views.view.bebbo_v1_apis.yml` (plus the V1 displays on `views.view.country_listing.yml`, `views.view.tax.yml`, and `views.view.sponsors_list.yml`). `render()` resolves the langcode, then `transformRows()` `match()`es on the Views display id and runs the per-endpoint `transformX()` method (each row carries **short keys** — `id`, `type`, `title`, `body`, `cover_image`, …). `/api/strings/%` is the exception — it uses the `bebbo_serializer` style.
 
 ### 4.1 Endpoint inventory
 
+The `bebbo_v1_apis` view has **22 displays**. The `tax`, `country_listing`, and `sponsors_list` views add the remaining V1 displays.
+
 | Path | View / style | Notes |
 |------|--------------|-------|
-| `/api/articles/%` | articles / custom_serialization | Pregnancy term preserved; child-age arrays filtered |
-| `/api/video-articles/%` | articles / custom_serialization | |
-| `/api/activities/%` | articles / custom_serialization | |
-| `/api/milestones/%` | articles / custom_serialization | |
-| `/api/faqs/%` | articles / custom_serialization | |
-| `/api/basic-pages/%` | articles / custom_serialization | adds `unique_name` (lowercased English title, spaces→`_`) |
-| `/api/daily-homescreen-messages/%` | articles / custom_serialization | minimal (id, type, title, dates) |
-| `/api/vaccinations/%` | articles / custom_serialization | |
-| `/api/child-development-data/%` | articles / custom_serialization | |
-| `/api/child-growth-data/%` | articles / custom_serialization | |
-| `/api/health-checkup-data/%` | articles / custom_serialization | |
-| `/api/surveys/%` | articles / custom_serialization | |
-| `/api/archive/%` | articles / custom_serialization | grouped `{Type:[ids]}` envelope |
-| `/api/standard_deviation/%` | articles / **`pb_custom_standard_deviation`** | nested SD envelope (see [§8](#8-standard-deviation)) |
-| `/api/pinned-contents/%/child_development/40` (boy) | articles / custom_serialization | type-specific media swap; dedup by id |
-| `/api/pinned-contents/%/child_development/41` (girl) | articles / custom_serialization | " |
-| `/api/pinned-contents/%/child_growth` | articles / custom_serialization | **V1-only** |
-| `/api/pinned-contents/%/faq` | articles / custom_serialization | **V1-only** |
-| `/api/pinned-contents/%/health_check_ups` | articles / custom_serialization | **V1-only** |
-| `/api/pinned-contents/%/vaccinations` | articles / custom_serialization | **V1-only** |
-| `/api/updated-pinned-contents/%/faq` | articles / custom_serialization | **V1-only** |
-| `/api/related-article-contents/%/milestone` | articles / custom_serialization | **V1-only**; dedup by id |
-| `/api/country-groups/%` | country_listing / custom_serialization | langcode forced to `en` |
-| `/api/vocabularies/%` | tax / custom_serialization | keyed map (see [§7](#7-taxonomy--vocabulary)) |
-| `/api/taxonomies/%/%` | tax / custom_serialization | keyed map |
+| `/api/articles/%` | bebbo_v1_apis / bebbo_v1_serializer | Pregnancy term preserved; child-age arrays filtered |
+| `/api/video-articles/%` | bebbo_v1_apis / bebbo_v1_serializer | |
+| `/api/activities/%` | bebbo_v1_apis / bebbo_v1_serializer | |
+| `/api/milestones/%` | bebbo_v1_apis / bebbo_v1_serializer | |
+| `/api/faqs/%` | bebbo_v1_apis / bebbo_v1_serializer | |
+| `/api/basic-pages/%` | bebbo_v1_apis / bebbo_v1_serializer | adds `unique_name` (lowercased English title, spaces→`_`) |
+| `/api/daily-homescreen-messages/%` | bebbo_v1_apis / bebbo_v1_serializer | minimal (id, type, title, dates) |
+| `/api/vaccinations/%` | bebbo_v1_apis / bebbo_v1_serializer | |
+| `/api/child-development-data/%` | bebbo_v1_apis / bebbo_v1_serializer | |
+| `/api/child-growth-data/%` | bebbo_v1_apis / bebbo_v1_serializer | |
+| `/api/health-checkup-data/%` | bebbo_v1_apis / bebbo_v1_serializer | |
+| `/api/surveys/%` | bebbo_v1_apis / bebbo_v1_serializer | |
+| `/api/archive/%` | bebbo_v1_apis / bebbo_v1_serializer | grouped `{Type:[ids]}` envelope |
+| `/api/standard_deviation/%` | bebbo_v1_apis / bebbo_v1_serializer | nested SD envelope (see [§8](#8-standard-deviation)); SD logic folded into `BebboV1Serializer` (was `pb_custom_standard_deviation`, removed) |
+| `/api/pinned-contents/%/child_development/40` (boy) | bebbo_v1_apis / bebbo_v1_serializer | type-specific media swap; dedup by id |
+| `/api/pinned-contents/%/child_development/41` (girl) | bebbo_v1_apis / bebbo_v1_serializer | " |
+| `/api/pinned-contents/%/child_growth` | bebbo_v1_apis / bebbo_v1_serializer | **V1-only** |
+| `/api/pinned-contents/%/faq` | bebbo_v1_apis / bebbo_v1_serializer | **V1-only** |
+| `/api/pinned-contents/%/health_check_ups` | bebbo_v1_apis / bebbo_v1_serializer | **V1-only** |
+| `/api/pinned-contents/%/vaccinations` | bebbo_v1_apis / bebbo_v1_serializer | **V1-only** |
+| `/api/updated-pinned-contents/%/faq` | bebbo_v1_apis / bebbo_v1_serializer | **V1-only** |
+| `/api/related-article-contents/%/milestone` | bebbo_v1_apis / bebbo_v1_serializer | **V1-only**; dedup by id |
+| `/api/country-groups/%` | country_listing / bebbo_v1_serializer | `%` is a country/app slug (e.g. `wawamor`), **not** a langcode; output `langcode` forced to `en` |
+| `/api/vocabularies/%` | tax / bebbo_v1_serializer | keyed map (see [§7](#7-taxonomy--vocabulary)) |
+| `/api/taxonomies/%/%` | tax / bebbo_v1_serializer | keyed map; 2nd arg is a vocabulary machine name **or** the literal `all` |
 | `/api/strings/%` | tax / **`bebbo_serializer`** | Also available at `/v2/api/strings/%` (same view, `v2_string_rest_export` display) |
-| `/api/sponsors/%` | sponsors_list / custom_serialization | **V1-only**; `%` is country-group id (`all` allowed), no `langcode` key in output |
+| `/api/sponsors/%` | sponsors_list / bebbo_v1_serializer | **V1-only**; `%` is country-group id (`all` allowed), no `langcode` key in output |
 
-### 4.2 Shared value transforms (`CustomSerializer::render`)
+### 4.2 Shared value transforms (`BebboV1Serializer` + `BebboSerializerHelpers` trait)
 
-Applied per-row to whichever short keys are present:
+Applied per-row (via the same helpers V2 uses) to whichever short keys are present:
 
-- **Text decode:** `title`, `question` → decode `&#039;`/`&quot;` then `htmlspecialchars_decode`.
-- **HTML body cleanup** (`body`, `summary`, `answer_part_1`, `answer_part_2`): absolutise `/sites/default/files/` & `/media/oembed` URLs; strip `<span>`, empty `<p>`/`<strong>`, inline `style=`, remote-video width/height, CKEditor label div; `html_entity_decode`.
-- **`embedded_images`** (array of `<img>` src, kept relative) extracted for types Article / Games / Basic page / Video Article.
-- **Media objects** (`cover_image`, `country_flag`, `country_sponsor_logo`, `unicef_logo`, `country_national_partner`, `cover_video`) via `customMediaFormatter()`: image → `{url,name,alt}` (`content_1200xh_` style, WebP); remote_video/video → `{url,name,site}` (or thumbnail `{url,name,alt}` for `cover_image`); empty → `{url:'',name:'',alt:''}`.
-- **Int arrays** (`child_age`, `keywords`, `related_articles`, `related_video_articles`, `related_activities`, `related_milestone`): comma-split, each `intval()`.
-- **Int casts** (`id`, `field_type_of_article`, `category`, `subcategory`, `child_gender`, `parent_gender`, `licensed`, `premature`, `mandatory`, `growth_type`, `standard_deviation`, `growth_period`, `activity_category`, `equipment`, `type_of_support`, `pinned_video_article`, `pinned_article`, `old_calendar`, `related_article`, `chatbot_subcategory`, …): empty → `0`.
-- **Endpoint-specific:** pinned-contents — Article rows drop `cover_video`/`cover_video_image`, Video-Article rows move `cover_video_image`→`cover_image`, plus **dedup by `id`**; basic-pages — add `unique_name`; articles/taxonomies — strip the Pregnancy term from child-age arrays (kept for `api/articles`).
+- **Text decode:** `title`, `question` → `decodeHtmlEntities` (`htmlspecialchars_decode ENT_QUOTES|ENT_HTML5`).
+- **HTML body** (`body`, `summary`, `answer_part_1`, `answer_part_2`): read from the pre-computed `field_body_rendered`/related rendered fields (no request-time DOMDocument parsing); image URLs already WebP-converted at presave (see [§5.7](#57-body-image-processing-v2)).
+- **`embedded_images`** (array of `<img>` src) sourced from the pre-computed `field_embedded_images` field.
+- **Media objects** (`cover_image`, `country_flag`, `country_sponsor_logo`, `unicef_logo`, `country_national_partner`, `cover_video`) via `parseViewCoverImage()` / `resolveMediaIds()` (**batched**, shared trait): image → `{url,name,alt}` (WebP); remote_video/video → `{url,name,site}` (or thumbnail `{url,name,alt}` for `cover_image`); empty → `{url:'',name:'',alt:''}`.
+- **Int arrays** (`child_age`, `keywords`, `related_articles`, `related_video_articles`, `related_activities`, `related_milestone`) via `toIntArray`.
+- **Int casts** (`id`, `field_type_of_article`, `category`, `subcategory`, `child_gender`, `parent_gender`, `licensed`, `premature`, `mandatory`, `growth_type`, `standard_deviation`, `growth_period`, `activity_category`, `equipment`, `type_of_support`, `pinned_video_article`, `pinned_article`, `old_calendar`, `related_article`, `chatbot_subcategory`, …) via `castToInt`: empty → `0`.
+- **Endpoint-specific:** pinned-contents — Article rows drop `cover_video`/`cover_video_image`, Video-Article rows move `cover_video_image`→`cover_image`, plus **dedup by `id`**; basic-pages — add `unique_name`; articles/taxonomies — Pregnancy term handling (see [§4.3](#43-v1-query-parameters)).
 
-> The per-row field **set** for each endpoint is selected by the corresponding `views.view.articles.yml` display (verified field-by-field in config). The serializer renders those fields under short keys and applies the transforms above. For the concrete shapes, the V1 endpoints mirror their V2 equivalents in [§5](#5-v2-rest-endpoints-v2api) — except the V1-only endpoints (sponsors, strings, the extra pinned/updated/related variants) and the grouped `archive` / nested `standard_deviation` shapes.
+> The per-row field **set** for each endpoint is selected by the corresponding `views.view.bebbo_v1_apis.yml` (or `tax`/`country_listing`/`sponsors_list`) display. The serializer renders those fields under short keys and applies the transforms above. For the concrete shapes, the V1 endpoints mirror their V2 equivalents in [§5](#5-v2-rest-endpoints-v2api) — except the V1-only endpoints (sponsors, the extra pinned/updated/related variants) and the grouped `archive` / nested `standard_deviation` shapes. The V1 JSON is byte-compatible with the legacy V1 contract.
 
 ### 4.3 V1 query parameters
 
-V1 honors exactly **one** parameter inside the serializer: **`pregnancy=true`** — on the taxonomies branch it keeps the Pregnancy `child_age` term (otherwise hidden); ignored on `api/articles`. The other filter params below ([§6](#6-query-parameters)) are Views exposed filters configured on the article view and apply to V1 too.
+- **`pregnancy=true`** — honored on **two** endpoints (verified):
+  - **articles** — `bebbo_serializer.module`'s `hook_views_query_alter()` injects the Pregnancy `child_age` TID into the `bebbo_v1_apis`/`v1_articles_rest_export` filter (commit `87ab0e989`).
+  - **taxonomies** — `BebboV1Serializer` keeps the otherwise-hidden Pregnancy `child_age` term in the taxonomy output.
+  - It is **not** an exposed Views filter.
+- **`datetime="YYYY-MM-DD HH:MM"`** and the other filter params ([§6](#6-query-parameters)) are Views **contextual-filter arguments** (`query_parameter` default-argument plugin) on the `bebbo_v1_apis` view, not exposed filters. The only exposed filter on the V1 view is `nid`.
 
 ---
 
@@ -162,9 +174,9 @@ V1 honors exactly **one** parameter inside the serializer: **`pregnancy=true`** 
 | `/v2/api/archive/%` | `archive_rest_export` | `transformArchive` |
 | `/v2/api/course/%` | `course_rest_export` | `transformCourse` |
 | `/v2/api/quiz/%` | `quiz_rest_export` | `transformQuiz` |
-| `/v2/api/country-groups/%` | `country_listing_export` (country_listing view) | `transformCountryGroups` |
+| `/v2/api/country-groups/%` | `country_listing_export` (country_listing view) | `transformCountryGroups`; `%` is a country/app slug (e.g. `wawamor`), not a langcode |
 | `/v2/api/vocabularies/%` | `vocabulary_rest_export` (tax view) | `transformVocabularies` |
-| `/v2/api/taxonomies/%/%` | `terms_rest_export` (tax view) | `transformTaxonomies` |
+| `/v2/api/taxonomies/%/%` | `terms_rest_export` (tax view) | `transformTaxonomies`; 2nd arg is a vocabulary machine name **or** `all` |
 | `/v2/api/strings/%` | `v2_string_rest_export` (tax view) | Same fields/filters as V1 `/api/strings/%` — V2 URL alias |
 | `/v2/api/check-update/{country}` | `CheckUpdateController::checkUpdate` (route `bebbo_serializer.v2_check_update`) | Same as V1 `/api/check-update/{country}` — same controller method, V2 URL path |
 
@@ -1084,7 +1096,7 @@ Full response shape:
 
 ### 5.5 Country-groups
 
-`transformCountryGroups` filters out `CountryID 131`, dedups by CountryID, parses media, builds language arrays, and removes raw `langcode`. Langcode is forced to `en` for this endpoint. `CountryID 126` ("Rest of the world") gets hardcoded `en`+`ru` languages and is moved to the end.
+`transformCountryGroups` filters out `CountryID 131`, dedups by CountryID, parses media, builds language arrays, and removes raw `langcode`. The path `%` argument is a **country/app slug** (e.g. `wawamor`, `babuni`), not a langcode; the output `langcode` is forced to `en` for this endpoint. `CountryID 126` ("Rest of the world") gets hardcoded `en`+`ru` languages and is moved to the end.
 
 **Country-group object keys:**
 
@@ -1163,7 +1175,7 @@ Configured as **Views contextual filters** (arguments) using the `query_paramete
 Both versions return **keyed objects**, not flat arrays.
 
 - **Vocabularies** (`/api/vocabularies/%`, `/v2/api/vocabularies/%`): `{ "<machine_name>": {"name": "Label"} }`. V2 prefers the translated label and **skips `keywords`**.
-- **Taxonomies** (`/api/taxonomies/%/%`, `/v2/api/taxonomies/%/%`): `{ "<vocab>": [ term, … ] }`. V2 per-vocab term shapes (`transformTaxonomies`):
+- **Taxonomies** (`/api/taxonomies/{lang}/{vocab}`, `/v2/api/taxonomies/{lang}/{vocab}`): `{ "<vocab>": [ term, … ] }`. The `{vocab}` argument is a **vocabulary machine name** (e.g. `child_age`) **or** the literal **`all`** — `all` returns terms for every vocabulary in one response (e.g. `/api/taxonomies/en/all` is valid). V2 per-vocab term shapes (`transformTaxonomies`):
   - `growth_period`: `{id,name,vaccination_opens(int),short_name,unique_name}`
   - `child_age`: `{id,name,days_from,days_to,buffers_days,age_bracket(int[])}`
   - `growth_introductory`: `{id,name,body,days_from,days_to}`
@@ -1173,7 +1185,7 @@ Both versions return **keyed objects**, not flat arrays.
   - basic vocabs: `{id,name}`
   - `keywords` is always skipped.
 
-V1 (`custom_serialization`) produces an equivalent keyed map; V2 envelope omits `total`.
+V1 (`bebbo_v1_serializer`) produces an equivalent keyed map (byte-identical to V2 after the D11 vid-token fix, commit `d27fda9f9`); both envelopes omit `total`.
 
 ---
 
@@ -1183,7 +1195,7 @@ Two distinct paths — **do not conflate**:
 
 | Path | View / style | Output |
 |------|--------------|--------|
-| `/api/standard_deviation/%` (V1) | `views.view.articles.yml` / **`pb_custom_standard_deviation`** | `{status:200, [langcode], data:{…}}` |
+| `/api/standard_deviation/%` (V1) | `views.view.bebbo_v1_apis.yml` / **`bebbo_v1_serializer`** | `{status,langcode,data}` (SD logic folded into `BebboV1Serializer`; the old `pb_custom_standard_deviation` module is removed) |
 | `/v2/api/standard_deviation/%` (V2) | `views.view.bebbo_v2_apis.yml` / `bebbo_serializer` | `{status,langcode,data}` |
 
 Both build nested growth-type structures keyed `height_for_age` and `weight_for_height` (the latter renamed from the internal `height_for_weight`), bucketed by child-age ranges, with SD-label keys such as `goodText`, `warrningSmallLengthText`, `emergencySmallLengthText`, `warrningBigLengthText` (height_for_age) and `goodText`, `warrningSmallHeightText`, `emergencySmallHeightText`, `warrningBigHeightText`, `emergencyBigHeightText` (weight_for_height). Each SD entry carries `child_age` (int[]) and per-label objects `{articleID:int[], name, text}`. Empty results → `{status:204,"message":"No Records Found"}`; bad langcode → `{status:400}`.
@@ -1241,6 +1253,49 @@ Populated via admin form at `/admin/config/parent-buddy/forcefull-update-check` 
 
 > Only the **V2** path (`/v2/api/check-update/`) is JWT-protected, via the `/v2/api/` pattern in the `bebbo_api_security` default protected set. The **V1** path (`/api/check-update/`) is public and is **not** in the protected set.
 
+### 9.2 Group / App names per site (country IDs)
+
+The `{country}` argument for check-update is a **group entity ID** (`countries_id`), and country-groups dedups/keys on the same group IDs (`CountryID`). Group IDs are **local to each site's database** — the same numeric ID means different things on different sites. DB-verified 2026-06-29:
+
+**Default (Bebbo) site — 18 groups:**
+
+| Group ID | Group | `app_name` |
+|----------|-------|------------|
+| 6 | Albania | Bebbo |
+| 11 | Bulgaria | Bebbo |
+| 16 | Greece | Bebbo |
+| 21 | Kosovo | Foleja |
+| 26 | Kyrgyzstan | Bebbo |
+| 31 | Montenegro | Bebbo |
+| 36 | North Macedonia | Bebbo |
+| 41 | Serbia | Bebbo |
+| 46 | Tajikistan | Bebbo |
+| 51 | Uzbekistan | Bebbo |
+| 106 | Belarus | Bebbo |
+| 126 | Global - English | Bebbo |
+| 131 | Global - Russian | Bebbo |
+| 136 | Ukraine | Bebbo |
+| 141 | Romania | Bebbo |
+| 146 | Moldova | Bebbo |
+| 151 | Slovakia | Bebbo |
+| 161 | India | Bebbo |
+
+> There is **no** group `156` / "Türkiye" on the default site — Türkiye is the separate `turkey` site (group `1`, app `merhababebek`).
+
+**Other sites (each group ID is local to its own site):**
+
+| Site | Group ID | Group | `app_name` |
+|------|----------|-------|------------|
+| Bangladesh | 1 | Bangladesh | Babuni |
+| Turkey | 1 | Türkiye | merhababebek |
+| Ecuador | 1 | Ecuador | Wawamor |
+| Pakistan | 1 | Pakistan | pakistan |
+| Pacific Islands (`somoa`) | 1 | Samoa | BebboPacific |
+| Pacific Islands (`somoa`) | 6 | Fiji | BebboPacific |
+| Zimbabwe | 1 | Zimbabwe | reraiumntwana |
+
+> In `country-groups`, `CountryID 131` (Global - Russian) is filtered out and `CountryID 126` (Global - English, "Rest of the world") is moved to the end with hardcoded `en`+`ru` languages.
+
 ---
 
 ## 10. JSON:API
@@ -1276,25 +1331,25 @@ API requests pass through these event subscribers in priority order:
 | Priority | Subscriber | Module | Effect |
 |----------|-----------|--------|--------|
 | **0** | `EtagResponseSubscriber` | `bebbo_serializer` | Sets ETag header; converts to 304 on matching `If-None-Match`. |
-| **-10** | `ApiResponseSubscriber` | `language_visibility_control` | Filters languages in **V1** `/api/country-groups` responses only. V2 handles filtering inside `BebboSerializer::transformCountryGroups()`. |
+
+> The former `language_visibility_control` `ApiResponseSubscriber` (which post-filtered languages on `/api/country-groups`) was **removed** (commit `aa17725b2`). Both serializers now call `filterLanguageDataForApi()` inline inside `transformCountryGroups()`, so no response-phase language filter remains.
 
 ---
 
 ## 12. Caching Layers
 
-### V2 (`BebboSerializer` + `CustomSerializerHelper`)
+### V1 (`BebboV1Serializer`) and V2 (`BebboSerializer`) — shared `BebboSerializerHelpers` trait
+
+Both serializers use the same caching/batching mechanisms (verified in `BebboSerializerHelpers.php` + `bebbo_serializer.module`):
 
 | Layer | Scope | Details |
 |-------|-------|---------|
-| **ETag / 304** | Per-endpoint | Avoids re-transmitting unchanged data (see §5.6) |
-| **Request-level static cache** | Per HTTP request | Media entities, file entities, ConfigurableLanguage, Group entities, image style, country groups, taxonomy terms (keyed by `{vocabulary}:{langcode}`) — all loaded once per request, not persisted |
-| **Batch entity loading** | Per request | `loadMediaBatch`, `loadFileBatch`, `loadTaxonomyTermsBatch`, `loadGroupsBatch` — single query for multiple IDs, eliminates N+1 |
-| **Direct DB queries** | Per request | `getFileUrisBatch`, `getMediaAltTextBatch`, `getNodeTitlesBatch`, `getTaxonomyTermsBatch`, `getLanguageDataBatch` — skip entity API overhead |
-| **Persistent cache** | Across requests | Vimeo API responses: 24h (`custom_serialization:vimeo:{id}`); failed Vimeo: 5min; Pregnancy term ID: permanent (tag: `taxonomy_term_list:child_age`) |
+| **ETag / 304** | Per-endpoint | V2 only — 5 displays (see [§5.6](#56-etag--conditional-requests)). V1 has no ETag. |
+| **Batched media resolution** | Per request | `resolveMediaIds()` / `parseViewCoverImage()` resolve all media IDs in a row set together (WebP image styles), avoiding the per-row N+1 entity loads of the old V1 `custom_serialization`. |
+| **Batched taxonomy/title lookups** | Per request | `queryBasicTermsBatch()` / `queryUniqueNameTermsBatch()` (taxonomy transforms); `getEnglishNodeTitles()` (shared) load in one query per request. |
+| **Persistent cache** | Across requests | Pregnancy term TID: permanent, cid `bebbo_serializer:pregnancy_tid`, tag `taxonomy_term_list` (`bebbo_serializer.module`). |
 
-### V1 (`CustomSerializer`)
-
-Same `CustomSerializerHelper` service, same batch loading and caching. Media resolution via `customMediaFormatter()` is per-row (no batching), which is the main V1→V2 performance improvement.
+> The previous Vimeo-response persistent cache and the `CustomSerializerHelper` service no longer exist — they belonged to the removed `custom_serialization` module. Porting V1 onto the V2 batched helpers (single query for multiple IDs vs. per-row loads) is the main V1 performance improvement.
 
 ---
 
@@ -1390,9 +1445,9 @@ curl -s 'https://bebbo.example.com/v2/api/taxonomies/en/child_age?pregnancy=true
 
 ### 14.4 V2 country-groups
 
-Langcode argument is ignored (forced to `en` internally):
+The `%` argument is a country/app slug (e.g. `wawamor`), **not** a langcode; the output `langcode` is forced to `en` internally:
 ```bash
-curl -s 'https://bebbo.example.com/v2/api/country-groups/en'
+curl -s 'https://bebbo.example.com/v2/api/country-groups/wawamor'
 ```
 
 ### 14.5 Force-update / check-update
@@ -1442,13 +1497,12 @@ curl -s -X POST 'https://bebbo.example.com/api/security/revoke' \
 
 | Body `status` | Body `message` | Condition | Applies to | Source |
 |---------------|----------------|-----------|------------|--------|
-| `400` | `"Request language is wrong"` | Langcode URL argument is not an enabled Drupal language | All V1 & V2 content endpoints (except country-groups, sponsors) | `BebboSerializer.php:291`, `CustomSerializer.php:684` |
-| `400` | `"Request country code is wrong"` | Path argument not a valid country group ID | **V1 `/api/sponsors/%` only** | `CustomSerializer.php:671` |
-| `403` | `"Language not available"` | Langcode is valid but not visible in any country group (per `language_visibility_control`) | All V1 & V2 content endpoints (except country-groups) | `BebboSerializer.php:305`, `CustomSerializer.php:711` |
-| `204` | `"No Records Found"` | View query returns zero rows | All V1 & V2 content endpoints, force-update | `BebboSerializer.php:189`, `CustomSerializer.php:634`, `CheckUpdateController.php` (check-update) |
+| `400` | `"Request language is wrong"` | Langcode URL argument is not an enabled Drupal language | All V1 & V2 content endpoints **except country-groups** | `BebboSerializer::checkLanguageVisibility()`, `BebboV1Serializer::checkLanguageVisibility()` |
+| `403` | `"Language not available"` | Langcode is valid but not visible in any country group (per `language_visibility_control`) | All V1 & V2 content endpoints **except country-groups** | `BebboSerializer::checkLanguageVisibility()`, `BebboV1Serializer::checkLanguageVisibility()` |
+| `204` | `"No Records Found"` | View query returns zero rows | All V1 & V2 content endpoints, force-update | `BebboSerializer::render()`, `BebboV1Serializer::render()`, `CheckUpdateController` (check-update) |
 | `200` | _(none)_ | Success — `data` array/object populated | All endpoints | — |
 
-Error envelope shape (all three error cases):
+Error envelope shape (`400`/`403`/`204` cases):
 ```json
 {"status": 400, "message": "Request language is wrong", "datetime": "2026-06-18 12:00"}
 ```

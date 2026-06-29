@@ -1,8 +1,8 @@
 # Bebbo Custom Modules Reference
 
 > **Audience:** backend maintainers, code reviewers, onboarding developers.
-> **Scope:** all 15 custom modules in `docroot/modules/custom/`, their purpose, hooks, services, routes, database tables, and interdependencies.
-> **Verified against:** repository `HEAD` (branch `feature/group3-manage-users`). Every hook, class, service, and route below was confirmed in source.
+> **Scope:** all 13 enabled custom modules in `docroot/modules/custom/`, their purpose, hooks, services, routes, database tables, and interdependencies.
+> **Verified against:** repository `HEAD` (branch `bug/issue-fixes`). Every hook, class, service, and route below was confirmed in source. **Verified 2026-06-29** against `config/sync/core.extension.yml` and the module directories on disk.
 
 ---
 
@@ -11,20 +11,20 @@
 | # | Module | Package | Purpose | Complexity |
 |---|--------|---------|---------|------------|
 | 1 | [`bebbo_api_security`](#1-bebbo_api_security) | Security | Device attestation, JWT auth for V2 API | High |
-| 2 | [`bebbo_serializer`](#2-bebbo_serializer) | Serialization | V2 REST API serialization, response envelopes, ETag | High |
-| 3 | [`custom_serialization`](#3-custom_serialization) | Serialization | V1 REST API serialization, media/field transforms | High |
+| 2 | [`bebbo_serializer`](#2-bebbo_serializer) | Serialization | V1 + V2 REST API serialization, response envelopes, ETag, check-update | High |
+| 3 | [`bebbo_custom_general`](#3-bebbo_custom_general) | Utilities | Catch-all utilities extracted from `pb_custom_form`: CSV export, TMGMT UX, mobile share, redirects, app-store QR | High |
 | 4 | [`pb_custom_field`](#4-pb_custom_field) | Editorial | Field access, form alterations, editorial workflow, group membership | High |
-| 5 | [`pb_custom_form`](#5-pb_custom_form) | Admin | Admin config forms, force-update API table, mobile share, CSV export | High |
+| 5 | [`pb_custom_form`](#5-pb_custom_form) | Admin | Force-update API table + admin config container | Medium |
 | 6 | [`pb_content_analytics`](#6-pb_content_analytics) | Analytics | BigQuery sync for read/like counts, analytics reports | Medium |
 | 7 | [`group_country_field`](#7-group_country_field) | Groups | Views query alteration for group-scoped content, TMGMT form control | Medium |
 | 8 | [`language_visibility_control`](#8-language_visibility_control) | Language | Per-group mobile language visibility, API response filtering | Medium |
 | 9 | [`language_custom_field`](#9-language_custom_field) | Language | Custom fields on language entities (locale, luxon, plural) | Low |
 | 10 | [`custom_article`](#10-custom_article) | Content | Batch keyword lowercasing, cross-translation field copy, Drush utilities | Low |
 | 11 | [`file_sanitizer`](#11-file_sanitizer) | Media | Filename sanitization on upload, MIME mismatch scanning | Low |
-| 12 | [`pb_custom_rest_api`](#12-pb_custom_rest_api-removed) | API | **Removed** — force-update check now in `bebbo_serializer` (`CheckUpdateController`) | — |
-| 13 | [`pb_custom_standard_deviation`](#13-pb_custom_standard_deviation) | API | V1 standard deviation Views style plugin | Low |
-| 14 | [`pb_custom_migrate`](#14-pb_custom_migrate) | Migration | 207 CSV-based content migration configs | Low |
-| 15 | [`pb_strings`](#15-pb_strings) | Content | Strings taxonomy management, unique name enforcement, bulk translate UI | Low |
+| 12 | [`pb_custom_migrate`](#12-pb_custom_migrate) | Migration | CSV-based content migration configs | Low |
+| 13 | [`pb_strings`](#13-pb_strings) | Content | Strings taxonomy management, unique name enforcement, bulk translate UI | Low |
+
+> **Removed modules** (no longer on disk): [`pb_custom_rest_api`](#removed-modules), [`custom_serialization`](#removed-modules), [`pb_custom_standard_deviation`](#removed-modules) — see the [Removed modules](#removed-modules) section. Their logic moved into `bebbo_serializer` and `bebbo_custom_general`.
 
 ---
 
@@ -61,6 +61,8 @@ Device authentication for the V2 content API. Apps prove authenticity via platfo
 | `/api/security/revoke` | POST | public (Bearer required in handler) | `SecurityController::revoke` |
 | `/admin/config/parent-buddy/api-security` | GET/POST | `administer bebbo api security` | `ApiSecuritySettingsForm` |
 
+The five `/api/security/*` endpoints are PUBLIC because unauthenticated devices bootstrap auth here — they are how a client OBTAINS the JWT used for `/v2/api/*`. JWT-only path protection is `/v2/api/` (the `/api/check-update/` pattern was dropped — commit `ba49af17a`).
+
 ### Hooks
 
 | Hook | Behavior |
@@ -69,7 +71,7 @@ Device authentication for the V2 content API. Apps prove authenticity via platfo
 
 ### Database Tables
 
-`bebbo_api_devices`, `bebbo_api_refresh_tokens`, `bebbo_api_challenges`, `bebbo_api_security_log` — schema details in [`API_SECURITY.md` §8](API_SECURITY.md#8-data-model).
+`bebbo_api_devices`, `bebbo_api_refresh_tokens`, `bebbo_api_challenges`, `bebbo_api_security_log` — schema details in [`API_SECURITY.md` §8](API_SECURITY.md#8-data-model). Backed by 4 admin Views (`bebbo_api_devices`, `bebbo_api_challenges`, `bebbo_api_refresh_tokens`, `bebbo_api_security_log`). Keys via the Key module: `bebbo_jwt_signing_key` (JWT) and `bebbo_google_sa_key` (Play Integrity / Google SA).
 
 ### Permissions
 
@@ -93,9 +95,9 @@ Device authentication for the V2 content API. Apps prove authenticity via platfo
 
 ### Purpose
 
-V2 REST API serialization. Provides the `bebbo_serializer` Views style plugin that transforms Views REST export rows into the Bebbo JSON envelope (`{status, total, langcode, datetime, data}`), the `bebbo_json` encoder, ETag support, and presave logic for computed fields.
+Both V1 (`/api/*`, public) and V2 (`/v2/api/*`, JWT-protected) REST API serialization. Provides the `bebbo_serializer` (V2) and `bebbo_v1_serializer` (V1) Views style plugins that transform Views REST export rows into the Bebbo JSON envelope (`{status, total, langcode, datetime, data}`), the `bebbo_json` encoder, ETag support (V2), and presave logic for computed fields. V1 emits plain escaped `json` for byte parity with the legacy app; V2 emits `bebbo_json` (unescaped slashes/unicode) with ETag/304.
 
-Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API** (`/api/strings/%` and `/v2/api/strings/%`, served by the `string_rest_export` / `v2_string_rest_export` displays of the `tax` view using this module's style plugin) and the **Force-Update / check-update** endpoint (`/api/check-update/{country}` and `/v2/api/check-update/{country}`, served by `CheckUpdateController` via `bebbo_serializer.routing.yml`). Both V1/V2 pairs return identical responses.
+Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API** (`/api/strings/%` and `/v2/api/strings/%`, served by the `string_rest_export` / `v2_string_rest_export` displays of the `tax` view using this module's style plugin) and the **Force-Update / check-update** endpoint (`/api/check-update/{country}` and `/v2/api/check-update/{country}`, served by `CheckUpdateController` via `bebbo_serializer.routing.yml`). Both V1/V2 pairs return identical responses. The V2 check-update route is marked `no_cache: TRUE` to prevent a cached authenticated 200 being replayed to anonymous clients by the page cache (commit `13ddbdcb7`).
 
 ### Services
 
@@ -112,7 +114,8 @@ Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API**
 |------|----------|
 | `hook_node_presave` | Populates `field_number_of_modules` (course), `field_number_of_questions` (quiz), truncates height/weight decimals (pregnancy_weekly_overview), auto-populates `field_embedded_images` and `field_body_rendered` for published nodes |
 | `hook_node_predelete` | Deletes orphaned quiz_questions nodes when quiz node deleted |
-| `hook_views_query_alter` | Adds Pregnancy term to child_age filter when `?pregnancy=true` on articles endpoint |
+| `hook_views_query_alter` | Adds Pregnancy term to child_age filter when `?pregnancy=true` on the V1 + V2 articles endpoints |
+| `hook_views_post_execute` | De-duplicates pinned/related rows on migrated displays |
 | `hook_form_alter` | Makes module/question count fields readonly on course/quiz forms; validates course expiry, passing score, question count |
 | `hook_inline_entity_form_translation_restrict_alter` | Allows adding new course modules on translation forms |
 | `hook_inline_entity_form_entity_form_alter` | Renames IEF "Add another item" → "Add another answer" on quiz forms |
@@ -123,6 +126,7 @@ Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API**
 |-------|------|------|
 | `BebboSerializer` | Views style plugin | 20+ `transformX()` methods for per-endpoint row transformation (V2 + Strings) |
 | `BebboV1Serializer` | Views style plugin | V1 counterpart style plugin (`bebbo_v1_serializer`) for the V1 displays |
+| `BebboSerializerHelpers` | Trait | Shared pure row-transform helpers (type casts, media/HTML parsing, language resolution, taxonomy) used by both style plugins |
 | `CheckUpdateController` | Controller | Force-update / check-update endpoint, shared by the V1 and V2 routes |
 | `BebboEncoder` | Encoder | `bebbo_json` format encoding |
 | `BodyImageProcessor` | Service | Presave body HTML → image URL extraction |
@@ -145,45 +149,79 @@ Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API**
 - `10002`: Migrates `field_content_toggle` value `ai_chatbot` → `chatbot`
 - `10003`: Migrates `field_content_toggle` allowed values to machine names, sets canonical field storage config
 
+> **Supersedes** the removed `pb_custom_rest_api` (check-update), `custom_serialization` (V1 serialization), and `pb_custom_standard_deviation` (V1 standard-deviation transform) — see [Removed modules](#removed-modules).
+
 ---
 
-## 3. `custom_serialization`
+## 3. `bebbo_custom_general`
 
-**Name:** PB API Serialization
-**Core:** `^9.2 || ^10 || ^11`
-**Dependencies:** `language_visibility_control:language_visibility_control`
+**Name:** Bebbo Custom General
+**Core:** `^10 || ^11`
+**Dependencies:** none declared in `.info.yml`
 
 ### Purpose
 
-V1 REST API serialization. Provides the `custom_serialization` Views style plugin for legacy `/api/*` endpoints and the `CustomSerializerHelper` service for batched entity loading, caching, and media resolution.
+Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag (P1 slices + `.module` hook slices 1–5b). Houses self-contained admin features and editorial-form helpers that have no dedicated module: Entity Share CSV export, TMGMT overview/cart UX, mobile-JS share landing pages, language/landing-page redirect management, app-store QR redirect, master-language settings, article category AJAX cascade, group-country form handling, node archive validation, and node-action batch helpers.
 
 ### Services
 
 | Service ID | Class | Role |
 |-----------|-------|------|
-| `custom_serialization.helper` | `CustomSerializerHelper` | Batch entity loading, request-level caching, Vimeo API, WebP conversion |
+| `bebbo_custom_general.mailer_sender_override` | `MailerSenderOverride` | Event subscriber — overrides mail sender from config |
+| `bebbo_custom_general.internal_content_node_redirect` | `InternalContentNodeRedirect` | `KernelEvents::REQUEST` — redirects anonymous internal node URLs by language / site context |
+
+### Routes
+
+| Path | Handler | Permission |
+|------|---------|------------|
+| `/admin/config/parent-buddy/mobile-javascript` | `MobileAppShareLinkForm` | `administer site configuration` |
+| `/share/{param1}/{param2}/{param3}` | `PbMobile::render` | `manage mobile javascript` |
+| `/foleja/share/{param1}/{param2}/{param3}` | `PbMobile::kosovorender` | `manage mobile javascript` |
+| `/admin/config/parent-buddy/redirect-management` | `RedirectManagementForm` | `manage redirect settings` |
+| `/admin/config/parent-buddy/admin-parent-buddy` | `SettingsForm` (master language) | `administer site configuration` |
+| `/admin/config/parent-buddy/app-store-redirect` | `AppStoreRedirectForm` | `administer site configuration` |
+| `/downloadapp.html` | `AppStoreRedirectController::render` | public (`_access: TRUE`) |
+| `/admin/config/parent-buddy/apply-trans-related-articles-video` | `ApplyTransRelatedArticlesVideo` | `administer site configuration` |
+| `/admin/content/entity_share/pull/export/csv` | `CsvExportController::download` | `entity_share_client_pull_content` |
+| `/admin/content/entity_share/pull/export/csv/batch` | `CsvExportController::downloadBatch` | `entity_share_client_pull_content` |
+| `/admin/content/entity_share/pull/export/csv/download` | `CsvExportController::downloadCompleted` | `entity_share_client_pull_content` |
+
+> The admin forms hang off the `pb_custom_form.admin_config_parent_buddy` menu container, and their permissions (`manage mobile javascript`, `manage redirect settings`) are still declared by `pb_custom_form`.
+
+### Hooks
+
+| Hook | Behavior |
+|------|----------|
+| `hook_theme` | Defines `pb-mobile` and `kosovo-mobile` share-page templates |
+| `hook_form_alter` | Article category→subcategory AJAX cascade; Entity Share pull CSV-download button; group-country edit form (make-available-for-mobile default + library + submit handler) |
+| `hook_form_tmgmt_overview_form_alter` | TMGMT overview Node ID column + filter + sortable header |
+| `hook_query_TAG_alter` (`tmgmt_entity_get_translatable_entities`) | Node ID filter/sort on the translatable-entities query |
+| `hook_menu_local_tasks_alter` | Adds TMGMT Job Items/Jobs/Sources/Cart/Providers/Settings local tasks |
+| `hook_preprocess_page` | TMGMT route cache context |
+| `hook_node_validate` | Requires a revision log when a non-admin sets a node to the archive moderation state |
+
+> **Dead-code note:** `bebbo_custom_general_pb_custom_field_preprocess_views_view_field()` was moved verbatim from `pb_custom_form` (slice 4/5). Its name does not match the `{module}_preprocess_{hook}` pattern, so the theme registry never registers it — it remains a no-op, with a `@todo` documenting how to enable it.
 
 ### Key Classes
 
 | Class | Type | Role |
 |-------|------|------|
-| `CustomSerializer` | Views style plugin | ~500 line `render()` with substring-dispatched per-endpoint transforms |
-| `CustomSerializerHelper` | Service | Media/file/taxonomy batch loading with static + persistent caches |
+| `CsvExportController` | Controller | Batch CSV export from Entity Share remote pull data |
+| `PbMobile` | Controller | Mobile share page + Kosovo (`foleja`) variant |
+| `AppStoreRedirectController` | Controller | QR-code `/downloadapp.html` landing page for app download |
+| `ChangeNodeStatus` | Batch processor | Archives node translations during country offload |
+| `ApplyNodeTranslations` | Batch processor | Copies related articles/videos across node translations |
+| `InternalContentNodeRedirect` | Event subscriber | Anonymous internal node → language redirect |
+| `MailerSenderOverride` | Event subscriber | Mail sender override from config |
+| Form classes | Forms | `MobileAppShareLinkForm`, `RedirectManagementForm`, `SettingsForm`, `AppStoreRedirectForm`, `ApplyTransRelatedArticlesVideo` |
 
-### Caching in `CustomSerializerHelper`
+### Config
 
-| Cache | Scope | TTL |
-|-------|-------|-----|
-| Media, file, language, group entities | Request-level static | Per-request |
-| Country groups, taxonomy terms | Request-level static | Per-request |
-| Image style | Request-level static | Per-request |
-| Vimeo thumbnails (success) | Persistent (`cache.default`) | 24h (86400s) |
-| Vimeo thumbnails (failure) | Persistent (`cache.default`) | 5min (300s) |
-| Pregnancy term ID | Persistent (`cache.default`) | Permanent (tag: `taxonomy_term_list:child_age`) |
+`bebbo_custom_general.mobile_app_share_link_form`, `bebbo_custom_general.adminsettings`, `bebbo_custom_general.app_store_redirect`, `bebbo_custom_general.landing_pages`, `bebbo_custom_general.language_redirects` (schema in `config/schema/bebbo_custom_general.schema.yml`). The mobile-share and redirect configs are config_ignore'd / per-site split.
 
-### Batch Loading Methods
+### Post-Update Hooks
 
-`loadMediaBatch`, `loadFileBatch`, `loadTaxonomyTermsBatch`, `loadConfigurableLanguagesBatch`, `loadGroupsBatch`, `getFileUrisBatch`, `getMediaAltTextBatch`, `getNodeTitlesBatch`, `getTaxonomyTermsBatch`, `getLanguageDataBatch` — all reduce N+1 queries to single DB calls.
+- `clean_orphan_language_content`: per-site, runs on `drush updb` — discovers content in non-configured languages (Entity Share import leftovers) and triages each (remove orphan translation / delete entirely-foreign entity / re-langcode to site default). Idempotent.
 
 ---
 
@@ -294,70 +332,38 @@ The largest editorial module. Controls field access, form alterations, editorial
 
 ### Purpose
 
-Admin configuration forms (force-update, mobile share, app store redirect, redirect management), mobile share page rendering, Entity Share CSV export, TMGMT form/view integration, and the `forcefull_check_update_api` database table.
-
-### Services
-
-| Service ID | Class | Role |
-|-----------|-------|------|
-| `pb_custom_form.internal_content_node_redirect` | `InternalContentNodeRedirect` | Event subscriber — redirects internal node URLs by site context |
+Now a small module after most of its grab-bag was decomposed into [`bebbo_custom_general`](#3-bebbo_custom_general). Retains the **Force-Update** admin config (`CustomForm`, `ForceUpdateCheckForm`), the `forcefull_check_update_api` database table, the `/admin/config/parent_buddy` admin-menu container that the other parent-buddy admin pages hang off, and the shared permissions consumed by the moved features.
 
 ### Permissions
 
 | Permission | Description |
 |-----------|-------------|
-| `manage mobile javascript` | Access mobile app share link JavaScript |
+| `manage mobile javascript` | Access mobile app share link JavaScript (used by `bebbo_custom_general` share routes) |
 | `forcefull update check` | Access force update check API config |
-| `manage redirect settings` | Access redirect management configuration |
+| `manage redirect settings` | Access redirect management configuration (used by `bebbo_custom_general` redirect form) |
 
 ### Routes
 
 | Path | Handler | Permission |
 |------|---------|------------|
-| `/admin/config/parent_buddy` | Menu container | `administer site configuration` |
+| `/admin/config/parent_buddy` | `SystemController::systemAdminMenuBlockPage` (menu container) | `administer site configuration` |
 | `/admin/config/parent-buddy/forcefull-update-check` | `CustomForm` | `forcefull update check` |
-| `/admin/config/parent-buddy/admin-parent-buddy` | `SettingsForm` | `administer site configuration` |
-| `/admin/config/parent-buddy/mobile-javascript` | `MobileAppShareLinkForm` | `administer site configuration` |
-| `/admin/config/parent-buddy/redirect-management` | `RedirectManagementForm` | `manage redirect settings` |
-| `/admin/config/parent-buddy/app-store-redirect` | `AppStoreRedirectForm` | `administer site configuration` |
-| `/admin/config/parent-buddy/apply-trans-related-articles-video` | `ApplyTransRelatedArticlesVideo` | `administer site configuration` |
 | `/forcefull-update-check` | `ForceUpdateCheckForm` | `forcefull update check` |
-| `/share/{param1}/{param2}/{param3}` | `PbMobile::render` | `manage mobile javascript` |
-| `/foleja/share/{param1}/{param2}/{param3}` | `PbMobile::kosovorender` | `manage mobile javascript` |
-| `/downloadapp.html` | `AppStoreRedirectController::render` | public |
-| `/admin/content/entity_share/pull/export/csv` | `CsvExportController::download` | `entity_share_client_pull_content` |
-| `/admin/content/entity_share/pull/export/csv/batch` | `CsvExportController::downloadBatch` | `entity_share_client_pull_content` |
-| `/admin/content/entity_share/pull/export/csv/download` | `CsvExportController::downloadCompleted` | `entity_share_client_pull_content` |
 
 ### Hooks
 
-| Hook | Behavior |
-|------|----------|
-| `hook_views_query_alter` | Filters articles by pregnancy status; Node ID filtering for TMGMT |
-| `hook_theme` | Defines `pb-mobile` and `kosovo-mobile` theme templates |
-| `hook_query_TAG_alter` | Custom filtering/sorting for TMGMT translatable entities |
-| `hook_form_alter` | Article categorization AJAX, TMGMT modifications, Entity Share CSV button |
-| `hook_views_post_execute` | Deduplicates pinned content in API responses |
-| `hook_preprocess_page` | Ensures TMGMT local tasks visibility |
-| `hook_menu_local_tasks_alter` | Adds TMGMT local tasks to source overview pages |
-| `hook_form_tmgmt_overview_form_alter` | TMGMT overview sorting/filtering (form-specific alter) |
-
-> **Dead code note:** `pb_custom_form_pb_custom_field_preprocess_views_view_field()` (`.module:670`) has an `Implements hook_preprocess_views_view_field()` docblock but its function name carries an extra `pb_custom_field` segment, so Drupal's hook system never invokes it. Effectively dead — not an active hook.
+The module-level hooks were moved to `bebbo_custom_general` / `bebbo_serializer`. The only remaining `.module` code is the helper `pb_custom_form_my_goto()` (a redirect utility used by the force-update forms).
 
 ### Database Table
 
-**`forcefull_check_update_api`** — stores force-update flags per country per update type. Schema details in [`API_REFERENCE.md` §9.1](API_REFERENCE.md#91-forcefull_check_update_api-table-schema).
+**`forcefull_check_update_api`** — stores force-update flags per country per update type. Read by `bebbo_serializer`'s `CheckUpdateController`. Schema details in [`API_REFERENCE.md` §9.1](API_REFERENCE.md#91-forcefull_check_update_api-table-schema).
 
 ### Key Classes
 
 | Class | Type | Role |
 |-------|------|------|
-| `CsvExportController` | Controller | Batch CSV export from Entity Share remote data |
-| `PbMobile` | Controller | Mobile share page + Kosovo variant |
-| `AppStoreRedirectController` | Controller | QR code landing page for app download |
-| `ChangeNodeStatus` | Batch processor | Archives nodes during country offload |
-| `ApplyNodeTranslations` | Batch processor | Applies field values across node translations |
-| 7 Form classes | Forms | Various admin config forms |
+| `CustomForm` | Form | Force-update settings admin form (writes `forcefull_check_update_api`) |
+| `ForceUpdateCheckForm` | Form | Front-end force-update check form |
 
 ### Update Hooks
 
@@ -459,8 +465,9 @@ Controls which languages appear in the mobile app API per country group. Adds a 
 
 | Service ID | Class | Role |
 |-----------|-------|------|
-| `language_visibility_control.service` | `LanguageVisibilityService` | Manages per-group language visibility; used by both serializers |
-| `language_visibility_control.api_response_subscriber` | `ApiResponseSubscriber` | `KernelEvents::RESPONSE` (priority -10) — filters languages in V1 `/api/country-groups` only (V2 handles filtering in `BebboSerializer`) |
+| `language_visibility_control.service` | `LanguageVisibilityService` | Manages per-group language visibility; called inline by both serializers via `filterLanguageDataForApi()` |
+
+> The former `ApiResponseSubscriber` (RESPONSE event, V1 country-groups post-filtering) was **removed** (commit `aa17725b2`): `BebboV1Serializer` / `BebboSerializer` now call `filterLanguageDataForApi()` inline, so the subscriber would only double-filter.
 
 ### Hooks
 
@@ -590,43 +597,7 @@ Sanitizes filenames on upload (transliteration, unsafe character removal, lowerc
 
 ---
 
-## 12. `pb_custom_rest_api` (removed)
-
-**Status:** Removed. The module and its `custom_rest_resource` / `v2_custom_rest_resource` REST resource configs no longer exist.
-
-The force-update / check-update endpoint now lives in **`bebbo_serializer`** as `CheckUpdateController`, served by plain routes (`bebbo_serializer.routing.yml`) instead of REST resource plugins:
-
-| Route | Path | Access |
-|-------|------|--------|
-| `bebbo_serializer.v1_check_update` | `/api/check-update/{country}` | Public (`_access: 'TRUE'`) |
-| `bebbo_serializer.v2_check_update` | `/v2/api/check-update/{country}` | `_access: 'TRUE'`; JWT-gated via the `/v2/api/` protected pattern; `no_cache: TRUE` |
-
-Both routes call the same `CheckUpdateController::checkUpdate` method, querying the `forcefull_check_update_api` table (owned by `pb_custom_form`) for the latest `content_update` and `app_update` records by country group ID. The two responses are identical.
-
-Full response shape documented in [`API_REFERENCE.md` §9](API_REFERENCE.md#9-force-update--check-update-endpoint).
-
----
-
-## 13. `pb_custom_standard_deviation`
-
-**Name:** PB Custom Standard Deviation
-**Core:** `^9.2 || ^10 || ^11`
-
-### Purpose
-
-V1-only Views style plugin for the `/api/standard_deviation/%` endpoint. Transforms child-growth data into nested structures keyed by growth type and SD label.
-
-### Views Style Plugin
-
-`CustomStandardDeviation` extends `Serializer`:
-- Groups rows by growth type (`height_for_age`, `height_for_weight` → renamed to `weight_for_height` in output)
-- Buckets by child-age ranges
-- Maps SD labels: `goodText`, `warrningSmallLengthText`, `emergencySmallLengthText`, `warrningBigLengthText` (height_for_age); `goodText`, `warrningSmallHeightText`, `emergencySmallHeightText`, `warrningBigHeightText`, `emergencyBigHeightText` (weight_for_height)
-- Language validation via `checkRequestParams()`
-
----
-
-## 14. `pb_custom_migrate`
+## 12. `pb_custom_migrate`
 
 **Name:** PB Custom Migrate (Multilingual)
 **Core:** `^9.2 || ^10 || ^11`
@@ -634,17 +605,17 @@ V1-only Views style plugin for the `/api/standard_deviation/%` endpoint. Transfo
 
 ### Purpose
 
-CSV-based content migration definitions. 207 migration config files in `config/install/` covering per-country, per-language content imports for activities, articles, FAQs, and other content types.
+CSV-based content migration definitions covering per-country, per-language content imports for activities, articles, FAQs, and other content types.
 
 ### Structure
 
-- `config/install/migrate_plus.migration.*.yml` — 207 migration configs
+- `config/install/migrate_plus.migration.*.yml` — migration configs
 - `sources/` — Migration source CSV files and mappings
 - `.module` — Empty (documentation comment only)
 
 ---
 
-## 15. `pb_strings`
+## 13. `pb_strings`
 
 **Name:** PB Strings
 **Core:** `^10 || ^11`
@@ -686,13 +657,29 @@ Manages the `strings` taxonomy vocabulary with UI for bulk translation and enfor
 
 ---
 
+## Removed modules
+
+These modules were uninstalled and deleted from disk in the current commit range; their logic moved into `bebbo_serializer` and `bebbo_custom_general`.
+
+| Module | Removed in | Replaced by |
+|--------|-----------|-------------|
+| `pb_custom_rest_api` | `5786db301` | `bebbo_serializer` — force-update / check-update now served by `CheckUpdateController` at `/api/check-update/{country}` (public) and `/v2/api/check-update/{country}` (JWT-gated, `no_cache`) via `bebbo_serializer.routing.yml`. The `forcefull_check_update_api` table stays in `pb_custom_form`. |
+| `custom_serialization` | `b3abeeb83` | `bebbo_serializer` — V1 REST serialization is now the `bebbo_v1_serializer` Views style plugin (`BebboV1Serializer`); the old `CustomSerializer` style plugin and `CustomSerializerHelper` service are gone. |
+| `pb_custom_standard_deviation` | `b3abeeb83` | `bebbo_serializer` — the `/api/standard_deviation/%` (and V2) transform is now `transformStandardDeviation()` in the V1/V2 style plugins. |
+
+Both V1 and V2 of the new `/api/*` and `/v2/api/*` infrastructure were validated at byte-parity with the legacy endpoints before the old modules were removed (see `changelog.txt` commits `7a5678a4a`, `72578f9b6`, `e876f7f2c`, `199a0b06e`).
+
+---
+
 ## Cross-Module Dependencies
 
 ```
 bebbo_serializer ──→ language_visibility_control ──→ group (contrib)
                                                   ──→ drupal:language
-                 ──→ pb_custom_form (CheckUpdateController uses its forcefull_check_update_api table)
-custom_serialization ──→ language_visibility_control
+                 ──→ drupal:rest, drupal:serialization
+                 ──→ pb_custom_form (CheckUpdateController reads its forcefull_check_update_api table)
+
+bebbo_custom_general ──→ pb_custom_form (admin-menu container parent + shared permissions)
 
 bebbo_api_security ──→ drupal:key
                    ──→ drupal:views
@@ -735,9 +722,9 @@ language_custom_field ──→ field:field, field:field_ui
 |-----------|-------|----------|--------|--------|
 | `bebbo_serializer.request_format_subscriber` | `REQUEST` | 1000 | `bebbo_serializer` | Registers `bebbo_json` MIME type |
 | `bebbo_api_security.request_subscriber` | `REQUEST` | 300 | `bebbo_api_security` | JWT enforcement |
-| `pb_custom_form.internal_content_node_redirect` | `REQUEST` | 30 | `pb_custom_form` | Internal node URL redirect |
+| `bebbo_custom_general.internal_content_node_redirect` | `REQUEST` | — | `bebbo_custom_general` | Anonymous internal node URL redirect |
+| `bebbo_custom_general.mailer_sender_override` | mail events | — | `bebbo_custom_general` | Mail sender override from config |
 | `bebbo_serializer.etag_response_subscriber` | `RESPONSE` | 0 | `bebbo_serializer` | ETag/304 |
-| `language_visibility_control.api_response_subscriber` | `RESPONSE` | -10 | `language_visibility_control` | V1 country-groups language filtering |
 | `pb_content_analytics.feeds_import_subscriber` | Feeds events | — | `pb_content_analytics` | Feeds import integration |
 
 ---
@@ -749,3 +736,5 @@ language_custom_field ──→ field:field, field:field_ui
 | REST API endpoints & response shapes | [`API_REFERENCE.md`](API_REFERENCE.md) |
 | Device attestation & JWT security | [`API_SECURITY.md`](API_SECURITY.md) |
 | System architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+</content>
+</invoke>
