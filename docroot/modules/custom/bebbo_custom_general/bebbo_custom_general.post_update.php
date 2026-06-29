@@ -8,6 +8,83 @@
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
+ * Remove defunct modules and stale view configs before cim.
+ *
+ * Custom_serialization, pb_custom_rest_api, and pb_custom_standard_deviation
+ * were deleted from disk. Active DB still references them in core.extension
+ * and views still use the custom_serialization plugin, causing crashes.
+ * This cleans up the active state so cim can proceed.
+ */
+function bebbo_custom_general_post_update_remove_defunct_modules(): string {
+  $modules_to_remove = [
+    'custom_serialization',
+    'pb_custom_rest_api',
+    'pb_custom_standard_deviation',
+  ];
+
+  // 1. Remove from core.extension.
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('core.extension');
+  $module_list = $config->get('module') ?? [];
+  $removed = [];
+  foreach ($modules_to_remove as $module) {
+    if (array_key_exists($module, $module_list)) {
+      unset($module_list[$module]);
+      $removed[] = $module;
+    }
+  }
+  if ($removed) {
+    $config->set('module', $module_list)->save();
+  }
+
+  // 2. Clean system.schema entries.
+  \Drupal::database()->delete('key_value')
+    ->condition('collection', 'system.schema')
+    ->condition('name', $modules_to_remove, 'IN')
+    ->execute();
+
+  // 3. Delete stale view configs that reference custom_serialization.
+  // cim will re-import the correct versions (articles is fully removed,
+  // country_listing/sponsors_list/tax get updated without the old displays).
+  $stale_views = [
+    'views.view.articles',
+    'views.view.duplicate_of_tax_test',
+  ];
+  foreach ($stale_views as $view_name) {
+    $view_config = $config_factory->getEditable($view_name);
+    if (!$view_config->isNew()) {
+      $view_config->delete();
+    }
+  }
+
+  // 4. Strip custom_serialization dependency and displays from remaining views.
+  $views_with_stale_displays = [
+    'views.view.country_listing' => ['rest_export_1'],
+    'views.view.sponsors_list' => ['rest_export_1'],
+    'views.view.tax' => ['rest_export_1', 'rest_export_3'],
+  ];
+  foreach ($views_with_stale_displays as $view_name => $display_ids) {
+    $view_config = $config_factory->getEditable($view_name);
+    if ($view_config->isNew()) {
+      continue;
+    }
+    foreach ($display_ids as $display_id) {
+      $view_config->clear("display.$display_id");
+    }
+    // Remove custom_serialization from dependencies.
+    $deps = $view_config->get('dependencies.module') ?? [];
+    $deps = array_values(array_diff($deps, ['custom_serialization']));
+    $view_config->set('dependencies.module', $deps);
+    $view_config->save();
+  }
+
+  $log = 'Defunct module cleanup: ';
+  $log .= $removed ? 'removed ' . implode(', ', $removed) . ' from core.extension. ' : 'no stale modules in core.extension. ';
+  $log .= 'Cleaned stale view configs (articles, duplicate_of_tax_test deleted; stale displays stripped from country_listing, sponsors_list, tax).';
+  return $log;
+}
+
+/**
  * Removes content stored in languages that are not configured on this site.
  *
  * The Entity Share content pull imported entity translations (and whole
