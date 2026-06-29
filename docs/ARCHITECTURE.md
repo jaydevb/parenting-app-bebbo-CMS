@@ -232,9 +232,8 @@ The codebase is standard Drupal layering: **core + contrib + custom**, plus comp
 
 | Module | Role (one line) |
 |--------|-----------------|
-| `bebbo_serializer` | V2 REST API — Views style plugin, serialization/transform engine, pre-computed fields, Course/Quiz form logic |
+| `bebbo_serializer` | V2 REST API — Views style plugin, serialization/transform engine, pre-computed fields, Course/Quiz form logic; also serves the Strings API (`/api/strings`, `/v2/api/strings`) and the Force-Update / check-update endpoint (`/api/check-update`, `/v2/api/check-update` via `CheckUpdateController`) |
 | `custom_serialization` | V1 REST API — legacy serializer style plugin |
-| `pb_custom_rest_api` | Custom REST resources (e.g. Force Update `/api/check-update`), force-API table |
 | `pb_custom_standard_deviation` | Standard deviation validation API |
 | `bebbo_api_security` | Device attestation (Apple/Google/sideloaded) + JWT issuance & enforcement for the API |
 | `pb_custom_field` | Field alterations, content workflow actions, group-based node access, admin-route subscriber, RTL admin CSS |
@@ -303,7 +302,7 @@ sequenceDiagram
 
 - Endpoints, query parameters, field mappings, and JSON envelope variants: **`API_REFERENCE.md`**.
 - JWT modes, attestation flows, and enforcement rollout: **`API_SECURITY.md`**.
-- **Protection scope (verified):** `protected_api_patterns` defaults to `/v2/api/` and `/api/check-update/`. The **V1 `/api/*` content endpoints are not JWT-protected**. `/api/security/*` is excluded (chicken-and-egg). The diagram above shows the V2 path; a V1 request skips the security subscriber and goes straight to the serializer.
+- **Protection scope (verified):** `protected_api_patterns` defaults to `/v2/api/` (this covers `/v2/api/check-update/`). The **V1 `/api/*` endpoints — content *and* the public `/api/check-update/` — are not JWT-protected**. `/api/security/*` is excluded (chicken-and-egg). The diagram above shows the V2 path; a V1 request skips the security subscriber and goes straight to the serializer.
 
 ---
 

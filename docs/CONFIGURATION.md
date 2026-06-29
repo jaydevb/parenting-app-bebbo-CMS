@@ -896,31 +896,29 @@ The path/count/disable settings actually live in **`jsonapi_extras.settings.yml`
 | Default disabled | `false` | jsonapi_extras.settings |
 | Validate config integrity | `false` | jsonapi_extras.settings |
 
-### REST resources
+### Force-update / check-update routes
 
-**`rest.resource.custom_rest_resource`** — V1 force-update check
+The force-update check is served by `CheckUpdateController` in `bebbo_serializer`, defined in `bebbo_serializer.routing.yml` (not REST resource config). The earlier `rest.resource.custom_rest_resource` / `rest.resource.v2_custom_rest_resource` configs and the `pb_custom_rest_api` module were removed.
+
+**`bebbo_serializer.v1_check_update`** — V1 force-update check
 
 | Setting | Value |
 |---|---|
-| Plugin | `custom_rest_resource` (from `pb_custom_rest_api`) |
+| Controller | `CheckUpdateController::checkUpdate` |
 | Path | `/api/check-update/{country}` |
 | Methods | GET |
-| Formats | json |
-| Authentication | basic_auth |
-| Granularity | resource |
+| Access | `_access: 'TRUE'` (public) |
 
-**`rest.resource.v2_custom_rest_resource`** — V2 force-update check
+**`bebbo_serializer.v2_check_update`** — V2 force-update check
 
 | Setting | Value |
 |---|---|
-| Plugin | `v2_custom_rest_resource` (from `pb_custom_rest_api`) |
+| Controller | `CheckUpdateController::checkUpdate` (same method as V1) |
 | Path | `/v2/api/check-update/{country}` |
 | Methods | GET |
-| Formats | json |
-| Authentication | basic_auth |
-| Granularity | resource |
+| Access | `_access: 'TRUE'`; JWT-gated by `bebbo_api_security` via the `/v2/api/` protected pattern; `no_cache: TRUE` |
 
-The V2 resource extends the V1 class with zero logic changes — identical response, different URL path.
+Both routes call the same controller method — identical response, different URL path (the V2 path adds JWT enforcement).
 
 ---
 

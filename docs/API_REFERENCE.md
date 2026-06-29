@@ -1,7 +1,7 @@
 # Bebbo API Reference — REST (V1 + V2), Force-Update, JSON:API
 
 > **Audience:** mobile-integration engineers, backend maintainers, support, QA.
-> **Scope:** every HTTP API the CMS exposes to clients — the legacy **V1 REST** (`/api/*`), the current **V2 REST** (`/v2/api/*`), the **Force-Update REST resource** (`/api/check-update/{country}`), and **JSON:API** (`/jsonapi/*`). Field shapes, envelopes, query params, auth, and the V1→V2 changes.
+> **Scope:** every HTTP API the CMS exposes to clients — the legacy **V1 REST** (`/api/*`), the current **V2 REST** (`/v2/api/*`), the **Force-Update / check-update endpoint** (`/api/check-update/{country}` + `/v2/api/check-update/{country}`), and **JSON:API** (`/jsonapi/*`). Field shapes, envelopes, query params, auth, and the V1→V2 changes.
 > **Verified against:** repository `HEAD` (branch `feature/group3-manage-users`). Endpoint paths come from the Views configs; envelopes/field transforms from the serializer source. Items that could not be confirmed in code are flagged inline. **No GraphQL exists** (see `ARCHITECTURE.md`).
 
 ---
@@ -12,7 +12,7 @@
 |---------|------|-----------|--------|
 | **V1 REST** | `/api/*` | `custom_serialization` Views style (+ `bebbo_serializer` for `/api/strings`, `pb_custom_standard_deviation` for `/api/standard_deviation`) | Legacy — still live |
 | **V2 REST** | `/v2/api/*` | `bebbo_serializer` Views style | Current |
-| **Force-Update** | `/api/check-update/{country}` + `/v2/api/check-update/{country}` | `pb_custom_rest_api` REST resources (`custom_rest_resource` / `v2_custom_rest_resource`) | Live |
+| **Force-Update** | `/api/check-update/{country}` + `/v2/api/check-update/{country}` | `bebbo_serializer` `CheckUpdateController` (routes `bebbo_serializer.v1_check_update` / `.v2_check_update`) | Live |
 | **Device Security** | `/api/security/*` | `bebbo_api_security` (`SecurityController`) | Live — attestation + JWT issuance (see [§13.1](#131-device-security--attestation-api-apisecurity)) |
 | **App-links** | `/.well-known/*` | `mobile_app_links` (`WellKnownController`) | Live — deep-link domain verification (see [§13.2](#132-app-link-well-known-endpoints)) |
 | **JSON:API** | `/jsonapi/*` | core `jsonapi` + `jsonapi_extras` | Enabled, **read-only** |
@@ -55,8 +55,8 @@ Only those two flags. **No pretty-print, and no `&nbsp;` substitution** — earl
 
 ### Authentication
 - **V1 & V2 content endpoints:** the Views displays declare **no auth provider** (`auth: {}`) and gate only on the `access content` permission (held by anonymous). They are effectively **public reads**. Some displays set `disable_sql_rewrite: true` (in V2: `articles_rest_export`, `child_dev_boy_rest_export`, `child_dev_girl_rest_export`, `child_growth_rest_export` — 4 of ~22 displays, not all).
-- **Device/JWT protection:** the `bebbo_api_security` subscriber can require a Bearer JWT on `/v2/api/*` (and `/api/check-update/`) when enforcement is on. **V1 `/api/*` content endpoints are NOT in the default protected set.** Full detail: **`API_SECURITY.md`**.
-- **`/api/check-update/{country}`:** `basic_auth` only (see [§9](#9-force-update-rest-resource)).
+- **Device/JWT protection:** the `bebbo_api_security` subscriber can require a Bearer JWT on `/v2/api/*` when enforcement is on. **V1 `/api/*` endpoints (content *and* `/api/check-update/`) are NOT in the default protected set.** Full detail: **`API_SECURITY.md`**.
+- **`/api/check-update/{country}`:** public (V1, route `_access: TRUE`); the V2 path `/v2/api/check-update/{country}` is JWT-gated via the `/v2/api/` protected pattern (see [§9](#9-force-update--check-update-endpoint)).
 
 ---
 
@@ -166,7 +166,7 @@ V1 honors exactly **one** parameter inside the serializer: **`pregnancy=true`** 
 | `/v2/api/vocabularies/%` | `vocabulary_rest_export` (tax view) | `transformVocabularies` |
 | `/v2/api/taxonomies/%/%` | `terms_rest_export` (tax view) | `transformTaxonomies` |
 | `/v2/api/strings/%` | `v2_string_rest_export` (tax view) | Same fields/filters as V1 `/api/strings/%` — V2 URL alias |
-| `/v2/api/check-update/{country}` | `v2_custom_rest_resource` (REST plugin) | Same as V1 `/api/check-update/{country}` — V2 URL alias |
+| `/v2/api/check-update/{country}` | `CheckUpdateController::checkUpdate` (route `bebbo_serializer.v2_check_update`) | Same as V1 `/api/check-update/{country}` — same controller method, V2 URL path |
 
 ### 5.1 Envelope variants
 - **Standard:** `{status,total,langcode,datetime,data}`; `total = (int) view->total_rows`.
@@ -1192,15 +1192,16 @@ Both build nested growth-type structures keyed `height_for_age` and `weight_for_
 
 ---
 
-## 9. Force-Update REST Resource
+## 9. Force-Update / Check-Update Endpoint
 
-**`GET /api/check-update/{country}`** — plugin `custom_rest_resource` (`pb_custom_rest_api`), config `rest.resource.custom_rest_resource.yml`.
+**`GET /api/check-update/{country}`** (V1) and **`GET /v2/api/check-update/{country}`** (V2) — both served by `CheckUpdateController::checkUpdate` in `bebbo_serializer` (routes `bebbo_serializer.v1_check_update` / `.v2_check_update`, defined in `bebbo_serializer.routing.yml`). Both routes call the **same** controller method, so the two responses are identical.
 
 | Property | Value |
 |----------|-------|
 | Method | `GET` only |
-| Format | `json` only |
-| **Authentication** | **`basic_auth` only** (no `cookie` provider) — a logged-in browser session will be rejected; use basic-auth or anonymous basic-auth client |
+| Format | `json` |
+| **Authentication (V1 `/api/check-update/`)** | **Public** — route `_access: 'TRUE'`; not under `/v2/api/`, so the `bebbo_api_security` JWT subscriber never matches it |
+| **Authentication (V2 `/v2/api/check-update/`)** | **JWT-gated** when enforcement is on — matches the `/v2/api/` protected pattern; the V2 route also sets `no_cache: TRUE` to prevent a cached 200 being replayed to unauthenticated callers |
 | `{country}` | country **group entity ID** (matched against `countries_id`) |
 | Source | latest row per `(countries_id, update_type)` in `forcefull_check_update_api` |
 
@@ -1238,7 +1239,7 @@ Response (both record types present):
 
 Populated via admin form at `/admin/config/parent-buddy/forcefull-update-check` (`pb_custom_form` module, `CustomForm`). Each form submission inserts a new row.
 
-> This path is also in the `bebbo_api_security` default protected set (`/api/check-update/`), so JWT enforcement can apply on top of basic-auth when enabled.
+> Only the **V2** path (`/v2/api/check-update/`) is JWT-protected, via the `/v2/api/` pattern in the `bebbo_api_security` default protected set. The **V1** path (`/api/check-update/`) is public and is **not** in the protected set.
 
 ---
 
@@ -1268,7 +1269,7 @@ API requests pass through these event subscribers in priority order:
 | Priority | Subscriber | Module | Effect |
 |----------|-----------|--------|--------|
 | **1000** | `RequestFormatSubscriber` | `bebbo_serializer` | Registers `bebbo_json` format → `application/json` MIME type. Prevents 406 errors on V2 routes. |
-| **300** | `ApiSecuritySubscriber` | `bebbo_api_security` | JWT enforcement on protected paths (`/v2/api/*`, `/api/check-update/*`). Mode: disabled/grace_period/enforced. |
+| **300** | `ApiSecuritySubscriber` | `bebbo_api_security` | JWT enforcement on protected paths (`/v2/api/*`, which covers `/v2/api/check-update/`). Mode: disabled/grace_period/enforced. |
 
 ### Response phase (`KernelEvents::RESPONSE`)
 
@@ -1394,11 +1395,15 @@ Langcode argument is ignored (forced to `en` internally):
 curl -s 'https://bebbo.example.com/v2/api/country-groups/en'
 ```
 
-### 14.5 Force-update (basic-auth)
+### 14.5 Force-update / check-update
 
 ```bash
-curl -s -u username:password \
-  'https://bebbo.example.com/api/check-update/45?_format=json'
+# V1 — public
+curl -s 'https://bebbo.example.com/api/check-update/45'
+
+# V2 — JWT-gated when enforcement is on (same response when authorized)
+curl -s -H 'Authorization: Bearer eyJhbGciOi...' \
+  'https://bebbo.example.com/v2/api/check-update/45'
 ```
 
 ### 14.6 V1 content endpoint (legacy)
@@ -1440,7 +1445,7 @@ curl -s -X POST 'https://bebbo.example.com/api/security/revoke' \
 | `400` | `"Request language is wrong"` | Langcode URL argument is not an enabled Drupal language | All V1 & V2 content endpoints (except country-groups, sponsors) | `BebboSerializer.php:291`, `CustomSerializer.php:684` |
 | `400` | `"Request country code is wrong"` | Path argument not a valid country group ID | **V1 `/api/sponsors/%` only** | `CustomSerializer.php:671` |
 | `403` | `"Language not available"` | Langcode is valid but not visible in any country group (per `language_visibility_control`) | All V1 & V2 content endpoints (except country-groups) | `BebboSerializer.php:305`, `CustomSerializer.php:711` |
-| `204` | `"No Records Found"` | View query returns zero rows | All V1 & V2 content endpoints, force-update | `BebboSerializer.php:189`, `CustomSerializer.php:634`, `CustomRestResource.php:58` |
+| `204` | `"No Records Found"` | View query returns zero rows | All V1 & V2 content endpoints, force-update | `BebboSerializer.php:189`, `CustomSerializer.php:634`, `CheckUpdateController.php` (check-update) |
 | `200` | _(none)_ | Success — `data` array/object populated | All endpoints | — |
 
 Error envelope shape (all three error cases):
@@ -1459,7 +1464,7 @@ This is a real HTTP 304 (set by `EtagResponseSubscriber`), not a body field. The
 
 ### 15.3 JWT enforcement errors (on protected content endpoints)
 
-When `enforcement_mode` is `enforced`, the `ApiSecuritySubscriber` returns real HTTP 401 responses on protected paths (`/v2/api/*`, `/api/check-update/*`). These use the **RFC 6750** response shape (with `error_description`, not `message`).
+When `enforcement_mode` is `enforced`, the `ApiSecuritySubscriber` returns real HTTP 401 responses on protected paths (`/v2/api/*`, which covers `/v2/api/check-update/`). These use the **RFC 6750** response shape (with `error_description`, not `message`).
 
 | HTTP Status | Body | Headers | Condition |
 |-------------|------|---------|-----------|
