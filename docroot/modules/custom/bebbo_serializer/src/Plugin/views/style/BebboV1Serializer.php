@@ -701,6 +701,10 @@ class BebboV1Serializer extends Serializer {
       return TRUE;
     }));
 
+    // embedded_images is not a view field on these displays, so batch-load it
+    // from the pinned article nodes (the row id is the pinned article nid).
+    $embeddedByNid = $this->resolveEmbeddedImagesByNid(array_column($rows, 'id'), $this->resolveLangcode());
+
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
@@ -709,6 +713,8 @@ class BebboV1Serializer extends Serializer {
       ]);
       $this->toIntArray($row, ['child_age', 'keywords', 'related_articles']);
       $this->decodeHtmlEntities($row, ['title']);
+
+      $row['embedded_images'] = $embeddedByNid[(int) ($row['id'] ?? 0)] ?? [];
 
       $coverVideo = $this->parseViewVideoMedia($row['cover_video'] ?? NULL);
       $coverImage = $this->parseViewCoverImage($row['cover_image'] ?? NULL);
@@ -885,48 +891,6 @@ class BebboV1Serializer extends Serializer {
     unset($row);
 
     return $rows;
-  }
-
-  /**
-   * Batch-loads embedded image URLs for the given node IDs and language.
-   *
-   * Reads field_embedded_images (auto-populated on node save from the body),
-   * preserving delta order. Falls back to the English value when the
-   * requested language has no row.
-   *
-   * @param int[] $nids
-   *   Node IDs.
-   * @param string $langcode
-   *   The requested language code.
-   *
-   * @return array<int, string[]>
-   *   Map of node ID to an ordered list of embedded image URLs.
-   */
-  private function resolveEmbeddedImagesByNid(array $nids, string $langcode): array {
-    $nids = array_values(array_unique(array_filter($nids)));
-    if (empty($nids)) {
-      return [];
-    }
-
-    $records = $this->database->select('node__field_embedded_images', 'e')
-      ->fields('e', ['entity_id', 'langcode', 'delta', 'field_embedded_images_value'])
-      ->condition('entity_id', $nids, 'IN')
-      ->condition('langcode', [$langcode, 'en'], 'IN')
-      ->orderBy('delta')
-      ->execute()
-      ->fetchAll();
-
-    // Prefer the requested language; fall back to English per node.
-    $byLang = [];
-    foreach ($records as $r) {
-      $byLang[(int) $r->entity_id][$r->langcode][] = (string) $r->field_embedded_images_value;
-    }
-
-    $result = [];
-    foreach ($byLang as $nid => $langs) {
-      $result[$nid] = $langs[$langcode] ?? $langs['en'] ?? [];
-    }
-    return $result;
   }
 
   /**
