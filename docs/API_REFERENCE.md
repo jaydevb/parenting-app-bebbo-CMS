@@ -118,7 +118,7 @@ The `bebbo_v1_apis` view has **22 displays**. The `tax`, `country_listing`, and 
 | `/api/pinned-contents/%/vaccinations` | bebbo_v1_apis / bebbo_v1_serializer | **V1-only** |
 | `/api/updated-pinned-contents/%/faq` | bebbo_v1_apis / bebbo_v1_serializer | **V1-only** |
 | `/api/related-article-contents/%/milestone` | bebbo_v1_apis / bebbo_v1_serializer | **V1-only**; dedup by id |
-| `/api/country-groups/%` | country_listing / bebbo_v1_serializer | `%` is a country/app slug (e.g. `wawamor`), **not** a langcode; output `langcode` forced to `en` |
+| `/api/country-groups/%` | country_listing / bebbo_v1_serializer | `%` is a country/app slug (e.g. `wawamor`), **not** a langcode; envelope `langcode` resolves to the active/site language (the slug arg is not a valid language, so `resolveLangcode()` falls back to the current language) |
 | `/api/vocabularies/%` | tax / bebbo_v1_serializer | keyed map (see [§7](#7-taxonomy--vocabulary)) |
 | `/api/taxonomies/%/%` | tax / bebbo_v1_serializer | keyed map; 2nd arg is a vocabulary machine name **or** the literal `all` |
 | `/api/strings/%` | tax / **`bebbo_serializer`** | Also available at `/v2/api/strings/%` (same view, `v2_string_rest_export` display) |
@@ -144,7 +144,7 @@ Applied per-row (via the same helpers V2 uses) to whichever short keys are prese
   - **articles** — `bebbo_serializer.module`'s `hook_views_query_alter()` injects the Pregnancy `child_age` TID into the `bebbo_v1_apis`/`v1_articles_rest_export` filter (commit `87ab0e989`).
   - **taxonomies** — `BebboV1Serializer` keeps the otherwise-hidden Pregnancy `child_age` term in the taxonomy output.
   - It is **not** an exposed Views filter.
-- **`datetime="YYYY-MM-DD HH:MM"`** and the other filter params ([§6](#6-query-parameters)) are Views **contextual-filter arguments** (`query_parameter` default-argument plugin) on the `bebbo_v1_apis` view, not exposed filters. The only exposed filter on the V1 view is `nid`.
+- **`datetime="YYYY-MM-DD HH:MM"`** and the other filter params ([§6](#6-query-parameters)) are Views **contextual-filter arguments** (`query_parameter` default-argument plugin) on the `bebbo_v1_apis` view, not exposed filters. The V1 view has **no exposed filters** at all — `nid` is an output field, and the `%` path segment is a contextual filter argument, not an exposed filter.
 
 ---
 
@@ -174,7 +174,7 @@ Applied per-row (via the same helpers V2 uses) to whichever short keys are prese
 | `/v2/api/archive/%` | `archive_rest_export` | `transformArchive` |
 | `/v2/api/course/%` | `course_rest_export` | `transformCourse` |
 | `/v2/api/quiz/%` | `quiz_rest_export` | `transformQuiz` |
-| `/v2/api/country-groups/%` | `country_listing_export` (country_listing view) | `transformCountryGroups`; `%` is a country/app slug (e.g. `wawamor`), not a langcode |
+| `/v2/api/country-groups/%` | `country_listing_export` (country_listing view) | `transformCountryGroups`; `%` is a country/app slug (e.g. `wawamor`), not a langcode; envelope `langcode` resolves to the active/site language (slug arg isn't a valid language, so `resolveLangcode()` falls back to current language) |
 | `/v2/api/vocabularies/%` | `vocabulary_rest_export` (tax view) | `transformVocabularies` |
 | `/v2/api/taxonomies/%/%` | `terms_rest_export` (tax view) | `transformTaxonomies`; 2nd arg is a vocabulary machine name **or** `all` |
 | `/v2/api/strings/%` | `v2_string_rest_export` (tax view) | Same fields/filters as V1 `/api/strings/%` — V2 URL alias |
@@ -874,7 +874,7 @@ Full response (no `total` in envelope, keyed by vocabulary):
 
 **Country-groups** (`/v2/api/country-groups/%`):
 
-Full response (standard envelope, langcode forced to `en`):
+Full response (standard envelope; `langcode` resolves to the active/site language — `en` shown here as the default-site example):
 ```json
 {
   "status": 200,
@@ -1096,7 +1096,7 @@ Full response shape:
 
 ### 5.5 Country-groups
 
-`transformCountryGroups` filters out `CountryID 131`, dedups by CountryID, parses media, builds language arrays, and removes raw `langcode`. The path `%` argument is a **country/app slug** (e.g. `wawamor`, `babuni`), not a langcode; the output `langcode` is forced to `en` for this endpoint. `CountryID 126` ("Rest of the world") gets hardcoded `en`+`ru` languages and is moved to the end.
+`transformCountryGroups` filters out `CountryID 131`, dedups by CountryID, parses media, builds language arrays, and removes raw `langcode`. The path `%` argument is a **country/app slug** (e.g. `wawamor`, `babuni`), not a langcode; because the slug is not a valid language, `resolveLangcode()` falls back to the active/site language, so the envelope `langcode` is the current site language (not hardcoded `en`). `CountryID 126` ("Rest of the world") gets hardcoded `en`+`ru` languages and is moved to the end.
 
 **Country-group object keys:**
 
@@ -1158,8 +1158,8 @@ Configured as **Views contextual filters** (arguments) using the `query_paramete
 | Param | Type | Meaning | V1 displays | V2 displays |
 |-------|------|---------|-------------|-------------|
 | `datetime` | ISO timestamp | Return rows changed after this time (`changed` filter) | 7 | 5 |
-| `childAge` | int (term id) | Filter by child-age term | 2 | 1 |
-| `childGender` | int (term id) | Filter by child gender | 2 | 1 |
+| `childAge` | int (term id) | Filter by child-age term | 1 | 1 |
+| `childGender` | int (term id) | Filter by child gender | 1 | 1 |
 | `parentGender` | int (term id) | Filter by parent gender | 1 | 1 |
 | `category` | int (term id) | Filter by content category | 1 | 1 |
 | `typeArticle` | int (term id) | Filter by type-of-article | 1 | 1 |
@@ -1371,14 +1371,14 @@ Common errors: `400 {error:"missing_field"\|"invalid_platform"\|"invalid_key", m
 
 ### 13.2 App-link `.well-known` endpoints
 
-Served by `mobile_app_links` (`WellKnownController`). All are **public** (`_access: TRUE`), **`GET`**, and bypass the route normalizer (`_disable_route_normalizer: TRUE`). Used by the OS to verify deep-link / universal-link domain ownership.
+Served by `mobile_app_links` (`WellKnownController`). All are **public** (`_access: TRUE`), bypass the route normalizer (`_disable_route_normalizer: TRUE`), and set **no `methods` requirement** — so they respond to any HTTP method, not GET-only. Used by the OS to verify deep-link / universal-link domain ownership.
 
 | Path | Method | Purpose |
 |------|--------|---------|
-| `/.well-known/assetlinks.json` | GET | Android App Links — Digital Asset Links statement |
-| `/.well-known/apple-app-site-association` | GET | iOS Universal Links — app-site association |
-| `/.well-known/apple-developer-domain-association.txt` | GET | Apple developer domain association |
-| `/.well-known/apple-developer-merchantid-domain-association.txt` | GET | Apple Pay merchant-id domain association |
+| `/.well-known/assetlinks.json` | any (no method restriction) | Android App Links — Digital Asset Links statement |
+| `/.well-known/apple-app-site-association` | any (no method restriction) | iOS Universal Links — app-site association |
+| `/.well-known/apple-developer-domain-association.txt` | any (no method restriction) | Apple developer domain association |
+| `/.well-known/apple-developer-merchantid-domain-association.txt` | any (no method restriction) | Apple Pay merchant-id domain association |
 
 ### 13.3 Miscellaneous public routes
 
@@ -1386,9 +1386,9 @@ These are not APIs but are publicly accessible routes served by custom modules:
 
 | Path | Module | Purpose |
 |------|--------|---------|
-| `/downloadapp.html` | `pb_custom_form` | App store redirect page (`_access: TRUE`) |
-| `/share/{param1}/{param2}/{param3}` | `pb_custom_form` | Mobile app deep-link share controller (permission: `manage mobile javascript`) |
-| `/foleja/share/{param1}/{param2}/{param3}` | `pb_custom_form` | Kosovo (`foleja`) variant of the deep-link share controller (permission: `manage mobile javascript`) |
+| `/downloadapp.html` | `bebbo_custom_general` | App store redirect page (`_access: TRUE`) |
+| `/share/{param1}/{param2}/{param3}` | `bebbo_custom_general` | Mobile app deep-link share controller (permission: `manage mobile javascript`) |
+| `/foleja/share/{param1}/{param2}/{param3}` | `bebbo_custom_general` | Kosovo (`foleja`) variant of the deep-link share controller (permission: `manage mobile javascript`) |
 
 ---
 
@@ -1445,7 +1445,7 @@ curl -s 'https://bebbo.example.com/v2/api/taxonomies/en/child_age?pregnancy=true
 
 ### 14.4 V2 country-groups
 
-The `%` argument is a country/app slug (e.g. `wawamor`), **not** a langcode; the output `langcode` is forced to `en` internally:
+The `%` argument is a country/app slug (e.g. `wawamor`), **not** a langcode; the envelope `langcode` resolves to the active/site language (the slug arg is not a valid language, so `resolveLangcode()` falls back to the current language):
 ```bash
 curl -s 'https://bebbo.example.com/v2/api/country-groups/wawamor'
 ```

@@ -2,7 +2,7 @@
 
 > **Audience:** backend maintainers, mobile-integration engineers, security reviewers, operations.
 > **Scope:** the `bebbo_api_security` custom module end-to-end — device attestation, JWT issuance/validation, request enforcement, data model, configuration, admin UI, and operations.
-> **Verified against:** `docroot/modules/custom/bebbo_api_security/` at repository `HEAD` (branch `bug/issue-fixes`), **verified 2026-06-29**. Every endpoint, field, default, and behavior below was read from the module source, not from prior documentation. Where a config key or method exists but is **not wired into runtime behavior**, that is called out explicitly (see [§13 Known gaps](#13-known-gaps--not-wired)).
+> **Verified against:** `docroot/modules/custom/bebbo_api_security/` at repository `HEAD` (branch `bug/issue-fixes`), **verified 2026-06-29**. Every endpoint, field, default, and behavior below was read from the module source, not from prior documentation. Where a config key or method exists but is **not wired into runtime behavior**, that is called out explicitly inline at the relevant section.
 > **No GraphQL.** This module protects REST only. See `ARCHITECTURE.md`.
 
 ---
@@ -154,7 +154,7 @@ flowchart TD
 
 | Package | Constraint (`composer.json`) | Installed (`composer.lock`) | Role |
 |---------|------------------------------|-----------------------------|------|
-| `firebase/php-jwt` | `^7.0@stable` | `v7.0.5` | JWT encode/decode (RS256) — access tokens and the Google SA assertion |
+| `firebase/php-jwt` | `^7.0@stable` | `v7.1.0` | JWT encode/decode (RS256) — access tokens and the Google SA assertion |
 | `spomky-labs/cbor-php` | `^3.0` | `3.2.3` | CBOR decode of Apple App Attest attestation/assertion objects |
 
 Google Play Integrity is called directly via the core HTTP client (`@http_client` / Guzzle) — there is **no** `google/apiclient` dependency. Apple verification is fully offline (OpenSSL + the pasted Root CA) — no Apple SDK.
@@ -165,7 +165,7 @@ Beyond the two dedicated Composer packages, the module relies on the following �
 
 | Component | Type | Where / how used |
 |-----------|------|------------------|
-| `firebase/php-jwt` `v7.0.5` | Composer lib | `Firebase\JWT\{JWT,Key,ExpiredException,SignatureInvalidException}` — RS256 JWT encode/decode (`JwtService`); also signs the Google SA assertion JWT (`GooglePlayIntegrityService`) |
+| `firebase/php-jwt` `v7.1.0` | Composer lib | `Firebase\JWT\{JWT,Key,ExpiredException,SignatureInvalidException}` — RS256 JWT encode/decode (`JwtService`); also signs the Google SA assertion JWT (`GooglePlayIntegrityService`) |
 | `spomky-labs/cbor-php` `3.2.3` | Composer lib | `CBOR\{Decoder,StringStream,CBORObject,Normalizable,Tag\TagManager,OtherObject\OtherObjectManager}` — decodes Apple App Attest attestation/assertion CBOR (`AppleAppAttestService`) |
 | `drupal/key` `^1.22` | Contrib module dep | Key entities `bebbo_jwt_signing_key`, `bebbo_google_sa_key`; read at runtime via `key.repository` |
 | `drupal/views` + `view_custom_table` | Contrib module dep | 4 admin Views over the custom tables (§10) |
@@ -252,7 +252,7 @@ Required body: `device_id`, `challenge`, `signature`. Rate limit: `verify_rate_l
 
 Required body: `refresh_token`. Calls `JwtService::refreshTokens()`. Success → `{status: refreshed, access_token, token_type: Bearer, expires_in, refresh_token}`. Failure (expired/revoked/replay) → **401** `{status: invalid, message: "Refresh token expired or revoked. Re-attestation required."}`.
 
-> Note: the per-device refresh rate limit (`refresh_rate_limit`, default 30) is defined in config and the admin form but is **not enforced** in `refresh()` — see [§13](#13-known-gaps--not-wired).
+> Note: the per-device refresh rate limit (`refresh_rate_limit`, default 30) is defined in config and the admin form but is **not enforced** in `refresh()`.
 
 ### 4.5 `POST /api/security/revoke` — Logout / revoke
 
@@ -407,7 +407,7 @@ Four tables created by `hook_schema()` (`bebbo_api_security.install`).
 ### `bebbo_api_security_log` — audit trail
 `id` (serial PK) · `device_id` varchar(255, null) · `event_type` varchar(32) · `details` text(medium, null; JSON) · `ip_address` varchar(45) · `created` int. Indexes: event_type, created. Event types seen in code: `register`, `attest_fail`, `revoke`.
 
-> `apple_receipt` is declared in the schema but is **never written or read** by the current code (see [§13](#13-known-gaps--not-wired)).
+> `apple_receipt` is declared in the schema but is **never written or read** by the current code.
 
 ### Device re-registration is an UPSERT
 `DeviceRegistryService::registerDevice()` deletes the device's existing refresh tokens and challenges, preserves the original `created`, and merges the new fields.
@@ -425,7 +425,7 @@ Config object `bebbo_api_security.settings` (schema in `config/schema/`, default
 | `dev_bypass_ips` | `''` | each line a valid IP | Subscriber |
 | `debug_logging` | `false` | — | Google/Apple/controller debug logs |
 | `google_package_name` | `''` | — | Play Integrity |
-| `google_project_number` | `''` | — | **(ops reference only — not read by server verification; see §13)** |
+| `google_project_number` | `''` | — | **(ops reference only — not read by server verification)** |
 | `google_verdict_freshness_seconds` | `600` | 60–3600 | Play Integrity |
 | `google_api_timeout` | `10` | 5–30 | Play Integrity HTTP |
 | `google_allow_unrecognized_version` | `false` | — | Play Integrity app verdict |
@@ -439,7 +439,7 @@ Config object `bebbo_api_security.settings` (schema in `config/schema/`, default
 | `register_rate_limit` | `10` | 1–100 | `/register` Flood |
 | `device_register_ip_rate_limit` | `5` | 1–50 | `/device/register` Flood |
 | `verify_rate_limit` | `10` | 1–100 | `/device/verify` Flood |
-| `refresh_rate_limit` | `30` | 1–200 | **(defined, not enforced — see §13)** |
+| `refresh_rate_limit` | `30` | 1–200 | **(defined, not enforced)** |
 | `challenge_expiry_seconds` | `120` | 30–600 | Sideloaded challenge TTL |
 | `revoked_token_retention_days` | `7` | 1–90 | Cron purge |
 | `security_log_max_entries` | `10000` | 1000–100000 | Cron/purge trim |

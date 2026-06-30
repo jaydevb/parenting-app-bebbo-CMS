@@ -144,7 +144,7 @@ Separate from the Acquia pipeline. Builds and pushes a Docker image to Amazon EC
 
 | Phase | Commands |
 |---|---|
-| `pre_build` | ECR login via `aws ecr get-login --region $AWS_DEFAULT_REGION` |
+| `pre_build` | ECR login via `aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION` |
 | `build` | `docker build -t $IMAGE_NAME:latest .` then tag as `817747646454.dkr.ecr.us-west-2.amazonaws.com/$IMAGE_NAME:latest` |
 | `post_build` | `docker push 817747646454.dkr.ecr.us-west-2.amazonaws.com/$IMAGE_NAME:latest` |
 
@@ -183,7 +183,7 @@ Per-environment module enable/uninstall lists (`modules:` in `blt.yml`) — woul
 ## 9. Platform Facts
 
 - **Drupal core:** `drupal/core-recommended: ^11.2` (`composer.json`)
-- **PHP:** 8.4 for `ci-checks` and `deploy-dev`; **8.3** for `deploy-stage` (`pipelines.yml` line 109)
+- **PHP:** 8.4 for `ci-checks` and `deploy-dev`; **8.3** for `deploy-stage` (`pipelines.yml` line 111)
 - **Hosting:** Acquia Cloud, application `parentbuddy2`, realm `devcloud`
 - **Multisite:** 7 sites (`hooks/sites.sh`): default, bangladesh, ecuador, pakistan, somoa, turkey, zimbabwe
 - **Artifact deploy:** Acquia CLI `acli push:artifact` (builds a deploy artifact and pushes to the Acquia Git env)

@@ -709,6 +709,10 @@ class BebboSerializer extends Serializer {
       return TRUE;
     }));
 
+    // embedded_images is not a view field on these displays, so batch-load it
+    // from the pinned article nodes (the row id is the pinned article nid).
+    $embeddedByNid = $this->resolveEmbeddedImagesByNid(array_column($rows, 'id'), $this->resolveLangcode());
+
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
@@ -717,6 +721,8 @@ class BebboSerializer extends Serializer {
       ]);
       $this->toIntArray($row, ['child_age', 'keywords', 'related_articles']);
       $this->decodeHtmlEntities($row, ['title']);
+
+      $row['embedded_images'] = $embeddedByNid[(int) ($row['id'] ?? 0)] ?? [];
 
       $coverVideo = $this->parseViewVideoMedia($row['cover_video'] ?? NULL);
       $coverImage = $this->parseViewCoverImage($row['cover_image'] ?? NULL);

@@ -124,17 +124,17 @@ cp scripts/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre
 
 ### 6.2 Code quality checks
 
-The exact checks CI runs (`.github/workflows/pipelines.yml`, job `ci-checks`). Run locally before pushing:
+The checks CI runs (`.github/workflows/pipelines.yml`, job `ci-checks`). CI invokes `phpcs`/`phplint` with **no arguments** — scope and standard come from `phpcs.xml.dist`:
 
 ```bash
 composer validate --no-check-all --ansi
 ddev composer install
-ddev exec ./vendor/bin/phpcs docroot/modules/custom --standard=Drupal,DrupalPractice
+ddev exec ./vendor/bin/phpcs
 ddev exec ./vendor/bin/drupal-check -d docroot/modules/custom
-ddev exec ./vendor/bin/phplint docroot/modules/custom
+ddev exec ./vendor/bin/phplint
 ```
 
-PHPCS config: `phpcs.xml.dist`. All four must pass — `deploy-dev`/`deploy-stage` are gated on `ci-checks`.
+The local convenience form `phpcs docroot/modules/custom --standard=Drupal,DrupalPractice` passes the path/standard explicitly; CI relies on `phpcs.xml.dist` instead. All four must pass — `deploy-dev`/`deploy-stage` are gated on `ci-checks`.
 
 ---
 
@@ -173,6 +173,14 @@ All 11 are **legacy-style** (`@command` annotations) across three custom modules
 ## 8. Maintenance Scripts
 
 Source: `scripts/`.
+
+### `scripts/setup-databases.sh`
+Imports Acquia DB dumps into the per-site DDEV databases for initial local setup. Expects `.sql.gz`/`.sql` files in a `database/` folder at the repo root, matches each dump to a site by a filename keyword pattern (newest first if multiple), creates the site DB if missing, imports, then runs `drush updb -y / cr / cim -y` against the site alias. Skips sites with no matching dump; exits non-zero if any import fails. Requires `ddev start` first.
+
+```bash
+ddev start && ddev composer install
+./scripts/setup-databases.sh
+```
 
 ### `scripts/truncate_content.sql`
 Truncates content tables (node, content_moderation_state, media, files, taxonomy, groups, menu_link_content, block_content, path_alias, shortcut) inside `SET FOREIGN_KEY_CHECKS=0/1`. Plain SQL — **destructive**. Invoke against a target DB:
@@ -354,7 +362,7 @@ Bebbo is a **7-site multisite**. All sites share a base config, with per-site ov
 
 | Layer | Path | What lives here |
 |-------|------|-----------------|
-| Shared base | `config/sync/` (1,576 files) | Core settings, content types, fields, views, permissions — everything common to all 7 sites |
+| Shared base | `config/sync/` (1,581 files) | Core settings, content types, fields, views, permissions — everything common to all 7 sites |
 | Per-site split | `config/{folder}/` | Site-specific modules, theme overrides, Entity Share channels/remotes, language config, site-specific views |
 
 Each site activates its own split via `docroot/sites/{site}/site.splits.php`:
@@ -378,7 +386,7 @@ $config['config_split.config_split.{name}_site']['status'] = TRUE;
 - Export only from `@ddev.bebbo` — never `cex` the other 6 sites (pulls in unrelated drift)
 - For the other 6 sites, hand-edit their split YAML and verify with `drush cim -y`
 - Adding a module to **one** site: declare it in that site's split entity (`config/sync/config_split.config_split.{name}_site.yml`), place module config in `config/{folder}/`
-- There is **no** per-environment config split (`config/envs/` exists but is empty) — environment differences come from Acquia env detection and deploy pipeline, not from config files
+- There is **no** per-environment config split (`config/envs/` contains only a README.md, no config YAML) — environment differences come from Acquia env detection and deploy pipeline, not from config files
 
 ### 11.3 Content synchronization (Entity Share)
 
@@ -439,6 +447,7 @@ Two config entries are in `config_ignore` to prevent `drush cim` from overwritin
 | Token refresh failing | Cron not running. Check `drush cron` and `ultimate_cron` status |
 | No emails after deploy | OAuth not configured on this environment. Follow §12.1 |
 | Client secret expired | Rotate secret in Entra, update at `/admin/config/system/mailer/office365` |
+| `554 5.2.0 STOREDRV.Submission.Exception:SendAsDeniedException` | O365 rejecting because From address differs from the authenticated mailbox (`admin@bebbo.app`). The `MailerSenderOverride` subscriber should override From to `admin@bebbo.app` on all outgoing mail. If still failing: (1) verify the composer patch `symfony_mailer_office365-pass-event-dispatcher.patch` is applied (`composer install` output should show it), (2) run `drush cr` to rebuild the service container, (3) confirm the subscriber fires by checking dblog for `mailer_sender_override` entries. Root cause: the upstream module creates its SMTP transport without the event dispatcher, so `MessageEvent` subscribers never fire — the patch fixes this. |
 
 ---
 

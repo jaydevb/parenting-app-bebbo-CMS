@@ -2,7 +2,7 @@
 
 Complete reference of the configuration stored in this Drupal 11 multisite, sourced **directly from the exported YAML in `config/sync/`** and the per-site config-split folders. Every value below was read from the actual config files — nothing is inferred from defaults or assumed.
 
-- **Shared base config:** `config/sync/` — 1,576 files
+- **Shared base config:** `config/sync/` — 1,581 files
 - **Per-site overrides:** `config/{bebbo,bangla,ecuador,pakistan,somoa,turkey,zimbabwe}/`
 - **Sites:** 7 (Default/Bebbo + Bangladesh, Ecuador, Pakistan, Pacific Islands [Bebbo Pacific, dir `somoa`], Turkey, Zimbabwe)
 
@@ -63,10 +63,13 @@ Complete reference of the configuration stored in this Drupal 11 multisite, sour
 | Transport user | `admin@bebbo.app` |
 | Transport auth plugin | `office365_oauth` (`symfony_mailer_office365`) |
 | OAuth credentials | Placeholders in config — real values entered per-environment via `/admin/config/system/mailer/office365`; protected by `config_ignore` |
+| Sender override | `MailerSenderOverride` event subscriber forces From / Sender / Envelope to `admin@bebbo.app` (read from `symfony_mailer_office365.config` → `mail`); original From preserved as Reply-To. Required because O365 rejects `SendAs` for per-site addresses (e.g. `info@babuni.app`) unless explicit SendAs permissions are configured in Exchange admin. |
 | Mailer policy | URL-to-absolute, inline CSS, wrap-and-convert (plain: false, swiftmailer: false), theme: `_active_fallback` |
 | Test email policy | Subject `"Test email from [site:name]"`, format `email_html` |
 
-**Background:** `drupal/smtp` (Basic Auth via `SMTPMailSystem`) was removed because Microsoft 365 Security Defaults block Authenticated SMTP at the tenant level. Replaced by `drupal/symfony_mailer` + `drupal/symfony_mailer_office365` using OAuth 2.0 Authorization Code flow (delegated `SMTP.Send` permission). OAuth tokens are auto-refreshed via Drupal cron. See [`RUNBOOK.md`](RUNBOOK.md) §14 for post-deployment setup steps.
+**Background:** `drupal/smtp` (Basic Auth via `SMTPMailSystem`) was removed because Microsoft 365 Security Defaults block Authenticated SMTP at the tenant level. Replaced by `drupal/symfony_mailer` + `drupal/symfony_mailer_office365` using OAuth 2.0 Authorization Code flow (delegated `SMTP.Send` permission). OAuth tokens are auto-refreshed via Drupal cron. See [`RUNBOOK.md`](RUNBOOK.md) §12 for post-deployment setup steps.
+
+**Patch — event dispatcher injection:** The upstream `symfony_mailer_office365` module creates its SMTP transport without passing the Symfony event dispatcher, which means `MessageEvent` subscribers (including `MailerSenderOverride`) never fire. A local patch (`patches/symfony_mailer_office365-pass-event-dispatcher.patch`) injects `@event_dispatcher` into the factory service and passes it through to `EsmtpTransport`. Without this patch, all outgoing emails use the per-site `system.site.mail` address as From, which triggers O365 `SendAsDenied` errors on sites whose address differs from the authenticated mailbox (`admin@bebbo.app`). See [`DEPENDENCIES.md`](DEPENDENCIES.md) §6 for the patch entry.
 
 ### Email TFA (Multi-Factor Authentication) — `email_tfa.settings.yml`
 
@@ -1102,20 +1105,20 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 
 | Split ID | Label | Folder | Override files |
 |---|---|---|---|
-| `bebbo_site` | Bebbo Site | `../config/bebbo` | 37 |
-| `bangladesh_site` | Bangladesh Site | `../config/bangla` | 146 |
-| `ecuador_site` | Ecuador Site | `../config/ecuador` | 102 |
+| `bebbo_site` | Bebbo Site | `../config/bebbo` | 36 |
+| `bangladesh_site` | Bangladesh Site | `../config/bangla` | 144 |
+| `ecuador_site` | Ecuador Site | `../config/ecuador` | 99 |
 | `pakistan_site` | Pakistan Site | `../config/pakistan` | 72 |
 | `somoa_site` | Somoa Site | `../config/somoa` | 104 |
-| `turkey_site` | Turkey Site | `../config/turkey` | 134 |
-| `zimbabwe_site` | Zimbabwe Site | `../config/zimbabwe` | 84 |
+| `turkey_site` | Turkey Site | `../config/turkey` | 132 |
+| `zimbabwe_site` | Zimbabwe Site | `../config/zimbabwe` | 83 |
 
 > **No split declares any extra `module:` or `theme:`** (verified: every split's `module:` and `theme:` field is `{ }`). All per-site customization is currently done via complete_list / partial_list config overrides.
 
 > **Module-installation rule (non-negotiable):** `core.extension.yml` lives **exclusively** in `config/sync/` and is the single source of truth for all 7 sites. **Never** add `core.extension` to a split's `complete_list` and **never** create `core.extension.yml` in a split folder. If a site needs a module the others don't, declare it in the `module:` field of that site's `config_split.config_split.{site}_site.yml`, then place that module's config YAML under the site's folder (`config/{folder}/`) and run `drush cim -y` on that site only.
 
 **Override categories per site:**
-- **All sites:** block, language entities, mobile_app_links, pb_custom_form, system.site
+- **All sites:** block, language entities, mobile_app_links, bebbo_custom_general, system.site
 - **entity_share_client:** all except bebbo (bangla, ecuador, pakistan, somoa, turkey, zimbabwe)
 - **ai_translate:** all 6 non-default sites
 - **Field overrides:** bangla, pakistan, somoa, turkey
@@ -1128,14 +1131,14 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 - Ecuador `country_listing` View sort split-patch removed — the partial/stale removal of `sorts.label` left a Views sort handler stub missing its `table` key, crashing the ec-dev country-groups API; the Ecuador split patch now matches sync (`305f94702`).
 
 ### `config_ignore.settings.yml` — never imported/exported
-`admin_toolbar.settings`, `bebbo_api_security.settings`, `entity_share_client.remote*`, `mobile_app_links.android_packages`, `mobile_app_links.ios`, `pb_content_analytics.settings`, `pb_custom_form.landing_pages`, `pb_custom_form.language_redirects`, `pb_custom_form.mobile_app_share_link_form`, `purge.logger_channels`, `symfony_mailer.mailer_transport.office_365_oauth`, `symfony_mailer_office365.config`, `tmgmt.translator.*`, `tmgmt_memsource.settings`, `views.view.entity_share_client_entity_import_status`.
+`admin_toolbar.settings`, `bebbo_api_security.settings`, `entity_share_client.remote*`, `mobile_app_links.android_packages`, `mobile_app_links.ios`, `pb_content_analytics.settings`, `bebbo_custom_general.landing_pages`, `bebbo_custom_general.language_redirects`, `bebbo_custom_general.mobile_app_share_link_form`, `purge.logger_channels`, `symfony_mailer.mailer_transport.office_365_oauth`, `symfony_mailer_office365.config`, `tmgmt.translator.*`, `tmgmt_memsource.settings`, `views.view.entity_share_client_entity_import_status`.
 
 ### Custom-module configs in sync
-- `pb_custom_form.adminsettings` — Master language `en,sr,ru,sq`
-- `pb_custom_form.app_store_redirect` — App store / Google Play URLs both empty
+- `bebbo_custom_general.adminsettings` — Master language `en,sr,ru,sq`
+- `bebbo_custom_general.app_store_redirect` — App store / Google Play URLs both empty
 
 ---
 
-*Generated from `config/sync/` and per-site split folders. All values read from actual YAML — no defaults assumed. Counts: 1,576 shared config files, 18 node types, 22 vocabularies, 4 media types, 68 views, 42 entity-share channels, 43 feed types, 207 migrations, 7 config splits.*
+*Generated from `config/sync/` and per-site split folders. All values read from actual YAML — no defaults assumed. Counts: 1,581 shared config files, 18 node types, 22 vocabularies, 4 media types, 68 views, 42 entity-share channels, 43 feed types, 207 migrations, 7 config splits.*
 
 *Verified 2026-06-29: config-split entity→folder mappings and empty `module:`/`theme:` fields confirmed against `config/sync/config_split.config_split.*.yml`; per-site enabled-language counts (total 46) and group/app-name tables DB-verified.*
