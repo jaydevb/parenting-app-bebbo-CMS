@@ -1,8 +1,8 @@
 adding:
   country:
-    default: PK
+    default: BD
   timezone:
-    default: Asia/Karachi
+    default: Asia/Dhaka
 removing:
   country:
     default: CH

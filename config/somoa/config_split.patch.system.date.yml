@@ -1,8 +1,8 @@
 adding:
   country:
-    default: PK
+    default: FJ
   timezone:
-    default: Asia/Karachi
+    default: Pacific/Fiji
 removing:
   country:
     default: CH

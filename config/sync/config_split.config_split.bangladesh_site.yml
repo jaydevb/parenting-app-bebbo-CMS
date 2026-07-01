@@ -89,6 +89,7 @@ complete_list:
   - bebbo_custom_general.language_redirects
 partial_list:
   - ai_translate.settings
+  - system.date
   - block.block.languagedropdownswitcher
   - core.entity_form_display.group.country.default
   - core.entity_form_display.media.image.default
