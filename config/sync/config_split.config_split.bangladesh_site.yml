@@ -15,7 +15,6 @@ theme: {  }
 complete_list:
   - block.block.gin_logo
   - system.site
-  - entity_share_client.import_config.config_stage
   - taxonomy.vocabulary.subcategory
   - taxonomy.vocabulary.type_of_article
   - field.field.group.country.field_app_name

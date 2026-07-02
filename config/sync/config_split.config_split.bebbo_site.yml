@@ -14,7 +14,6 @@ module: {  }
 theme: {  }
 complete_list:
   - block.block.gin_kosovologo
-  - entity_share_server.channel.taxonomy_type_of_article_en
   - language.entity.al-sq
   - language.entity.bg-bg
   - language.entity.by-be
