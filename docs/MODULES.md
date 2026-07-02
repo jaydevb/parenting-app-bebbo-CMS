@@ -2,7 +2,7 @@
 
 > **Audience:** backend maintainers, code reviewers, onboarding developers.
 > **Scope:** all 13 enabled custom modules in `docroot/modules/custom/`, their purpose, hooks, services, routes, database tables, and interdependencies.
-> **Verified against:** repository `HEAD` (branch `bug/issue-fixes`). Every hook, class, service, and route below was confirmed in source. **Verified 2026-06-29** against `config/sync/core.extension.yml` and the module directories on disk.
+> **Verified against:** repository `HEAD` (branch `bug/issue-fixes`). Every hook, class, service, and route below was confirmed in source. **Verified 2026-07-02** against `config/sync/core.extension.yml` and the module directories on disk.
 
 ---
 
@@ -197,7 +197,12 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 | `hook_query_TAG_alter` (`tmgmt_entity_get_translatable_entities`) | Node ID filter/sort on the translatable-entities query |
 | `hook_menu_local_tasks_alter` | Adds TMGMT Job Items/Jobs/Sources/Cart/Providers/Settings local tasks |
 | `hook_preprocess_page` | TMGMT route cache context |
+| `hook_preprocess_node_add_list` | Removes hidden bundles (see helper below) from the `/node/add` content-type selection page |
+| `hook_menu_links_discovered_alter` | Removes `node.add` links for hidden bundles from every Add-content menu, including the `admin_toolbar_tools` shortcuts |
+| `hook_form_views_exposed_form_alter` | Removes hidden bundles from the exposed "Type" dropdown on the `content`, `global_content_listing`, and `country_content_listing` views |
 | `bebbo_custom_general_node_validate` (form `#validate` handler) | Attached to node edit/add forms via `hook_form_alter`; requires a revision log when a non-admin sets a node to the archive moderation state |
+
+> **Hidden-bundle visibility:** `_bebbo_custom_general_hidden_node_types()` returns the node bundles that must never appear as standalone, selectable content in the admin UI (currently `quiz_questions`, which is authored only inline via the Quiz content type's `field_quiz_questions` inline entity form). The three hooks above consume it. This is visibility-only — no permission or access change — so inline entity form authoring is unaffected. To reveal a bundle, remove it from that helper.
 
 > **Dead-code note:** `bebbo_custom_general_pb_custom_field_preprocess_views_view_field()` was moved verbatim from `pb_custom_form` (slice 4/5). Its name does not match the `{module}_preprocess_{hook}` pattern, so the theme registry never registers it — it remains a no-op, with a `@todo` documenting how to enable it.
 
