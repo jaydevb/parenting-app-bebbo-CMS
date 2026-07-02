@@ -3,11 +3,6 @@
 
   var SINGLE_QUESTION = (drupalSettings.bebboQuizType && drupalSettings.bebboQuizType.singleQuestionValue) || 'single_question_quiz';
 
-  // Tracks whether an auto-removal AJAX cycle is in progress.
-  var removing = false;
-  // Tracks whether we're waiting for the IEF confirm dialog to appear.
-  var pendingConfirm = false;
-
   function getWrapper() {
     return $('[data-drupal-selector="edit-field-quiz-questions-wrapper"]');
   }
@@ -26,10 +21,11 @@
   }
 
   /**
-   * Toggle IEF add/duplicate controls based on quiz type.
+   * Toggle IEF add/duplicate controls and the single-question error.
    *
-   * When switching to single_question_quiz with >1 questions, auto-removes
-   * extra entities one at a time via IEF's own AJAX remove flow.
+   * When the quiz type is single_question_quiz with >1 questions, shows an
+   * inline error and lets the user remove the extras manually. Nothing is
+   * auto-removed, and the quiz-type selection is left unchanged.
    */
   function toggleAddControls() {
     var $wrapper = getWrapper();
@@ -48,42 +44,34 @@
     // Hide/show duplicate buttons in entity operation cells.
     $wrapper.find('.ief-entity-operations input[name*="entity-duplicate"]').toggle(!isSingle);
 
-    // Auto-remove extra entities for single question quiz.
-    if (isSingle && !removing && !pendingConfirm && count > 1) {
-      removeLastEntity($wrapper);
+    // Do NOT auto-remove. Surface an inline error and let the user remove the
+    // extra questions manually; leave the quiz-type value as the user set it.
+    if (isSingle && count > 1) {
+      showSingleQuestionError($wrapper, count);
+    }
+    else {
+      clearSingleQuestionError($wrapper);
     }
   }
 
   /**
-   * Triggers the IEF remove button on the last entity row.
-   *
-   * IEF removal is 2-step: click Remove -> confirm dialog appears ->
-   * click Confirm -> entity removed. Each step triggers an AJAX rebuild,
-   * which fires Drupal.behaviors.attach again.
+   * Shows the inline "too many questions for a single quiz" error.
    */
-  function removeLastEntity($wrapper) {
-    var $removeButtons = $wrapper.find('.ief-entity-operations input[name*="entity-remove"]');
-    if ($removeButtons.length <= 1) {
-      return;
+  function showSingleQuestionError($wrapper, count) {
+    var message = Drupal.t('A Single question quiz must have only one question. You currently have @count — please remove the extra questions and keep just one before saving.', { '@count': count });
+    var $error = $wrapper.find('.single-question-error');
+    if (!$error.length) {
+      $wrapper.prepend('<div class="single-question-error messages messages--error" style="margin-bottom:10px;"></div>');
+      $error = $wrapper.find('.single-question-error');
     }
-
-    removing = true;
-    pendingConfirm = true;
-    $removeButtons.last().trigger('mousedown');
+    $error.text(message);
   }
 
   /**
-   * Handles step 2 of IEF removal: clicking the confirm button.
+   * Removes the inline single-question error when the condition clears.
    */
-  function handlePendingConfirm($wrapper) {
-    var $confirmBtn = $wrapper.find('input[name*="ief-remove-confirm"]');
-    if ($confirmBtn.length) {
-      pendingConfirm = false;
-      removing = true;
-      $confirmBtn.first().trigger('mousedown');
-      return true;
-    }
-    return false;
+  function clearSingleQuestionError($wrapper) {
+    $wrapper.find('.single-question-error').remove();
   }
 
   function updateQuestionCount() {
@@ -131,18 +119,6 @@
 
   Drupal.behaviors.bebboSerializerQuestionCount = {
     attach: function (context) {
-      // Reset removal flag on every attach (AJAX rebuild completed).
-      removing = false;
-
-      var $wrapper = getWrapper();
-
-      // Step 2 of auto-removal: confirm dialog appeared, click confirm.
-      if (pendingConfirm && $wrapper.length) {
-        if (handlePendingConfirm($wrapper)) {
-          return;
-        }
-      }
-
       updateQuestionCount();
       toggleAddControls();
 
