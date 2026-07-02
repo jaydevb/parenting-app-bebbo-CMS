@@ -57,6 +57,7 @@ complete_list:
   - workflows.workflow.group_workflow
 partial_list:
   - gin.settings
+  - system.date
   - system.theme.global
   - ai_translate.settings
   - core.entity_form_display.block_content.basic.default

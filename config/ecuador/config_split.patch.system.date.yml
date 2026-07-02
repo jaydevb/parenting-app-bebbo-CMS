@@ -1,8 +1,8 @@
 adding:
   country:
-    default: PK
+    default: EC
   timezone:
-    default: Asia/Karachi
+    default: America/Guayaquil
 removing:
   country:
     default: CH

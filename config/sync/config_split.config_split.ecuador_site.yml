@@ -151,6 +151,7 @@ complete_list:
   - views.view.bebbo_v2_apis
 partial_list:
   - ai_translate.settings
+  - system.date
   - block.block.languagedropdownswitcher
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library

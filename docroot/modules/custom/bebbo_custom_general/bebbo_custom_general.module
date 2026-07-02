@@ -943,3 +943,73 @@ function bebbo_custom_general_pb_custom_field_preprocess_views_view_field(&$vari
   }
 
 }
+
+/**
+ * Node bundles hidden from every admin listing, menu and dropdown.
+ *
+ * These bundles are content that is only ever authored inline (e.g.
+ * "Quiz questions" is created via the Quiz content type's inline entity
+ * form field_quiz_questions). They must never appear as standalone,
+ * selectable content anywhere in the admin UI.
+ *
+ * TO REVEAL a bundle again: remove it from this array (or comment out the
+ * whole block). No permission or access change is involved — this is purely
+ * visibility, so inline entity form authoring keeps working regardless.
+ *
+ * @return string[]
+ *   The node type machine names to hide.
+ */
+function _bebbo_custom_general_hidden_node_types() {
+  return [
+    'quiz_questions',
+  ];
+}
+
+/**
+ * Implements hook_preprocess_node_add_list().
+ *
+ * Removes hidden bundles from the /node/add content type selection page.
+ */
+function bebbo_custom_general_preprocess_node_add_list(&$variables) {
+  foreach (_bebbo_custom_general_hidden_node_types() as $type) {
+    unset($variables['content'][$type], $variables['types'][$type]);
+  }
+}
+
+/**
+ * Implements hook_menu_links_discovered_alter().
+ *
+ * Removes hidden bundles from any "Add content" menu link, including the
+ * admin_toolbar_tools shortcuts under Content.
+ */
+function bebbo_custom_general_menu_links_discovered_alter(&$links) {
+  $hidden = _bebbo_custom_general_hidden_node_types();
+  foreach ($links as $key => $link) {
+    if (($link['route_name'] ?? '') === 'node.add') {
+      $node_type = $link['route_parameters']['node_type'] ?? '';
+      if (in_array($node_type, $hidden, TRUE)) {
+        unset($links[$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_views_exposed_form_alter().
+ *
+ * Removes hidden bundles from the exposed "Type" dropdown on the admin
+ * content listing views so they cannot be selected as a filter option.
+ */
+function bebbo_custom_general_form_views_exposed_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $listings = ['content', 'global_content_listing', 'country_content_listing'];
+  $view = $form_state->get('view');
+  if (!$view || !in_array($view->id(), $listings, TRUE)) {
+    return;
+  }
+  if (!isset($form['type']['#options'])) {
+    return;
+  }
+  foreach (_bebbo_custom_general_hidden_node_types() as $type) {
+    unset($form['type']['#options'][$type]);
+  }
+}
