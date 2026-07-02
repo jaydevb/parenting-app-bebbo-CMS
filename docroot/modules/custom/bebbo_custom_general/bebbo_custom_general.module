@@ -766,6 +766,17 @@ function bebbo_custom_general_preprocess_page(&$variables) {
 }
 
 /**
+ * Implements hook_menu_local_actions_alter().
+ */
+function bebbo_custom_general_menu_local_actions_alter(&$local_actions): void {
+  // Rename the "Add group" action on the group collection (/admin/group) to
+  // "Add Country" — Bebbo uses a single "country" group type on all sites.
+  if (isset($local_actions['group.add_group'])) {
+    $local_actions['group.add_group']['title'] = t('Add Country');
+  }
+}
+
+/**
  * Implements hook_menu_local_tasks_alter().
  */
 function bebbo_custom_general_menu_local_tasks_alter(&$data, $route_name) {
