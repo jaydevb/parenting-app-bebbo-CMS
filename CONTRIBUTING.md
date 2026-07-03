@@ -266,6 +266,8 @@ The following themes are installed and enabled (`config/sync/core.extension.yml`
 
 - **Country admin**: Manages country users and language content.
 
+- **Translator**: Accepts translation jobs through the Translation Management (TMGMT) workflow and translates content, taxonomy terms, document media, and interface strings.
+
 Each user role has a dashboard. Country admin and senior editor have
 access to country reports.
 

@@ -88,6 +88,9 @@ GRANT ALL PRIVILEGES ON turkey_db.* TO 'db'@'%';
 CREATE DATABASE IF NOT EXISTS ecuador_db;
 GRANT ALL PRIVILEGES ON ecuador_db.* TO 'db'@'%';
 
+CREATE DATABASE IF NOT EXISTS pakistan_db;
+GRANT ALL PRIVILEGES ON pakistan_db.* TO 'db'@'%';
+
 CREATE DATABASE IF NOT EXISTS somoa_db;
 GRANT ALL PRIVILEGES ON somoa_db.* TO 'db'@'%';
 
@@ -155,6 +158,32 @@ The AI translation feature (and the other AI-powered features) uses the OpenAI p
 3. **Verify:** open a piece of content, use the **Translate** tab's AI translate action, and confirm a translation is produced. Provider settings live at **Configuration → AI** (`/admin/config/ai`).
 
 The key is stored in the site's active configuration only; do not export it into `config/sync`.
+
+### Outbound Email (Microsoft 365)
+
+Outbound email (content-moderation notifications, two-factor codes) is sent through the Symfony Mailer **Office 365 OAuth** transport. The committed configuration contains placeholders — email will not send until you supply real credentials:
+
+1. **Register an application** in [Microsoft Entra ID (Azure AD)](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade): note the **Application (client) ID** and **Directory (tenant) ID**, create a **client secret**, and grant the application the `Mail.Send` Microsoft Graph permission (admin consent required).
+2. **Add the credentials to the CMS:** go to **Configuration → System → Mailer** (`/admin/config/system/mailer`), edit the **Office 365 OAuth** transport, and enter the client ID, client secret, tenant ID, and the sending mailbox address.
+3. **Verify:** send a test email via **Configuration → System → Mailer → Test**.
+
+These three values are ignored by configuration export (`config_ignore`), so they stay local to each environment. For local development you can skip this — DDEV captures outgoing mail in Mailpit (`ddev launch -m`).
+
+### API Authentication (JWT + Device Attestation)
+
+The V2 REST APIs (`/v2/api/*`) support device-based authentication provided by the `bebbo_api_security` module. Enforcement is **disabled by default**, so a fresh install works without any of this — set it up only when you want to exercise the secured API flow:
+
+1. **Generate an RSA signing key** for JWTs and expose it as an environment variable:
+   ```bash
+   openssl genrsa -out bebbo-jwt.pem 2048
+   base64 -i bebbo-jwt.pem   # value for BEBBO_JWT_PRIVATE_KEY
+   ```
+   For DDEV, uncomment and set `BEBBO_JWT_PRIVATE_KEY` under `web_environment` in `.ddev/config.yaml` (see the commented example), then `ddev restart`. On hosted environments set it as a platform environment variable.
+2. **(Optional) Android attestation:** create a Google Cloud service account with the **Play Integrity API** enabled, download its JSON key, and set it (base64-encoded) as the `BEBBO_GOOGLE_SA_KEY` environment variable.
+3. **(Optional) iOS attestation:** enter your Apple **Team ID**, **bundle ID**, and the [Apple App Attestation Root CA](https://www.apple.com/certificateauthority/) PEM in the module settings form (**Configuration → Web services → API Security**).
+4. **Enable enforcement** by switching the module's *Enforcement mode* from `disabled` to `grace_period` (monitor) or `enforced`.
+
+The full attestation flow, token lifetimes, and rollout guidance are documented in [API Security](docs/API_SECURITY.md).
 
 ## Documentation
 
