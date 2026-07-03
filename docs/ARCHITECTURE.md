@@ -2,7 +2,7 @@
 
 > **Audience:** new developers, maintainers, support, and operations.
 > **Scope:** high-level architecture, multisite topology, configuration layering, request/serving flow, and access model. Deep dives live in the sibling docs referenced throughout.
-> **Verified against:** repository `HEAD` on branch `bug/issue-fixes`, **verified 2026-06-29**. All version numbers and structural facts below were read directly from the codebase, not copied from older documentation.
+> **Verified 2026-07-03.** All version numbers and structural facts below were read directly from the codebase, not copied from older documentation.
 
 ---
 
@@ -12,13 +12,13 @@ Bebbo (a.k.a. *Parent Buddy*) is the **headless Drupal CMS** behind UNICEF's par
 
 | Property | Value | Source |
 |----------|-------|--------|
-| Drupal core | **11.3.12** | `composer.lock` (`drupal/core`) |
+| Drupal core | **11.3.13** | `composer.lock` (`drupal/core`) |
 | PHP | **>= 8.4** | `composer.json` `require.php`; DDEV `php_version: "8.4"` |
 | Database | MariaDB (DDEV local; **10.11**) | `.ddev/config.yaml` |
 | CLI tooling | **Drush ^13** | `composer.json` |
 | Admin theme | **Gin** (`drupal/gin ^5.0`) | `config/sync/system.theme.yml` |
 | Default theme | **Gin** (headless — no separate frontend theme) | `config/sync/system.theme.yml` |
-| Hosting | **Acquia Cloud** (BLT-managed, machine name `parentbuddy`) | `blt/`, `hooks/`, `README.acquia` |
+| Hosting | **Acquia Cloud** — application `parentbuddy2` (`blt/` config is legacy; BLT is not installed) | `drush/sites/parentbuddy2.site.yml`, `hooks/`, `README.acquia` |
 | Caching | Memcache (Acquia) | `acquia/memcache-settings`, `docroot/sites/common_settings/cloud-memcache-d8+.php` |
 | Local dev | DDEV (`bebbo.app`) | `.ddev/` |
 | Architecture | Single codebase, **7-site Drupal multisite**, per-site config via Config Split | `docroot/sites/`, `config/` |
@@ -222,13 +222,13 @@ The codebase is standard Drupal layering: **core + contrib + custom**, plus comp
 
 | Layer | Where | Count / notes |
 |-------|-------|---------------|
-| Drupal core | `docroot/core` | 11.3.12 |
+| Drupal core | `docroot/core` | 11.3.13 |
 | Contrib modules | `docroot/modules/contrib` | ~100+ packages (full list + versions in `DEPENDENCIES.md`) |
-| Custom modules | `docroot/modules/custom` | **13 modules** (below) — _Verified 2026-06-29_ |
+| Custom modules | `docroot/modules/custom` | **13 modules** (below) — _Verified 2026-07-03_ |
 | Custom themes | `docroot/themes/custom` | none — admin/default theme is contrib **Gin** |
 | Patches | `patches/` + `composer.json` `extra.patches` | core, content_moderation, tmgmt, group, lang_dropdown, etc. |
 
-### 6.1 Custom modules (verified by `*.info.yml` + `core.extension.yml`, _Verified 2026-06-29_)
+### 6.1 Custom modules (verified by `*.info.yml` + `core.extension.yml`, _Verified 2026-07-03_)
 
 The **13** custom modules below were verified on disk in `docroot/modules/custom/` and in `config/sync/core.extension.yml`. The former `custom_serialization` (V1 serializer), `pb_custom_rest_api` (force/check-update REST resource), and `pb_custom_standard_deviation` modules have been **removed** — their logic was consolidated into `bebbo_serializer` (V1+V2 serialization, `standard_deviation`, check-update controller). The two primary API/utility modules are now `bebbo_serializer` and `bebbo_custom_general`.
 
@@ -256,7 +256,7 @@ Per-module deep documentation belongs in **`MODULES.md`**; API/JSON shapes in **
 
 The contrib **`group` module (`drupal/group ^3`)** is the backbone of Bebbo's multi-country model. Each country is a **Group entity of type `country`** (`config/sync/group.type.country.yml`, id `country`). Content, users, languages, branding, and the moderation workflow are all organized around these groups.
 
-> `access_policy ^2` is in `composer.json` (it pairs with Group 3.x) but is **not** enabled in committed config at `HEAD` — the Group 1.x → 3.x upgrade on branch `feature/group3-manage-users` is still in progress. Treat the enabled module set as the source of truth.
+> `access_policy ^2` is declared in `composer.json` (it pairs with Group 3.x) but is **not** enabled in committed config (`core.extension.yml`). Treat the enabled module set as the source of truth.
 
 ```mermaid
 flowchart TB
@@ -273,7 +273,6 @@ flowchart TB
 
 - A user's group memberships determine which country's content they can see and act on. Reviewers are scoped to their assigned group; multi-country users (e.g. Global Admin) span groups.
 - Content moderation runs through the `group_workflow` (Draft → review states → Published / Archived / Require Modification).
-- The Group module is currently being upgraded from 1.x → 3.x for Drupal 11.
 
 > Full role matrix, group fields, workflow states/transitions, and the per-group content report are documented in **`MODULES.md`** (group section). This overview intentionally stays high-level.
 
@@ -281,7 +280,7 @@ flowchart TB
 
 ## 8. Request / Serving Flow (Mobile API)
 
-Bebbo exposes **two parallel REST API surfaces** — both implemented as Drupal **Views REST exports** with custom serializer **style plugins**, plus a handful of controller routes. _Verified 2026-06-29 from view `path:` values, view `style:` plugins, and the `bebbo_serializer` / `bebbo_api_security` routing files._
+Bebbo exposes **two parallel REST API surfaces** — both implemented as Drupal **Views REST exports** with custom serializer **style plugins**, plus a handful of controller routes. _Verified 2026-07-03 from view `path:` values, view `style:` plugins, and the `bebbo_serializer` / `bebbo_api_security` routing files._
 
 | | **V1** | **V2** |
 |---|--------|--------|
@@ -292,7 +291,7 @@ Bebbo exposes **two parallel REST API surfaces** — both implemented as Drupal 
 | Taxonomy / vocab / strings view | `tax` (V1 displays) | `tax` (V2 displays) |
 | Country-groups view | `country_listing` (V1 display) | `country_listing` (V2 display) |
 | Sponsors view | `sponsors_list` → `/api/sponsors/%` | _(none — V1 only)_ |
-| Controller routes | `CheckUpdateController` → `/api/check-update/{country}` | `CheckUpdateController` → `/v2/api/check-update/{country}` (`no_cache: TRUE` — JWT-bypass fix) |
+| Controller routes | `CheckUpdateController` → `/api/check-update/{country}` | `CheckUpdateController` → `/v2/api/check-update/{country}` (`no_cache: TRUE` — JWT-gated, never page-cached) |
 
 Both serializer plugins share the `BebboSerializerHelpers` trait and emit the same `{status,total,langcode,datetime,data}` envelope; `bebbo_v1_serializer` emits plain (escaped) JSON for byte-parity with the legacy V1 contract. V2 adds `course`, `guide`, `quiz`, and `weekly-overview`; V1 keeps the fuller pinned/related-content set. Device-security bootstrapping lives in `bebbo_api_security` controller routes — five public POST endpoints (`no_cache`): `/api/security/register`, `/api/security/device/register`, `/api/security/device/verify`, `/api/security/refresh`, `/api/security/revoke` — through which a device obtains the JWT used for `/v2/api/*`.
 
@@ -316,7 +315,7 @@ sequenceDiagram
 
 - Endpoints, query parameters, field mappings, and JSON envelope variants: **`API_REFERENCE.md`**.
 - JWT modes, attestation flows, and enforcement rollout: **`API_SECURITY.md`**.
-- **Protection scope (verified):** `protected_api_patterns` defaults to `/v2/api/` (this covers `/v2/api/check-update/`). The **V1 `/api/*` endpoints — content *and* the public `/api/check-update/` — are not JWT-protected**. `/api/security/*` is excluded (chicken-and-egg). The diagram above shows the V2 path; a V1 request skips the security subscriber and goes straight to the serializer.
+- **Protection scope (verified):** `protected_api_patterns` defaults to `/v2/api/` (this covers `/v2/api/check-update/`). The **V1 `/api/*` endpoints — content *and* the public `/api/check-update/` — are not JWT-protected**. `/api/security/*` is excluded (token-issuance endpoints must be reachable without a JWT). The diagram above shows the V2 path; a V1 request skips the security subscriber and goes straight to the serializer.
 
 ---
 

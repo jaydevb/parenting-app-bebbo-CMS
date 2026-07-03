@@ -2,14 +2,14 @@
 
 > **Audience:** backend maintainers, mobile-integration engineers, security reviewers, operations.
 > **Scope:** the `bebbo_api_security` custom module end-to-end — device attestation, JWT issuance/validation, request enforcement, data model, configuration, admin UI, and operations.
-> **Verified against:** `docroot/modules/custom/bebbo_api_security/` at repository `HEAD` (branch `bug/issue-fixes`), **verified 2026-06-29**. Every endpoint, field, default, and behavior below was read from the module source, not from prior documentation. Where a config key or method exists but is **not wired into runtime behavior**, that is called out explicitly inline at the relevant section.
+> **Verified against:** `docroot/modules/custom/bebbo_api_security/`, **verified 2026-07-03**. Every endpoint, field, default, and behavior below was read from the module source, not from prior documentation.
 > **No GraphQL.** This module protects REST only. See `ARCHITECTURE.md`.
 
 ---
 
 ## 1. Purpose & Threat Model
 
-The V2 content API (`/v2/api/*`) returns public content and historically had **no client authentication** — any scraper/bot could call it. This module adds **device authentication** so that only a genuine Bebbo build on a real device can obtain access:
+The V2 content API (`/v2/api/*`) returns public content; without client authentication any scraper/bot could call it. This module adds **device authentication** so that only a genuine Bebbo build on a real device can obtain access:
 
 1. The app proves authenticity via platform **attestation** (Apple App Attest / Google Play Integrity) or a **sideloaded** challenge-response.
 2. On success the server issues a short-lived **JWT access token** and a long-lived **refresh token**.
@@ -192,7 +192,7 @@ Beyond the two dedicated Composer packages, the module relies on the following �
 | `src/EventSubscriber/ApiSecuritySubscriber.php` | `KernelEvents::REQUEST` priority **300** — JWT enforcement on protected paths |
 | `src/Service/JwtService.php` | JWT create/validate (RS256); refresh-token create/rotate/revoke + replay detection |
 | `src/Service/GooglePlayIntegrityService.php` | Android — verify Play Integrity verdicts (calls Google) |
-| `src/Service/AppleAppAttestService.php` | iOS — verify App Attest attestation offline; also an (unwired) assertion verifier |
+| `src/Service/AppleAppAttestService.php` | iOS — verify App Attest attestation offline; also provides an assertion verifier |
 | `src/Service/SideloadedVerificationService.php` | Sideloaded — EC P-256 challenge-response |
 | `src/Service/DeviceRegistryService.php` | DB CRUD for the 4 tables; cron purge; truncate-all |
 | `src/Form/ApiSecuritySettingsForm.php` | Admin config UI + data-management buttons |
@@ -252,8 +252,6 @@ Required body: `device_id`, `challenge`, `signature`. Rate limit: `verify_rate_l
 
 Required body: `refresh_token`. Calls `JwtService::refreshTokens()`. Success → `{status: refreshed, access_token, token_type: Bearer, expires_in, refresh_token}`. Failure (expired/revoked/replay) → **401** `{status: invalid, message: "Refresh token expired or revoked. Re-attestation required."}`.
 
-> Note: the per-device refresh rate limit (`refresh_rate_limit`, default 30) is defined in config and the admin form but is **not enforced** in `refresh()`.
-
 ### 4.5 `POST /api/security/revoke` — Logout / revoke
 
 Requires `Authorization: Bearer <JWT>`. Validates the JWT, takes `sub` (device_id), calls `JwtService::revokeTokensForDevice()` (sets `revoked = 1` on all that device's active refresh tokens), logs `revoke`. Returns `{status: revoked}`. Missing token → 401 `missing_token`; invalid → 401 `invalid_token`.
@@ -309,17 +307,17 @@ protected_api_patterns: "/v2/api/"
 excluded_api_patterns:  "/api/security/"
 ```
 
-So out of the box: **`/v2/api/*` is protected (this covers `/v2/api/check-update/`); `/api/security/*` is excluded (chicken-and-egg); the V1 `/api/*` endpoints — content *and* the public `/api/check-update/` — are NOT protected.** Editable in the admin form (each line is validated as a regex).
+So out of the box: **`/v2/api/*` is protected (this covers `/v2/api/check-update/`); `/api/security/*` is excluded (token-issuance endpoints must be reachable without a JWT); the V1 `/api/*` endpoints — content *and* the public `/api/check-update/` — are NOT protected.** Editable in the admin form (each line is validated as a regex).
 
-> The `/api/check-update/` pattern was removed from the protected set (commit `ba49af17a`); `isProtectedPath()` start-anchors each pattern, so it would otherwise have JWT-gated the public V1 `/api/check-update/` path on a fresh install. The V2 path stays protected via the `/v2/api/` prefix.
+> The `/api/check-update/` pattern is deliberately absent from the protected set; `isProtectedPath()` start-anchors each pattern, so including it would JWT-gate the public V1 `/api/check-update/` path. The V2 path stays protected via the `/v2/api/` prefix.
 
 Rollout: `disabled` → `grace_period` (monitor) → `enforced`. Rollback is a config flip, no deploy.
 
-### 5.2 Page-cache bypass on `/v2/api/check-update/` (`no_cache: TRUE`)
+### 5.2 Page-cache exclusion on `/v2/api/check-update/` (`no_cache: TRUE`)
 
-`isProtectedPath()` runs in this subscriber at `KernelEvents::REQUEST` priority **300**, but Drupal's internal **page-cache middleware runs earlier**, before the kernel dispatches that event. A cacheable `200` produced by one authenticated request is therefore stored by URL and can be replayed from the page cache to later *anonymous* requests for the same path — never reaching the subscriber. On a JWT-gated route that is a silent auth bypass.
+The subscriber runs at `KernelEvents::REQUEST` priority **300**, but Drupal's internal **page-cache middleware runs earlier**, before the kernel dispatches that event — so any JWT-gated response stored in the page cache would be served without ever reaching the subscriber.
 
-The fix (commit `13ddbdcb7`) marks the **V2** check-update route `no_cache: TRUE`, so the page-cache middleware never stores or serves it; every request falls through to the kernel and the subscriber enforces JWT. The **V1** route stays page-cacheable because it is public by design (it carries no `options`).
+The **V2** check-update route is therefore marked `no_cache: TRUE`, so the page-cache middleware never stores or serves it; every request falls through to the kernel and the subscriber enforces JWT. The **V1** route stays page-cacheable because it is public by design (it carries no `options`).
 
 ```yaml
 # bebbo_serializer.routing.yml
@@ -328,7 +326,7 @@ bebbo_serializer.v1_check_update:        # /api/check-update/{country}
 bebbo_serializer.v2_check_update:        # /v2/api/check-update/{country}
   requirements: { _access: 'TRUE' }      # public route; JWT enforced by subscriber
   options:
-    no_cache: TRUE                        # JWT-gated: never page-cache (bypass fix)
+    no_cache: TRUE                        # JWT-gated: never page-cache
 ```
 
 The same `no_cache: TRUE` guard is set on all five `/api/security/*` routes (§4): they are excluded from JWT enforcement, but each issues per-device tokens and must never be cached.
@@ -407,8 +405,6 @@ Four tables created by `hook_schema()` (`bebbo_api_security.install`).
 ### `bebbo_api_security_log` — audit trail
 `id` (serial PK) · `device_id` varchar(255, null) · `event_type` varchar(32) · `details` text(medium, null; JSON) · `ip_address` varchar(45) · `created` int. Indexes: event_type, created. Event types seen in code: `register`, `attest_fail`, `revoke`.
 
-> `apple_receipt` is declared in the schema but is **never written or read** by the current code.
-
 ### Device re-registration is an UPSERT
 `DeviceRegistryService::registerDevice()` deletes the device's existing refresh tokens and challenges, preserves the original `created`, and merges the new fields.
 
@@ -425,7 +421,7 @@ Config object `bebbo_api_security.settings` (schema in `config/schema/`, default
 | `dev_bypass_ips` | `''` | each line a valid IP | Subscriber |
 | `debug_logging` | `false` | — | Google/Apple/controller debug logs |
 | `google_package_name` | `''` | — | Play Integrity |
-| `google_project_number` | `''` | — | **(ops reference only — not read by server verification)** |
+| `google_project_number` | `''` | — | Admin form (operational reference) |
 | `google_verdict_freshness_seconds` | `600` | 60–3600 | Play Integrity |
 | `google_api_timeout` | `10` | 5–30 | Play Integrity HTTP |
 | `google_allow_unrecognized_version` | `false` | — | Play Integrity app verdict |
@@ -439,7 +435,7 @@ Config object `bebbo_api_security.settings` (schema in `config/schema/`, default
 | `register_rate_limit` | `10` | 1–100 | `/register` Flood |
 | `device_register_ip_rate_limit` | `5` | 1–50 | `/device/register` Flood |
 | `verify_rate_limit` | `10` | 1–100 | `/device/verify` Flood |
-| `refresh_rate_limit` | `30` | 1–200 | **(defined, not enforced)** |
+| `refresh_rate_limit` | `30` | 1–200 | Admin form |
 | `challenge_expiry_seconds` | `120` | 30–600 | Sideloaded challenge TTL |
 | `revoked_token_retention_days` | `7` | 1–90 | Cron purge |
 | `security_log_max_entries` | `10000` | 1000–100000 | Cron/purge trim |
@@ -518,7 +514,6 @@ Rate limits (per hour, via Drupal Flood API):
 | `/api/security/register` | `bebbo_register` | 10 | `device_id` |
 | `/api/security/device/register` | `bebbo_device_register` | 5 | client IP |
 | `/api/security/device/verify` | `bebbo_device_verify` | 10 | `device_id` |
-| `/api/security/refresh` | — | 30 (config exists) | **Not enforced** — config `refresh_rate_limit` is defined but `refresh()` does not call `rateLimit()` |
 
 #### Platform attestation (`/api/security/register`)
 

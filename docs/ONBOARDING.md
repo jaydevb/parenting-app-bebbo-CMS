@@ -1,13 +1,13 @@
 ## Welcome to the Bebbo Community!
 
-Bebbo is more than an app - it\'s a movement. We\'re building an
+Bebbo is more than an app - it's a movement. We're building an
 open-source, community-driven digital parenting resource to empower
-parents worldwide in supporting their children\'s healthy development.
+parents worldwide in supporting their children's healthy development.
 Every child deserves access to evidence-based guidance, regardless of
 their location or circumstances.
 
-We\'re excited to welcome passionate individuals who share our vision.
-Whether you\'re a developer, designer, translator, content creator, or
+We're excited to welcome passionate individuals who share our vision.
+Whether you're a developer, designer, translator, content creator, or
 someone who cares about early childhood development, your contribution
 matters. Explore our [project description and goals](DESCRIPTION_GOALS.md)
 document to learn more about Bebbo.

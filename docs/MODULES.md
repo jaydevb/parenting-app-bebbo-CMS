@@ -2,7 +2,7 @@
 
 > **Audience:** backend maintainers, code reviewers, onboarding developers.
 > **Scope:** all 13 enabled custom modules in `docroot/modules/custom/`, their purpose, hooks, services, routes, database tables, and interdependencies.
-> **Verified against:** repository `HEAD` (branch `bug/issue-fixes`). Every hook, class, service, and route below was confirmed in source. **Verified 2026-07-02** against `config/sync/core.extension.yml` and the module directories on disk.
+> **Verified:** every hook, class, service, and route below was confirmed in source. **Verified 2026-07-03** against `config/sync/core.extension.yml` and the module directories on disk.
 
 ---
 
@@ -61,7 +61,7 @@ Device authentication for the V2 content API. Apps prove authenticity via platfo
 | `/api/security/revoke` | POST | public (Bearer required in handler) | `SecurityController::revoke` |
 | `/admin/config/parent-buddy/api-security` | GET/POST | `administer bebbo api security` | `ApiSecuritySettingsForm` |
 
-The five `/api/security/*` endpoints are PUBLIC because unauthenticated devices bootstrap auth here — they are how a client OBTAINS the JWT used for `/v2/api/*`. JWT-only path protection is `/v2/api/` (the `/api/check-update/` pattern was dropped — commit `ba49af17a`).
+The five `/api/security/*` endpoints are PUBLIC because unauthenticated devices bootstrap auth here — they are how a client OBTAINS the JWT used for `/v2/api/*`. JWT-only path protection is `/v2/api/` (the `/api/check-update/` pattern is not in the protected set — the V1 check-update path stays public).
 
 ### Hooks
 
@@ -97,7 +97,7 @@ The five `/api/security/*` endpoints are PUBLIC because unauthenticated devices 
 
 Both V1 (`/api/*`, public) and V2 (`/v2/api/*`, JWT-protected) REST API serialization. Provides the `bebbo_serializer` (V2) and `bebbo_v1_serializer` (V1) Views style plugins that transform Views REST export rows into the Bebbo JSON envelope (`{status, total, langcode, datetime, data}`), the `bebbo_json` encoder, ETag support (V2), and presave logic for computed fields. V1 emits plain escaped `json` for byte parity with the legacy app; V2 emits `bebbo_json` (unescaped slashes/unicode) with ETag/304.
 
-Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API** (`/api/strings/%` and `/v2/api/strings/%`, served by the `string_rest_export` / `v2_string_rest_export` displays of the `tax` view using this module's style plugin) and the **Force-Update / check-update** endpoint (`/api/check-update/{country}` and `/v2/api/check-update/{country}`, served by `CheckUpdateController` via `bebbo_serializer.routing.yml`). Both V1/V2 pairs return identical responses. The V2 check-update route is marked `no_cache: TRUE` to prevent a cached authenticated 200 being replayed to anonymous clients by the page cache (commit `13ddbdcb7`).
+Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API** (`/api/strings/%` and `/v2/api/strings/%`, served by the `string_rest_export` / `v2_string_rest_export` displays of the `tax` view using this module's style plugin) and the **Force-Update / check-update** endpoint (`/api/check-update/{country}` and `/v2/api/check-update/{country}`, served by `CheckUpdateController` via `bebbo_serializer.routing.yml`). Both V1/V2 pairs return identical responses. The V2 check-update route is marked `no_cache: TRUE` to prevent a cached authenticated 200 being replayed to anonymous clients by the page cache.
 
 ### Services
 
@@ -115,7 +115,7 @@ Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API**
 | `hook_node_presave` | Populates `field_number_of_modules` (course), `field_number_of_questions` (quiz), truncates height/weight decimals (pregnancy_weekly_overview), auto-populates `field_embedded_images` and `field_body_rendered` for published nodes |
 | `hook_node_predelete` | Deletes orphaned quiz_questions nodes when quiz node deleted |
 | `hook_views_query_alter` | Adds Pregnancy term to child_age filter when `?pregnancy=true` on the V1 + V2 articles endpoints |
-| `hook_form_alter` | Makes module/question count fields readonly on course/quiz forms; validates course expiry, passing score, question count |
+| `hook_form_alter` | Makes module/question count fields readonly on course/quiz forms; validates course expiry and passing score; rejects saving a Quiz as `single_question_quiz` while it holds more than one question (validation error — extra questions are never auto-removed) |
 | `hook_inline_entity_form_translation_restrict_alter` | Allows adding new course modules on translation forms |
 | `hook_inline_entity_form_entity_form_alter` | Renames IEF "Add another item" → "Add another answer" on quiz forms |
 
@@ -196,6 +196,7 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 | `hook_form_tmgmt_overview_form_alter` | TMGMT overview Node ID column + filter + sortable header |
 | `hook_query_TAG_alter` (`tmgmt_entity_get_translatable_entities`) | Node ID filter/sort on the translatable-entities query |
 | `hook_menu_local_tasks_alter` | Adds TMGMT Job Items/Jobs/Sources/Cart/Providers/Settings local tasks |
+| `hook_menu_local_actions_alter` | Renames the "Add group" action on `/admin/group` to "Add Country" (all sites use the single `country` group type) |
 | `hook_preprocess_page` | TMGMT route cache context |
 | `hook_preprocess_node_add_list` | Removes hidden bundles (see helper below) from the `/node/add` content-type selection page |
 | `hook_menu_links_discovered_alter` | Removes `node.add` links for hidden bundles from every Add-content menu, including the `admin_toolbar_tools` shortcuts |
@@ -204,7 +205,7 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 
 > **Hidden-bundle visibility:** `_bebbo_custom_general_hidden_node_types()` returns the node bundles that must never appear as standalone, selectable content in the admin UI (currently `quiz_questions`, which is authored only inline via the Quiz content type's `field_quiz_questions` inline entity form). The three hooks above consume it. This is visibility-only — no permission or access change — so inline entity form authoring is unaffected. To reveal a bundle, remove it from that helper.
 
-> **Dead-code note:** `bebbo_custom_general_pb_custom_field_preprocess_views_view_field()` was moved verbatim from `pb_custom_form` (slice 4/5). Its name does not match the `{module}_preprocess_{hook}` pattern, so the theme registry never registers it — it remains a no-op, with a `@todo` documenting how to enable it.
+> **Dead-code note:** `bebbo_custom_general_pb_custom_field_preprocess_views_view_field()` was moved verbatim from `pb_custom_form` (slice 4/5). Its name does not match the `{module}_preprocess_{hook}` pattern, so the theme registry never registers it — it is a no-op.
 
 ### Key Classes
 
@@ -221,7 +222,7 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 
 ### Config
 
-`bebbo_custom_general.mobile_app_share_link_form`, `bebbo_custom_general.adminsettings`, `bebbo_custom_general.app_store_redirect`, `bebbo_custom_general.landing_pages`, `bebbo_custom_general.language_redirects` (schema in `config/schema/bebbo_custom_general.schema.yml`). The mobile-share and redirect configs are config_ignore'd / per-site split.
+`bebbo_custom_general.adminsettings`, `bebbo_custom_general.app_store_redirect`, and `bebbo_custom_general.mobile_app_share_link_form` live in shared `config/sync/` (the mobile-share form is additionally overridden in the Ecuador and Turkey splits). `bebbo_custom_general.landing_pages` and `bebbo_custom_general.language_redirects` are **per-site**: each of the 7 split folders carries its own copy; neither exists in `config/sync/`. Schema in `config/schema/bebbo_custom_general.schema.yml`. None of these are in `config_ignore`.
 
 ### Post-Update Hooks
 
@@ -475,7 +476,7 @@ Controls which languages appear in the mobile app API per country group. Adds a 
 |-----------|-------|------|
 | `language_visibility_control.service` | `LanguageVisibilityService` | Manages per-group language visibility; called inline by both serializers via `filterLanguageDataForApi()` |
 
-> The former `ApiResponseSubscriber` (RESPONSE event, V1 country-groups post-filtering) was **removed** (commit `aa17725b2`): `BebboV1Serializer` / `BebboSerializer` now call `filterLanguageDataForApi()` inline, so the subscriber would only double-filter.
+> The former `ApiResponseSubscriber` (RESPONSE event, V1 country-groups post-filtering) was **removed**: `BebboV1Serializer` / `BebboSerializer` now call `filterLanguageDataForApi()` inline, so the subscriber would only double-filter.
 
 ### Hooks
 
@@ -667,15 +668,15 @@ Manages the `strings` taxonomy vocabulary with UI for bulk translation and enfor
 
 ## Removed modules
 
-These modules were uninstalled and deleted from disk in the current commit range; their logic moved into `bebbo_serializer` and `bebbo_custom_general`.
+These modules were uninstalled and removed from the codebase; their logic lives in `bebbo_serializer` and `bebbo_custom_general`.
 
-| Module | Removed in | Replaced by |
-|--------|-----------|-------------|
-| `pb_custom_rest_api` | `5786db301` | `bebbo_serializer` — force-update / check-update now served by `CheckUpdateController` at `/api/check-update/{country}` (public) and `/v2/api/check-update/{country}` (JWT-gated, `no_cache`) via `bebbo_serializer.routing.yml`. The `forcefull_check_update_api` table stays in `pb_custom_form`. |
-| `custom_serialization` | `b3abeeb83` | `bebbo_serializer` — V1 REST serialization is now the `bebbo_v1_serializer` Views style plugin (`BebboV1Serializer`); the old `CustomSerializer` style plugin and `CustomSerializerHelper` service are gone. |
-| `pb_custom_standard_deviation` | `b3abeeb83` | `bebbo_serializer` — the `/api/standard_deviation/%` (and V2) transform is now `transformStandardDeviation()` in the V1/V2 style plugins. |
+| Module | Replaced by |
+|--------|-------------|
+| `pb_custom_rest_api` | `bebbo_serializer` — force-update / check-update now served by `CheckUpdateController` at `/api/check-update/{country}` (public) and `/v2/api/check-update/{country}` (JWT-gated, `no_cache`) via `bebbo_serializer.routing.yml`. The `forcefull_check_update_api` table stays in `pb_custom_form`. |
+| `custom_serialization` | `bebbo_serializer` — V1 REST serialization is now the `bebbo_v1_serializer` Views style plugin (`BebboV1Serializer`); the old `CustomSerializer` style plugin and `CustomSerializerHelper` service are gone. |
+| `pb_custom_standard_deviation` | `bebbo_serializer` — the `/api/standard_deviation/%` (and V2) transform is now `transformStandardDeviation()` in the V1/V2 style plugins. |
 
-Both V1 and V2 of the new `/api/*` and `/v2/api/*` infrastructure were validated at byte-parity with the legacy endpoints before the old modules were removed (see `changelog.txt` commits `7a5678a4a`, `72578f9b6`, `e876f7f2c`, `199a0b06e`).
+Both V1 and V2 of the new `/api/*` and `/v2/api/*` infrastructure were validated at byte-parity with the legacy endpoints before the old modules were removed.
 
 ---
 
@@ -744,5 +745,3 @@ language_custom_field ──→ field:field, field:field_ui
 | REST API endpoints & response shapes | [`API_REFERENCE.md`](API_REFERENCE.md) |
 | Device attestation & JWT security | [`API_SECURITY.md`](API_SECURITY.md) |
 | System architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
-</content>
-</invoke>

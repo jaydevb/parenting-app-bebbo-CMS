@@ -2,7 +2,7 @@
 
 > **Audience:** developers, maintainers, operations, release managers.
 > **Scope:** the four environments (Local / Dev / Stage / Prod), how Drupal settings resolve per environment, multisite domains per environment, the deploy pipeline + Acquia cloud hooks, and cross-site content sync.
-> **Verified against:** repository `HEAD` (branch `bug/issue-fixes`), **verified 2026-06-29**. Every value below was read from the live files named in each section — `.ddev/config.yaml`, `docroot/sites/`, `hooks/`, `.github/workflows/pipelines.yml` — and the per-site language/group tables (§11–§12) were DB-verified on that date. Where a setting lives on Acquia's servers (outside this repo) it is marked as such and **not** guessed.
+> **Verified 2026-07-03.** Every value below was read from the live files named in each section — `.ddev/config.yaml`, `docroot/sites/`, `hooks/`, `.github/workflows/pipelines.yml` — the per-site language/group tables (§11–§12) were DB-verified 2026-06-29. Where a setting lives on Acquia's servers (outside this repo) it is marked as such and **not** guessed.
 
 ---
 
@@ -12,10 +12,10 @@
 |-------------|-------|-----|----------------|---------------|---------------|
 | **Local** | DDEV (`bebbo.app`) | 8.4 | n/a (manual `ddev start`) | — | `config/sync` + active split |
 | **Dev** | Acquia Cloud | **8.4** | push to `develop` | `@parentbuddy2.dev` | `config/sync` + active split |
-
-> Acquia Dev runs MySQL 5.7.44 — below Drupal 11's MySQL 8.0 minimum. The `drupal/mysql57` contrib module backports the database driver. Its settings include is loaded in `post.settings.php` after the Acquia include so `$databases` is already populated.
 | **Stage** | Acquia Cloud | **8.3** | push to `stage` | `@parentbuddy2.test` | `config/sync` + active split |
 | **Prod** | Acquia Cloud | **8.4**¹ | **manual only** | `@parentbuddy2.prod`¹ | `config/sync` + active split |
+
+> Acquia Dev runs MySQL 5.7.44 — below Drupal 11's MySQL 8.0 minimum. The `drupal/mysql57` contrib module backports the database driver. Its settings include is loaded in `post.settings.php` after the Acquia include so `$databases` is already populated.
 
 ¹ There is **no** `deploy-prod` job and **no** `@parentbuddy2.prod` reference in `pipelines.yml`. Prod is deployed manually; the cloud hook explicitly **skips** DB/config steps on prod (see [§6](#6-acquia-cloud-hooks)).
 
@@ -233,7 +233,7 @@ $DRUSH cr              # [5/5] final cache rebuild
 
 Content is **not** shared at the database level — each site has its own DB (local: per-site `*_db`; Acquia: separate DB per site). Moving content **between sites or between environments** is done with the **Entity Share** module (`drupal/entity_share`, present in `composer.json`; see [`DEPENDENCIES.md`](DEPENDENCIES.md) §3.7).
 
-Entity Share exposes per-site channels and pulls content over JSON:API from a remote (e.g. pulling Prod content down to a local/Dev site). Channel and remote configuration is per-site and lives in each site's config split. (Detailed channel mechanics and known pull gotchas are operational knowledge, not committed pipeline config.)
+Entity Share exposes channels and pulls content over JSON:API from a remote (e.g. pulling Prod content down to a local/Dev site). Channel and remote configuration is standardized across all 7 sites and lives in shared `config/sync/` — 42 server channels plus `prod`/`stage` client remotes; only the Basic-Auth credential is environment-managed (key-level `config_ignore`). See [`CONFIGURATION.md`](CONFIGURATION.md) §13.
 
 ---
 

@@ -1,7 +1,7 @@
 **Project Description**
 
 Bebbo is a comprehensive digital parenting app designed to empower
-parents with evidence-based tools and guidance to support their child\'s
+parents with evidence-based tools and guidance to support their child's
 development from birth to six years of age. This app provides accessible
 and culturally relevant content that spans critical topics like child
 health, nutrition, safety, and tools including developmental milestone

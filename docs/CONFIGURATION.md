@@ -2,7 +2,7 @@
 
 Complete reference of the configuration stored in this Drupal 11 multisite, sourced **directly from the exported YAML in `config/sync/`** and the per-site config-split folders. Every value below was read from the actual config files — nothing is inferred from defaults or assumed.
 
-- **Shared base config:** `config/sync/` — 1,581 files
+- **Shared base config:** `config/sync/` — 1,586 files
 - **Per-site overrides:** `config/{bebbo,bangla,ecuador,pakistan,somoa,turkey,zimbabwe}/`
 - **Sites:** 7 (Default/Bebbo + Bangladesh, Ecuador, Pakistan, Pacific Islands [Bebbo Pacific, dir `somoa`], Turkey, Zimbabwe)
 
@@ -42,6 +42,27 @@ Complete reference of the configuration stored in this Drupal 11 multisite, sour
 | Fast 404 | Enabled for static files (txt, png, gif, jpg, css, js, ico, swf, flv, cgi, bat, pl, dll, exe, asp) |
 | Fast 404 exclude paths | matching `/styles/` or `/imagecache/` |
 
+### Date & Timezone — `system.date.yml`
+
+| Setting | Value |
+|---|---|
+| Base country / timezone (`config/sync/`) | `CH` / `Europe/Zurich` |
+| First day of week | `0` (Sunday) |
+| User-configurable timezone | `true` (default `0`, no warning) |
+
+Per-site config-split patches (`config/{folder}/config_split.patch.system.date.yml`) override country + timezone locally:
+
+| Site | Country | Timezone |
+|---|---|---|
+| Bangladesh | BD | Asia/Dhaka |
+| Turkey | TR | Europe/Istanbul |
+| Ecuador | EC | America/Guayaquil |
+| Pakistan | PK | Asia/Karachi |
+| Pacific Islands | FJ | Pacific/Fiji |
+| Zimbabwe | ZW | Africa/Harare |
+
+The timezone affects admin-UI date display only — stored values are Unix timestamps, and the API `datetime` envelope field is hardcoded to `Asia/Kolkata` (see [`API_REFERENCE.md`](API_REFERENCE.md) §2).
+
 ### Logging & Cron
 | File | Setting | Value |
 |---|---|---|
@@ -62,12 +83,12 @@ Complete reference of the configuration stored in this Drupal 11 multisite, sour
 | Transport host | `smtp.office365.com:587` (TLS) |
 | Transport user | `admin@bebbo.app` |
 | Transport auth plugin | `office365_oauth` (`symfony_mailer_office365`) |
-| OAuth credentials | Placeholders in config — real values entered per-environment via `/admin/config/system/mailer/office365`; protected by `config_ignore` |
+| OAuth credentials | Placeholders in config — real values entered per-environment via `/admin/config/system/mailer/office365`; the credential **keys** (`client_id`, `client_secret`, `tenant_id`) are protected by key-level `config_ignore` entries while the rest of the transport config stays in Git (see §16) |
 | Sender override | `MailerSenderOverride` event subscriber forces From / Sender / Envelope to `admin@bebbo.app` (read from `symfony_mailer_office365.config` → `mail`); original From preserved as Reply-To. Required because O365 rejects `SendAs` for per-site addresses (e.g. `info@babuni.app`) unless explicit SendAs permissions are configured in Exchange admin. |
 | Mailer policy | URL-to-absolute, inline CSS, wrap-and-convert (plain: false, swiftmailer: false), theme: `_active_fallback` |
 | Test email policy | Subject `"Test email from [site:name]"`, format `email_html` |
 
-**Background:** `drupal/smtp` (Basic Auth via `SMTPMailSystem`) was removed because Microsoft 365 Security Defaults block Authenticated SMTP at the tenant level. Replaced by `drupal/symfony_mailer` + `drupal/symfony_mailer_office365` using OAuth 2.0 Authorization Code flow (delegated `SMTP.Send` permission). OAuth tokens are auto-refreshed via Drupal cron. See [`RUNBOOK.md`](RUNBOOK.md) §12 for post-deployment setup steps.
+**Background:** the `smtp` module (Basic Auth via `SMTPMailSystem`) was uninstalled on all sites because Microsoft 365 Security Defaults block Authenticated SMTP at the tenant level; the `drupal/smtp` Composer package is still declared in `composer.json` but the module is not enabled anywhere. Replaced by `drupal/symfony_mailer` + `drupal/symfony_mailer_office365` using OAuth 2.0 Authorization Code flow (delegated `SMTP.Send` permission). OAuth tokens are auto-refreshed via Drupal cron. See [`RUNBOOK.md`](RUNBOOK.md) §12 for post-deployment setup steps.
 
 **Patch — event dispatcher injection:** The upstream `symfony_mailer_office365` module creates its SMTP transport without passing the Symfony event dispatcher, which means `MessageEvent` subscribers (including `MailerSenderOverride`) never fire. A local patch (`patches/symfony_mailer_office365-pass-event-dispatcher.patch`) injects `@event_dispatcher` into the factory service and passes it through to `EsmtpTransport`. Without this patch, all outgoing emails use the per-site `system.site.mail` address as From, which triggers O365 `SendAsDenied` errors on sites whose address differs from the authenticated mailbox (`admin@bebbo.app`). See [`DEPENDENCIES.md`](DEPENDENCIES.md) §6 for the patch entry.
 
@@ -476,6 +497,8 @@ Cardinality `1` = single, `-1` = unlimited. Reference target shown for entity_re
 | field_survey_link | link | 1 | Yes | — |
 | field_type | list_string | 1 | Yes | — |
 
+Allowed values for `field_type` (`field.storage.node.field_type`): `survey` (Survey), `special_survey` (Special survey), `feedback` (Feedback), `user_guide` (User Guide), `donate` (Donate).
+
 #### Vaccinations - Age Periods
 | Field | Type | Card. | Req | Target |
 |---|---|---|---|---|
@@ -796,7 +819,7 @@ All notify the role only (author + site_mail notifications off).
 - **SME** — update any for 12 types, transitions SME→require-modification / SME→senior-editor / SME→reviewer, `view latest version`, view unpublished
 - **Senior Editor** — create+entity for 10 types, update any/own for 12 types, approval/publish/archive/reject/review-routing transitions, view unpublished
 
-> ⚠️ **Stale permission string:** `country-member` carries `view group_membership content` — a leftover Group 1.x name. The Group 3.x equivalent is `view group_membership relationship`. Known issue, fix deferred (see project memory).
+> ⚠️ **Legacy permission string:** `country-member` carries `view group_membership content` — a Group 1.x-era permission name (the Group 3.x equivalent is `view group_membership relationship`). This is the string committed in the YAML; do not "correct" it without re-verifying the member role's access.
 
 ### Groups & app names per site (DB-verified 2026-06-29)
 
@@ -852,7 +875,7 @@ Each site holds one or more `country` group entities. The **group id is the "cou
 | Site | Language codes |
 |---|---|
 | Bebbo (default) | al-sq, bg-bg, by-be, by-ru, gr-el, kg-ky, kg-ru, md-ro, me-cnr, mk-mk, mk-sq, ro, ro-ro, rs-en, rs-sr, ru, sk, sq, sr, tj-ru, tj-tg, uk, uz-kaa, uz-ru, uz-uz, xk-rs, xk-sq (27) |
-| Bangladesh | ar, bn, gr-arb, gr-fa |
+| Bangladesh | bn |
 | Ecuador | ec-es, es |
 | Pakistan | ur |
 | Pacific Islands (Bebbo Pacific) | fj-en, fj-fj, ws-en, ws-sm |
@@ -924,14 +947,14 @@ This table reflects the languages **actually enabled in each site's live databas
 | Embeddings | OpenAI | text-embedding-3-small |
 | Moderation | OpenAI | omni-moderation-latest |
 | Speech to text | OpenAI | whisper-1 |
-| Text to image | OpenAI | dall-e-3 |
+| Text to image | OpenAI | gpt-image-1 |
 | Text to speech | OpenAI | tts-1-hd |
 | Translate text | Chat Translation | gpt-4.1-mini |
 
 Request timeout 60 s; prompt logging disabled.
 
 ### `ai_translate.settings.yml`
-`use_ai_translate: true`, default prompt `ai_translate__ai_translate_default`, `entity_reference_depth: 1`, `translation_status: keep_original`, `redirect_after_create:` empty/null, **28** language codes in `language_settings` (all default prompt, no per-language overrides).
+`use_ai_translate: true`, default prompt `ai_translate__ai_translate_default`, `entity_reference_depth: 1`, `translation_status: create_draft`, `redirect_after_create: list`, **28** language codes in `language_settings` (all default prompt, no per-language overrides).
 
 ### Prompts (in sync)
 - `ai.ai_prompt_type.ai_translate` — variables: sourceLang, sourceLangName, destLang, destLangName, inputText
@@ -982,18 +1005,21 @@ Both routes call the same controller method — identical response, different UR
 
 ## 13. Entity Share (Content Syndication)
 
-**42 server channels** (`entity_share_server.channel.*`) in shared sync, by `channel_entity_type`: **21 node, 3 media, 18 taxonomy_term**. Pattern `{type}_{entity}_{language}`; all use `access_by_permission: true`, authorized role `administrator` + 3 authorized user UUIDs, `maxsize: 50`.
+Entity Share configuration is **standardized across all 7 sites** and lives entirely in shared `config/sync/` — no split folder carries any channel or remote YAML.
 
-### Node channels (21)
-content_article_mandatory_en, content_article_nonmandatory_en_, content_article_nonm_health_en, content_article_nonm_nutrition_en, content_article_nonm_parenting_corner_en, content_article_nonm_play_en_, content_article_nonm_responsive_parenting_en, content_article_nonm_safety_en, content_article_pregnancy_en, content_basic_page_en, content_child_development_age_periods, content_child_growth_en, content_daily_homescreen_messages_en, content_faq_en, content_games_en, content_health_check_ups, content_linked_pages_en, content_milestone_en, content_vaccinations_age_en, content_video_article_en, **test_article_en** (node/article).
+**42 server channels** (`entity_share_server.channel.*`) in shared sync, by `channel_entity_type`: **20 node, 3 media, 19 taxonomy_term**. Pattern `{type}_{entity}_{language}`; all use `access_by_permission: true`, authorized role `administrator` + 3 authorized user UUIDs, `maxsize: 50`.
+
+### Node channels (20)
+content_article_mandatory_en, content_article_nonmandatory_en_, content_article_nonm_health_en, content_article_nonm_nutrition_en, content_article_nonm_parenting_corner_en, content_article_nonm_play_en_, content_article_nonm_responsive_parenting_en, content_article_nonm_safety_en, content_article_pregnancy_en, content_basic_page_en, content_child_development_age_periods, content_child_growth_en, content_daily_homescreen_messages_en, content_faq_en, content_games_en, content_health_check_ups, content_linked_pages_en, content_milestone_en, content_vaccinations_age_en, content_video_article_en.
 
 ### Media channels (3)
 media_image_en, media_remote_video_en, media_video_en.
 
-### Taxonomy channels (18)
-taxonomy_age_periods_for_vacc_en, taxonomy_category_en, taxonomy_chatbot_category_en, taxonomy_chatbot_child_age_en, taxonomy_chatbot_child_age_tr, taxonomy_chatbot_subcategory_en_, taxonomy_child_s_age_en, taxonomy_child_s_gender_en, taxonomy_domain_of_activity_en, taxonomy_growth_introductory_en, taxonomy_growth_type_en, taxonomy_keywords_en, taxonomy_parent_s_gender_en, taxonomy_relationship_to_child_en, taxonomy_standard_deviation_category_en, taxonomy_standard_deviation_en, taxonomy_subcategory_en, taxonomy_type_of_support_en_.
+### Taxonomy channels (19)
+taxonomy_age_periods_for_vacc_en, taxonomy_category_en, taxonomy_chatbot_category_en, taxonomy_chatbot_child_age_en, taxonomy_chatbot_child_age_tr, taxonomy_chatbot_subcategory_en_, taxonomy_child_s_age_en, taxonomy_child_s_gender_en, taxonomy_domain_of_activity_en, taxonomy_growth_introductory_en, taxonomy_growth_type_en, taxonomy_keywords_en, taxonomy_parent_s_gender_en, taxonomy_relationship_to_child_en, taxonomy_standard_deviation_category_en, taxonomy_standard_deviation_en, taxonomy_subcategory_en, taxonomy_type_of_article_en, taxonomy_type_of_support_en_.
 
-> **Per-site additions:** Pacific Islands (`somoa`) and Zimbabwe each add ~30 TR-variant channels in their split complete_lists; Turkey and Ecuador add channels too.
+### Client remotes (2)
+`entity_share_client.remote.prod` and `entity_share_client.remote.stage` are committed in `config/sync/` (shared by all sites). The Basic-Auth credential is not committed: `key.key.entity_share_basic_auth` has its `key_value` protected by a key-level `config_ignore` entry (see §16).
 
 `entity_share_diff.settings`: lines_leading `100`, lines_trailing `100`.
 
@@ -1025,12 +1051,12 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 | Machine name | Label | Base table |
 |---|---|---|
 | archive | Archive | node_field_data |
-| articles | Articles | node_field_data |
 | articlescontentlist | ArticlesContentList | node_field_data |
 | bebbo_api_challenges | Challenges | bebbo_api_challenges |
 | bebbo_api_devices | Registered Devices | bebbo_api_devices |
 | bebbo_api_refresh_tokens | Refresh Tokens | bebbo_api_refresh_tokens |
 | bebbo_api_security_log | Security Log | bebbo_api_security_log |
+| bebbo_v1_apis | Bebbo v1 APIs | node_field_data |
 | bebbo_v2_apis | Bebbo v2 APIs | node_field_data |
 | block_content | Content blocks | block_content_field_data |
 | child_growth_reports | Child Growth Reports | node_field_data |
@@ -1095,7 +1121,7 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 
 **Custom base tables** (from custom modules): `bebbo_api_challenges`, `bebbo_api_devices`, `bebbo_api_refresh_tokens`, `bebbo_api_security_log`, `pb_analytics_sync_log`, `forcefull_check_update_api`, `entity_import_status`.
 
-> The `tax` view (machine name `tax`) was relabelled "Taxonomy, Vocabulary & Strings APIs" (commit `a38edc6d1`); it serves the V1 `api/taxonomies/%/%`, `api/strings/%`, `api/vocabularies/%` and V2 `v2/api/...` displays.
+> The `tax` view (machine name `tax`) is labelled "Taxonomy, Vocabulary & Strings APIs"; it serves the V1 `api/taxonomies/%/%`, `api/strings/%`, `api/vocabularies/%` and V2 `v2/api/...` displays.
 
 ---
 
@@ -1105,33 +1131,35 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 
 | Split ID | Label | Folder | Override files |
 |---|---|---|---|
-| `bebbo_site` | Bebbo Site | `../config/bebbo` | 36 |
+| `bebbo_site` | Bebbo Site | `../config/bebbo` | 35 |
 | `bangladesh_site` | Bangladesh Site | `../config/bangla` | 144 |
-| `ecuador_site` | Ecuador Site | `../config/ecuador` | 99 |
-| `pakistan_site` | Pakistan Site | `../config/pakistan` | 72 |
-| `somoa_site` | Somoa Site | `../config/somoa` | 104 |
-| `turkey_site` | Turkey Site | `../config/turkey` | 132 |
-| `zimbabwe_site` | Zimbabwe Site | `../config/zimbabwe` | 83 |
+| `ecuador_site` | Ecuador Site | `../config/ecuador` | 93 |
+| `pakistan_site` | Pakistan Site | `../config/pakistan` | 70 |
+| `somoa_site` | Somoa Site | `../config/somoa` | 75 |
+| `turkey_site` | Turkey Site | `../config/turkey` | 129 |
+| `zimbabwe_site` | Zimbabwe Site | `../config/zimbabwe` | 53 |
 
 > **No split declares any extra `module:` or `theme:`** (verified: every split's `module:` and `theme:` field is `{ }`). All per-site customization is currently done via complete_list / partial_list config overrides.
 
 > **Module-installation rule (non-negotiable):** `core.extension.yml` lives **exclusively** in `config/sync/` and is the single source of truth for all 7 sites. **Never** add `core.extension` to a split's `complete_list` and **never** create `core.extension.yml` in a split folder. If a site needs a module the others don't, declare it in the `module:` field of that site's `config_split.config_split.{site}_site.yml`, then place that module's config YAML under the site's folder (`config/{folder}/`) and run `drush cim -y` on that site only.
 
 **Override categories per site:**
-- **All sites:** block, language entities, mobile_app_links, bebbo_custom_general, system.site
-- **entity_share_client:** all except bebbo (bangla, ecuador, pakistan, somoa, turkey, zimbabwe)
+- **All sites:** block, language entities, `mobile_app_links.android_packages` + `.ios`, `bebbo_custom_general.landing_pages` / `.language_redirects`, system.site
 - **ai_translate:** all 6 non-default sites
 - **Field overrides:** bangla, pakistan, somoa, turkey
-- **entity_share_server channels (~30):** somoa, zimbabwe (+ turkey, ecuador)
 - **workflows.workflow.group_workflow:** somoa, turkey, zimbabwe (complete_list)
-- **`views.view.bebbo_v1_apis`:** per-site split patches override the "Pregnancy" `child_age` TID used by the V1 articles/taxonomies pregnancy filter, since the TID differs per site (commit `5661b330f`).
-
-**Recent split-config changes:**
-- Per-site `child_age` TID patches added to `bebbo_v1_apis` so each site's pregnancy filter resolves the correct local term (`5661b330f`).
-- Ecuador `country_listing` View sort split-patch removed — the partial/stale removal of `sorts.label` left a Views sort handler stub missing its `table` key, crashing the ec-dev country-groups API; the Ecuador split patch now matches sync (`305f94702`).
+- **`config_split.patch.system.date.yml`:** the 6 country sites override the base timezone/country (see §1)
+- **`views.view.bebbo_v1_apis`:** per-site split patches override the "Pregnancy" `child_age` TID used by the V1 articles/taxonomies pregnancy filter, since the TID differs per site
+- **Entity Share:** no split carries channel or remote YAML — all Entity Share config is shared in `config/sync/` (see §13)
 
 ### `config_ignore.settings.yml` — never imported/exported
-`admin_toolbar.settings`, `bebbo_api_security.settings`, `entity_share_client.remote*`, `mobile_app_links.android_packages`, `mobile_app_links.ios`, `pb_content_analytics.settings`, `bebbo_custom_general.landing_pages`, `bebbo_custom_general.language_redirects`, `bebbo_custom_general.mobile_app_share_link_form`, `purge.logger_channels`, `symfony_mailer.mailer_transport.office_365_oauth`, `symfony_mailer_office365.config`, `tmgmt.translator.*`, `tmgmt_memsource.settings`, `views.view.entity_share_client_entity_import_status`.
+
+Whole-entity ignores: `admin_toolbar.settings`, `bebbo_api_security.settings`, `mobile_app_links.android_packages`, `mobile_app_links.ios`, `pb_content_analytics.settings`, `purge.logger_channels`, `tmgmt.translator.*` (plus explicit `deepl_free`, `deepl_pro`, `google`, `memsource`, `microsoft`), `tmgmt_memsource.settings`, `views.view.entity_share_client_entity_import_status`.
+
+Key-level ignores (only the named key is environment-managed; the rest of the entity stays in Git):
+- `key.key.entity_share_basic_auth:key_provider_settings.key_value`
+- `symfony_mailer.mailer_transport.office_365_oauth:configuration.client_id` / `:configuration.client_secret` / `:configuration.tenant_id`
+- `symfony_mailer_office365.config:client_id` / `:client_secret` / `:tenant_id`
 
 ### Custom-module configs in sync
 - `bebbo_custom_general.adminsettings` — Master language `en,sr,ru,sq`
@@ -1139,6 +1167,6 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 
 ---
 
-*Generated from `config/sync/` and per-site split folders. All values read from actual YAML — no defaults assumed. Counts: 1,581 shared config files, 18 node types, 22 vocabularies, 4 media types, 68 views, 42 entity-share channels, 43 feed types, 207 migrations, 7 config splits.*
+*Generated from `config/sync/` and per-site split folders. All values read from actual YAML — no defaults assumed. Counts: 1,586 shared config files, 18 node types, 22 vocabularies, 4 media types, 68 views, 42 entity-share channels, 43 feed types, 207 migrations, 7 config splits.*
 
-*Verified 2026-06-29: config-split entity→folder mappings and empty `module:`/`theme:` fields confirmed against `config/sync/config_split.config_split.*.yml`; per-site enabled-language counts (total 46) and group/app-name tables DB-verified.*
+*Verified 2026-07-03: config-split entity→folder mappings and empty `module:`/`theme:` fields confirmed against `config/sync/config_split.config_split.*.yml`; split file counts, Entity Share channel/remote layout, and `config_ignore` entries re-read from the YAML. Per-site enabled-language counts (total 46) and group/app-name tables DB-verified 2026-06-29.*

@@ -1,6 +1,6 @@
 # CI/CD & Deployment
 
-> **Verified 2026-06-29** against `.github/workflows/pipelines.yml` and `hooks/common/code-deploy.sh`.
+> **Verified 2026-07-03** against `.github/workflows/pipelines.yml` and `hooks/common/code-deploy.sh`.
 
 Reference for the build, test, and deploy pipeline. Every claim below is sourced **directly from the files in the repo** — `.github/workflows/pipelines.yml`, the Acquia Cloud hooks under `hooks/`, `blt/`, `drush/sites/`, `buildspec.yml`, `composer.json`, and `phpcs.xml.dist`. Nothing is inferred from convention; where the repo contradicts itself (stale comments, version drift), that is called out explicitly.
 
@@ -42,7 +42,7 @@ workflow_dispatch:        # manual run button
 | Drupal Check | `./vendor/bin/drupal-check -d docroot/modules/custom` |
 | PHPLint | `./vendor/bin/phplint` |
 
-All three quality gates must pass; both deploy jobs declare `needs: ci-checks`.
+All quality gates (composer validate, PHPCS, drupal-check, PHPLint) must pass; both deploy jobs declare `needs: ci-checks`.
 
 > **Local secret scanning:** A pre-commit hook (`scripts/git-hooks/pre-commit`) scans staged files for hardcoded secrets before they reach CI. Auto-installed via `composer install`. See [`RUNBOOK.md`](RUNBOOK.md) §6.1 for details.
 

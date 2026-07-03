@@ -72,7 +72,7 @@ Below are extensive steps you can follow to easily open a pull request.
 
 - Be sure to follow our coding standards outlined in the [coding style guide](CODING_STYLE_GUIDE.md).
 
-- Create and switch to a new branch from the dev branch. Use the following command: `git checkout -b feature_name`
+- Create and switch to a new branch from the `develop` branch, using the `feature/`, `bug/`, or `hotfix/` prefix. Example: `git checkout -b feature/add-user-profile-page`
 
 - Implement the changes you want to contribute.
 
@@ -87,7 +87,7 @@ Below are extensive steps you can follow to easily open a pull request.
 - To open a pull request, go to the original repository on GitHub. You will see a notification for your recently pushed branch.
   Click on "Compare & pull request."
 
-- Create a pull request (PR) against the \"dev\" branch of the original repository.
+- Create a pull request (PR) against the \"develop\" branch of the original repository.
   The title of your PR should describe your changes, for example, \"Adding new distribution to the application.\"
   In the PR description, provide additional information about the changes, and their purpose.
 
@@ -148,11 +148,15 @@ pull request (PR).
 
 #### **1. Automated Checks**
 
-- Once you submit your PR, our continuous integration (CI) setup will automatically run checks, including:
+- Once you submit your PR, our continuous integration (CI) setup (GitHub Actions, `.github/workflows/pipelines.yml`) automatically runs:
 
-  - Code linting for style compliance.
+  - `composer validate` — Composer manifest validation.
 
-  - Security checks are automated using CodeQL to ensure no vulnerabilities are introduced.
+  - PHPCS — Drupal / DrupalPractice coding-standards check.
+
+  - drupal-check — deprecation and compatibility scan of `docroot/modules/custom`.
+
+  - PHPLint — PHP syntax lint.
 
 - If any checks fail, review the logs, update your code, and push changes to the same branch to rerun the checks.
 
@@ -186,7 +190,7 @@ pull request (PR).
 
 #### **5. Merging**
 
-- Approved pull requests are merged into the repository's main branch by a maintainer.
+- Approved pull requests are merged into the repository's `develop` branch by a maintainer (pushes to `develop` deploy to the Acquia Dev environment; see [`CICD_DEPLOYMENT.md`](CICD_DEPLOYMENT.md)).
 
 - The PR will be closed, and you'll be notified when the changes are live.
 
@@ -214,11 +218,25 @@ pull request (PR).
 
 ## **Custom modules**
 
-The following custom modules are installed as part of the profile:
+The following custom modules live in `docroot/modules/custom/` (full reference: [`MODULES.md`](MODULES.md)):
 
-- custom_serialization
+- bebbo_api_security
+
+- bebbo_custom_general
+
+- bebbo_serializer
+
+- custom_article
+
+- file_sanitizer
 
 - group_country_field
+
+- language_custom_field
+
+- language_visibility_control
+
+- pb_content_analytics
 
 - pb_custom_field
 
@@ -226,17 +244,15 @@ The following custom modules are installed as part of the profile:
 
 - pb_custom_migrate
 
-- pb_custom_rest_api
-
-- pb_custom_standard_deviation
+- pb_strings
 
 ## **Theme**
 
-The following themes are installed and enabled by the profile:
+The following themes are installed and enabled (`config/sync/core.extension.yml` / `system.theme.yml`):
 
-- claro
+- gin — admin theme **and** default theme (the platform is headless; there is no custom frontend theme)
 
-- tara
+- claro — enabled as a base admin theme
 
 ## **Custom roles**
 
