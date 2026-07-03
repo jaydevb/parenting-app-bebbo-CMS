@@ -7,6 +7,7 @@
   * [Configuration](#configuration)
   * [Run the Application](#run-the-application)
   * [Local Configuration Management](#local-configuration-management)
+* [Documentation](#documentation)
 * [CI/CD Security Practices](#cicd-security-practices)
 * [Branching Strategy](#branching-strategy)
 * [Maintainers](#maintainers)
@@ -135,6 +136,26 @@ Use this when you make changes through the Drupal UI and need to update the conf
 ddev drush cex -y
 ddev drush cr
 ```
+
+## Documentation
+
+The project documentation is organised under the `/docs` directory.
+
+| Topic | Description |
+|--------|-------------|
+| [Architecture](docs/ARCHITECTURE.md) | Overall CMS architecture and system design |
+| [Configuration](docs/CONFIGURATION.md) | Drupal configuration management |
+| [Environment Guide](docs/ENVIRONMENTS.md) | Development, Stage and Production environments |
+| [Modules](docs/MODULES.md) | Custom modules and their purpose |
+| [API Reference](docs/API_REFERENCE.md) | REST API endpoints |
+| [API Security](docs/API_SECURITY.md) | Authentication and API security model |
+| [CI/CD Deployment](docs/CICD_DEPLOYMENT.md) | Deployment pipeline and release process |
+| [Dependencies](docs/DEPENDENCIES.md) | Third-party packages and services |
+| [Runbook](docs/RUNBOOK.md) | Operational runbook and troubleshooting |
+| [Coding Standards](docs/CODING_STYLE_GUIDE.md) | Development standards |
+| [Contributing Guide](docs/CONTRIBUTING.md) | How to contribute |
+| [Code of Conduct](docs/CODE_OF_CONDUCT.md) | Community guidelines |
+| [Security Policy](SECURITY.md) | Reporting security vulnerabilities |
 
 ## CI/CD Security Practices
 The automated pipeline defined in [.github/workflows/pipelines.yml](.github/workflows/pipelines.yml) enforces several security measures that contributors should be aware of:
