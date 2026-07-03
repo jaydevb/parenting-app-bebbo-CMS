@@ -7,6 +7,7 @@
   * [Configuration](#configuration)
   * [Run the Application](#run-the-application)
   * [Local Configuration Management](#local-configuration-management)
+* [Feature Setup](#feature-setup)
 * [Documentation](#documentation)
 * [CI/CD Security Practices](#cicd-security-practices)
 * [Branching Strategy](#branching-strategy)
@@ -139,6 +140,20 @@ Use this when you make changes through the Drupal UI and need to update the conf
 ddev drush cex -y
 ddev drush cr
 ```
+
+## Feature Setup
+
+Some features rely on external services and need credentials configured before they work. Credentials are never committed to git — they are entered per environment.
+
+### AI Translate (OpenAI)
+
+The AI translation feature (and the other AI-powered features) uses the OpenAI provider, which reads its API key from the Key module entity **OpenAI API Key** (`openai_api_key`). The key ships empty, so AI Translate will not work until you add a key:
+
+1. **Generate the key:** sign in at [platform.openai.com](https://platform.openai.com/api-keys), open **API keys**, and create a new secret key (`sk-...`). The account must have billing enabled.
+2. **Add it to the CMS:** go to **Configuration → System → Keys** (`/admin/config/system/keys`), edit **OpenAI API Key**, paste the key value, and save.
+3. **Verify:** open a piece of content, use the **Translate** tab's AI translate action, and confirm a translation is produced. Provider settings live at **Configuration → AI** (`/admin/config/ai`).
+
+The key is stored in the site's active configuration only; do not export it into `config/sync`.
 
 ## Documentation
 
