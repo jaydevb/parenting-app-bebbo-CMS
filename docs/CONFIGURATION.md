@@ -4,7 +4,7 @@ Complete reference of the configuration stored in this Drupal 11 multisite, sour
 
 - **Shared base config:** `config/sync/` — 1,586 files
 - **Per-site overrides:** `config/{bebbo,bangla,ecuador,pakistan,somoa,turkey,zimbabwe}/`
-- **Sites:** 7 (Default/Bebbo + Bangladesh, Ecuador, Pakistan, Pacific Islands [Bebbo Pacific, dir `somoa`], Turkey, Zimbabwe)
+- **Sites:** 7 (Default/Bebbo + Bangladesh, Ecuador, PK, Pacific Islands [Bebbo Pacific, dir `somoa`], Turkey, Zimbabwe)
 
 ---
 
@@ -57,7 +57,7 @@ Per-site config-split patches (`config/{folder}/config_split.patch.system.date.y
 | Bangladesh | BD | Asia/Dhaka |
 | Turkey | TR | Europe/Istanbul |
 | Ecuador | EC | America/Guayaquil |
-| Pakistan | PK | Asia/Karachi |
+| PK | PK | Asia/Karachi |
 | Pacific Islands | FJ | Pacific/Fiji |
 | Zimbabwe | ZW | Africa/Harare |
 
@@ -855,7 +855,7 @@ Each site holds one or more `country` group entities. The **group id is the "cou
 | Bangladesh | 1 | Bangladesh | Babuni |
 | Turkey | 1 | Türkiye | merhababebek |
 | Ecuador | 1 | Ecuador | Wawamor |
-| Pakistan | 1 | Pakistan | pakistan |
+| PK | 1 | Pakistan | pakistan |
 | Pacific Islands (somoa) | 1 | Samoa | BebboPacific |
 | Pacific Islands (somoa) | 6 | Fiji | BebboPacific |
 | Zimbabwe | 1 | Zimbabwe | reraiumntwana |
@@ -877,7 +877,7 @@ Each site holds one or more `country` group entities. The **group id is the "cou
 | Bebbo (default) | al-sq, bg-bg, by-be, by-ru, gr-el, kg-ky, kg-ru, md-ro, me-cnr, mk-mk, mk-sq, ro, ro-ro, rs-en, rs-sr, ru, sk, sq, sr, tj-ru, tj-tg, uk, uz-kaa, uz-ru, uz-uz, xk-rs, xk-sq (27) |
 | Bangladesh | bn |
 | Ecuador | ec-es, es |
-| Pakistan | ur |
+| PK | ur |
 | Pacific Islands (Bebbo Pacific) | fj-en, fj-fj, ws-en, ws-sm |
 | Turkey | tr |
 | Zimbabwe | zw-en, zw-nd, zw-sn |
@@ -892,7 +892,7 @@ This table reflects the languages **actually enabled in each site's live databas
 | Bangladesh | 2 | en English · bn Bengali |
 | Turkey | 2 | en English · tr Turkish |
 | Ecuador | 3 | en English · es Spanish · ec-es Ecuador-Spanish |
-| Pakistan | 2 | en English · ur Urdu |
+| PK | 2 | en English · ur Urdu |
 | Pacific Islands (somoa) | 5 | en Global English · fj-fj Fijian · fj-en Fiji-English · ws-sm Samoan · ws-en Samoa-English |
 | Zimbabwe | 4 | en Global English · zw-en Zimbabwe-English · zw-sn Zimbabwe-Shona · zw-nd Zimbabwe-Ndebele |
 

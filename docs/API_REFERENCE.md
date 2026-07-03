@@ -1291,7 +1291,7 @@ The `{country}` argument for check-update is a **group entity ID** (`countries_i
 | Bangladesh | 1 | Bangladesh | Babuni |
 | Turkey | 1 | Türkiye | merhababebek |
 | Ecuador | 1 | Ecuador | Wawamor |
-| Pakistan | 1 | Pakistan | pakistan |
+| PK | 1 | Pakistan | pakistan |
 | Pacific Islands (`somoa`) | 1 | Samoa | BebboPacific |
 | Pacific Islands (`somoa`) | 6 | Fiji | BebboPacific |
 | Zimbabwe | 1 | Zimbabwe | reraiumntwana |

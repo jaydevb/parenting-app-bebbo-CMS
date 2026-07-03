@@ -52,7 +52,7 @@ The local Drush alias key, the site directory, and the config folder do **not** 
 | Default (Bebbo) | `@ddev.bebbo` · `@ddev.default` | `default` | `bebbo` |
 | Bangladesh | `@ddev.bangla` · `@ddev.bangladesh` | `bangladesh` | `bangla` |
 | Ecuador | `@ddev.ec` · `@ddev.ecuador` | `ecuador` | `ecuador` |
-| Pakistan | `@ddev.pakistan` | `pakistan` | `pakistan` |
+| PK | `@ddev.pakistan` | `pakistan` | `pakistan` |
 | Pacific Islands (Bebbo Pacific) | `@ddev.ws` · `@ddev.somoa` | `somoa` | `somoa` |
 | Turkey | `@ddev.tr` · `@ddev.turkey` | `turkey` | `turkey` |
 | Zimbabwe | `@ddev.zw` · `@ddev.zimbabwe` | `zimbabwe` | `zimbabwe` |
@@ -375,7 +375,7 @@ $config['config_split.config_split.{name}_site']['status'] = TRUE;
 | Default (Bebbo) | `bebbo_site` | `config/bebbo/` |
 | Bangladesh | `bangladesh_site` | `config/bangla/` |
 | Ecuador | `ecuador_site` | `config/ecuador/` |
-| Pakistan | `pakistan_site` | `config/pakistan/` |
+| PK | `pakistan_site` | `config/pakistan/` |
 | Pacific Islands | `somoa_site` | `config/somoa/` |
 | Turkey | `turkey_site` | `config/turkey/` |
 | Zimbabwe | `zimbabwe_site` | `config/zimbabwe/` |
@@ -512,7 +512,7 @@ Per-site domains by environment (verified from `docroot/sites/sites.php`). Use t
 | Bangladesh | babuni.app · bangla.bebbo.app | bangla-stage.bebbo.app | bangla-dev.bebbo.app | bangla.bebbo.app.ddev.site |
 | Turkey | merhababebek.app · tr.bebbo.app | tr-stage.bebbo.app | tr-dev.bebbo.app | tr.bebbo.app.ddev.site |
 | Ecuador | wawamor.ec · ec.bebbo.app | ec-stage.bebbo.app | ec-dev.bebbo.app | ec.bebbo.app.ddev.site |
-| Pakistan | pk.bebbo.app | pk-stage.bebbo.app | pk-dev.bebbo.app | pk.bebbo.app.ddev.site |
+| PK | pk.bebbo.app | pk-stage.bebbo.app | pk-dev.bebbo.app | pk.bebbo.app.ddev.site |
 | Pacific Islands (Bebbo Pacific) | ws.bebbo.app · bebbopacific.app | ws-stage.bebbo.app | ws-dev.bebbo.app | ws.bebbo.app.ddev.site |
 | Zimbabwe | umntwana.app · zw.bebbo.app · rerai.umntwana.app | zw-stage.bebbo.app | zw-dev.bebbo.app | zw.bebbo.app.ddev.site |
 

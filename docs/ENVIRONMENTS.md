@@ -68,7 +68,7 @@ Verified against `docroot/sites/sites.php` lines 58–93 on **2026-06-29**. PROD
 | Bangladesh (`bangladesh` / `bangla`) | `babuni.app`, `bangla.bebbo.app` | `bangla-stage.bebbo.app` | `bangla-dev.bebbo.app` | `bangla.bebbo.app.ddev.site` |
 | Turkey (`turkey` / `turkey`) | `merhababebek.app`, `tr.bebbo.app` | `tr-stage.bebbo.app` | `tr-dev.bebbo.app` | `tr.bebbo.app.ddev.site` |
 | Ecuador (`ecuador` / `ecuador`) | `wawamor.ec`, `ec.bebbo.app` | `ec-stage.bebbo.app` | `ec-dev.bebbo.app` | `ec.bebbo.app.ddev.site` |
-| Pakistan (`pakistan` / `pakistan`) | `pk.bebbo.app` | `pk-stage.bebbo.app` | `pk-dev.bebbo.app` | `pk.bebbo.app.ddev.site` |
+| PK (`pakistan` / `pakistan`) | `pk.bebbo.app` | `pk-stage.bebbo.app` | `pk-dev.bebbo.app` | `pk.bebbo.app.ddev.site` |
 | Pacific Islands (`somoa` / `somoa`) | `ws.bebbo.app`, `bebbopacific.app` | `ws-stage.bebbo.app` | `ws-dev.bebbo.app` | `ws.bebbo.app.ddev.site` |
 | Zimbabwe (`zimbabwe` / `zimbabwe`) | `umntwana.app`, `zw.bebbo.app`, `rerai.umntwana.app` | `zw-stage.bebbo.app` | `zw-dev.bebbo.app` | `zw.bebbo.app.ddev.site` |
 
@@ -263,7 +263,7 @@ DB-verified **2026-06-29**. Total across all sites: **46** distinct language ent
 | Bangladesh | 2 | `en` English · `bn` Bengali |
 | Turkey | 2 | `en` English · `tr` Turkish |
 | Ecuador | 3 | `en` English · `es` Spanish · `ec-es` Ecuador-Spanish |
-| Pakistan | 2 | `en` English · `ur` Urdu |
+| PK | 2 | `en` English · `ur` Urdu |
 | Pacific Islands (`somoa`) | 5 | `en` Global English · `fj-fj` Fijian · `fj-en` Fiji-English · `ws-sm` Samoan · `ws-en` Samoa-English |
 | Zimbabwe | 4 | `en` Global English · `zw-en` Zimbabwe-English · `zw-sn` Zimbabwe-Shona · `zw-nd` Zimbabwe-Ndebele |
 
@@ -305,7 +305,7 @@ DB-verified **2026-06-29**. The group `id` equals the in-app "CountryID"; each n
 | Bangladesh | 1 | Bangladesh | Babuni |
 | Turkey | 1 | Türkiye | merhababebek |
 | Ecuador | 1 | Ecuador | Wawamor |
-| Pakistan | 1 | Pakistan | pakistan |
+| PK | 1 | Pakistan | pakistan |
 | Pacific Islands | 1 | Samoa | BebboPacific |
 | Pacific Islands | 6 | Fiji | BebboPacific |
 | Zimbabwe | 1 | Zimbabwe | reraiumntwana |

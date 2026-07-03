@@ -90,7 +90,7 @@ Seven sites share one codebase and one Drupal install. Six are country sites; on
 | Bangladesh | `bangladesh/` | `bangla/` | `bangladesh_site` | babuni.app, bangla.bebbo.app |
 | Turkey | `turkey/` | `turkey/` | `turkey_site` | merhababebek.app, tr.bebbo.app |
 | Ecuador | `ecuador/` | `ecuador/` | `ecuador_site` | wawamor.ec, ec.bebbo.app |
-| Pakistan | `pakistan/` | `pakistan/` | `pakistan_site` | pk.bebbo.app |
+| PK | `pakistan/` | `pakistan/` | `pakistan_site` | pk.bebbo.app |
 | Pacific Islands (app: **Bebbo Pacific**) | `somoa/` | `somoa/` | `somoa_site` | ws.bebbo.app, bebbopacific.app |
 | Zimbabwe | `zimbabwe/` | `zimbabwe/` | `zimbabwe_site` | umntwana.app, rerai.umntwana.app, zw.bebbo.app |
 
@@ -152,7 +152,7 @@ config/
 ├── bebbo/       # Default (Bebbo) site overrides
 ├── bangla/      # Bangladesh overrides
 ├── ecuador/     # Ecuador overrides
-├── pakistan/    # Pakistan overrides
+├── pakistan/    # PK overrides
 ├── somoa/       # Pacific Islands (Bebbo Pacific) overrides
 ├── turkey/      # Turkey overrides
 ├── zimbabwe/    # Zimbabwe overrides
