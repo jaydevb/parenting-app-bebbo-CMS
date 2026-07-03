@@ -38,8 +38,8 @@ The primary goals of the Bebbo parenting app are:
 
 5.  **Data Privacy:** Many apps collect personally identifiable
     information (PII) of minors and parents, raising concerns among
-    users and governments. Bebbo prioritises user privacy and the user
-    data will never be shared with any third party.
+    users and governments. Bebbo prioritises user privacy and the
+    personal user data remains on user's phone.
 
 6.  **Open Source Availability:** Governments are often hesitant to
     include private sector apps in their programming due to vendor

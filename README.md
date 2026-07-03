@@ -11,6 +11,7 @@
 * [Documentation](#documentation)
 * [CI/CD Security Practices](#cicd-security-practices)
 * [Branching Strategy](#branching-strategy)
+* [License](#license)
 * [Maintainers](#maintainers)
 * [Community](#community)
 
@@ -222,6 +223,12 @@ CI checks (`composer validate`, PHPCS, `drupal-check`, `phplint`) run on every p
    - Before any promotion, pull the latest changes, resolve conflicts locally, and verify CI is green. Only approved, green PRs are merged.
 
 ![Branching strategy diagram](docs/BranchingStrategy.png)
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0).
+
+See the [LICENSE link](LICENSE) file for the complete license text.
 
 ## Maintainers
 The Bebbo CMS is actively maintained by UNICEF (United Nations Children's Fund) in collaboration with various partners. It is part of the larger Bebbo project, a digital parenting platform aimed at providing parents and caregivers with essential early childhood development resources. Bebbo is a DPGA-recognized Digital Public Good.
