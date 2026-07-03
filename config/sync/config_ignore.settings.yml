@@ -4,7 +4,7 @@ mode: simple
 ignored_config_entities:
   - admin_toolbar.settings
   - bebbo_api_security.settings
-  - 'entity_share_client.remote*'
+  - 'key.key.entity_share_basic_auth:key_provider_settings.key_value'
   - mobile_app_links.android_packages
   - mobile_app_links.ios
   - pb_content_analytics.settings

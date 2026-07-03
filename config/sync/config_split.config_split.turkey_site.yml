@@ -22,8 +22,6 @@ complete_list:
   - core.base_field_override.taxonomy_term.type_of_article.path
   - core.base_field_override.taxonomy_term.type_of_article.status
   - core.base_field_override.user.user.path
-  - entity_share_client.import_config.config_stage
-  - entity_share_server.channel.content_article_pregnancy_tr_
   - field.field.taxonomy_term.subcategory.field_child_s_age
   - field.storage.taxonomy_term.field_child_s_age
   - language.entity.tr
@@ -172,7 +170,6 @@ partial_list:
   - core.entity_view_display.user.user.default
   - core.menu.static_menu_link_overrides
   - editor.editor.admin_full_html
-  - entity_share_server.channel.content_health_check_ups
   - feeds.feed_type.taxonomy_age_period_language
   - feeds.feed_type.taxonomy_categories_serbia_serbi
   - feeds.feed_type.taxonomy_charbot_child_age_langu

@@ -452,7 +452,7 @@ function _bebbo_serializer_quiz_question_count_validate(array &$form, FormStateI
   if ($question_count > 1) {
     $form_state->setErrorByName(
       'field_quiz_questions',
-      t('A "Single question quiz" can have at most 1 question. You currently have @count questions.', [
+      t('A Single question quiz must have only one question. You currently have @count — please remove the extra questions and keep just one before saving.', [
         '@count' => $question_count,
       ])
     );

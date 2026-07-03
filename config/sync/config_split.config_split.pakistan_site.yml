@@ -14,7 +14,6 @@ module: {  }
 theme: {  }
 complete_list:
   - block.block.claro_help_search
-  - entity_share_client.import_config.config_production
   - field.field.group.country.field_app_name
   - field.storage.group.field_app_name
   - language.entity.ur
@@ -43,7 +42,6 @@ partial_list:
   - core.entity_view_display.taxonomy_term.child_age.default
   - core.menu.static_menu_link_overrides
   - editor.editor.admin_full_html
-  - entity_share_server.channel.content_health_check_ups
   - feeds.feed_type.taxonomy_age_period_language
   - feeds.feed_type.taxonomy_keywords
   - field.field.node.activities.body
