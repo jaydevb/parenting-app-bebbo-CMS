@@ -47,7 +47,7 @@
     // Do NOT auto-remove. Surface an inline error and let the user remove the
     // extra questions manually; leave the quiz-type value as the user set it.
     if (isSingle && count > 1) {
-      showSingleQuestionError($wrapper, count);
+      showSingleQuestionError($wrapper);
     }
     else {
       clearSingleQuestionError($wrapper);
@@ -57,8 +57,8 @@
   /**
    * Shows the inline "too many questions for a single quiz" error.
    */
-  function showSingleQuestionError($wrapper, count) {
-    var message = Drupal.t('A Single question quiz must have only one question. You currently have @count — please remove the extra questions and keep just one before saving.', { '@count': count });
+  function showSingleQuestionError($wrapper) {
+    var message = Drupal.t('To change the quiz type to “Single question quiz,” the “Questions” section must contain only one question. Please remove all additional questions before changing to this quiz type.');
     var $error = $wrapper.find('.single-question-error');
     if (!$error.length) {
       $wrapper.prepend('<div class="single-question-error messages messages--error" style="margin-bottom:10px;"></div>');
