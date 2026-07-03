@@ -7,15 +7,18 @@
   * [Configuration](#configuration)
   * [Run the Application](#run-the-application)
   * [Local Configuration Management](#local-configuration-management)
+* [Feature Setup](#feature-setup)
+* [Documentation](#documentation)
 * [CI/CD Security Practices](#cicd-security-practices)
 * [Branching Strategy](#branching-strategy)
+* [License](#license)
 * [Maintainers](#maintainers)
 * [Community](#community)
 
 ## Introduction
 Parent Buddy CMS application is a headless implementation of Drupal 11 CMS where the content is added through the web interface and serves as REST APIs for a mobile app. This application assists editors in adding different types of content under various content types and taxonomies configured in Drupal CMS. Go through the [onboarding document](./docs/ONBOARDING.md) before continuing with the Installation guidelines below.
 
-For more information on setup and getting started, check out our [guidelines for contributors](./docs/CONTRIBUTING.md).
+For more information on setup and getting started, check out our [guidelines for contributors](./CONTRIBUTING.md).
 
 ## Installation
 
@@ -50,10 +53,13 @@ git config --global core.longpaths true
    ```
    ddev composer install
    ```
-4. Download the database from the Acquia server and import it locally. If you don’t have access to Acquia, you can download the dump database [here](https://drive.google.com/file/d/1SuBFYpNYARkHceyPoiLBWaa7zBAZfYsz/view).
+4. Download the latest development database from the Acquia server and import it locally. If you do not have access to Acquia, you can download the latest development database dump from [here](https://drive.google.com/file/d/1SuBFYpNYARkHceyPoiLBWaa7zBAZfYsz/view).
+
+   The development database is provided solely for local development and testing. It contains development content only and does **not** contain production personal data. It should never be used in production environments.
    ```
    ddev import-db --src=/path/to/bebbo.sql.gz
    ```
+   For complete database setup, multisite configuration, and local environment instructions, see the [Runbook](docs/RUNBOOK.md).
 5. Import public files if required:
    ```
    ddev import-files --src=/path/to/files.tar.gz
@@ -81,6 +87,9 @@ GRANT ALL PRIVILEGES ON turkey_db.* TO 'db'@'%';
 
 CREATE DATABASE IF NOT EXISTS ecuador_db;
 GRANT ALL PRIVILEGES ON ecuador_db.* TO 'db'@'%';
+
+CREATE DATABASE IF NOT EXISTS pakistan_db;
+GRANT ALL PRIVILEGES ON pakistan_db.* TO 'db'@'%';
 
 CREATE DATABASE IF NOT EXISTS somoa_db;
 GRANT ALL PRIVILEGES ON somoa_db.* TO 'db'@'%';
@@ -136,6 +145,71 @@ ddev drush cex -y
 ddev drush cr
 ```
 
+## Feature Setup
+
+Some features rely on external services and need credentials configured before they work. Credentials are never committed to git — they are entered per environment.
+
+### AI Translate (OpenAI)
+
+The AI translation feature (and the other AI-powered features) uses the OpenAI provider, which reads its API key from the Key module entity **OpenAI API Key** (`openai_api_key`). The key ships empty, so AI Translate will not work until you add a key:
+
+1. **Generate the key:** sign in at [platform.openai.com](https://platform.openai.com/api-keys), open **API keys**, and create a new secret key (`sk-...`). The account must have billing enabled.
+2. **Add it to the CMS:** go to **Configuration → System → Keys** (`/admin/config/system/keys`), edit **OpenAI API Key**, paste the key value, and save.
+3. **Verify:** open a piece of content, use the **Translate** tab's AI translate action, and confirm a translation is produced. Provider settings live at **Configuration → AI** (`/admin/config/ai`).
+
+The key is stored in the site's active configuration only; do not export it into `config/sync`.
+
+### Outbound Email (Microsoft 365)
+
+Outbound email (content-moderation notifications, two-factor codes) is sent through the Symfony Mailer **Office 365 OAuth** transport. The committed configuration contains placeholders — email will not send until you supply real credentials:
+
+1. **Register an application** in [Microsoft Entra ID (Azure AD)](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade): note the **Application (client) ID** and **Directory (tenant) ID**, create a **client secret**, and grant the application the `Mail.Send` Microsoft Graph permission (admin consent required).
+2. **Add the credentials to the CMS:** go to **Configuration → System → Mailer** (`/admin/config/system/mailer`), edit the **Office 365 OAuth** transport, and enter the client ID, client secret, tenant ID, and the sending mailbox address.
+3. **Verify:** send a test email via **Configuration → System → Mailer → Test**.
+
+These three values are ignored by configuration export (`config_ignore`), so they stay local to each environment. For local development you can skip this — DDEV captures outgoing mail in Mailpit (`ddev launch -m`).
+
+### API Authentication (JWT + Device Attestation)
+
+The V2 REST APIs (`/v2/api/*`) support device-based authentication provided by the `bebbo_api_security` module. Enforcement is **disabled by default**, so a fresh install works without any of this — set it up only when you want to exercise the secured API flow:
+
+1. **Generate an RSA signing key** for JWTs and expose it as an environment variable:
+   ```bash
+   openssl genrsa -out bebbo-jwt.pem 2048
+   base64 -i bebbo-jwt.pem   # value for BEBBO_JWT_PRIVATE_KEY
+   ```
+   For DDEV, uncomment and set `BEBBO_JWT_PRIVATE_KEY` under `web_environment` in `.ddev/config.yaml` (see the commented example), then `ddev restart`. On hosted environments set it as a platform environment variable.
+2. **(Optional) Android attestation:** create a Google Cloud service account with the **Play Integrity API** enabled, download its JSON key, and set it (base64-encoded) as the `BEBBO_GOOGLE_SA_KEY` environment variable.
+3. **(Optional) iOS attestation:** enter your Apple **Team ID**, **bundle ID**, and the [Apple App Attestation Root CA](https://www.apple.com/certificateauthority/) PEM in the module settings form (**Configuration → Web services → API Security**).
+4. **Enable enforcement** by switching the module's *Enforcement mode* from `disabled` to `grace_period` (monitor) or `enforced`.
+
+The full attestation flow, token lifetimes, and rollout guidance are documented in [API Security](docs/API_SECURITY.md).
+
+## Documentation
+
+The project documentation is organised under the `/docs` directory.
+
+| Topic | Description |
+|--------|-------------|
+| [Architecture](docs/ARCHITECTURE.md) | Overall CMS architecture and system design |
+| [Configuration](docs/CONFIGURATION.md) | Drupal configuration management |
+| [Environment Guide](docs/ENVIRONMENTS.md) | Development, Stage and Production environments |
+| [Modules](docs/MODULES.md) | Custom modules and their purpose |
+| [API Reference](docs/API_REFERENCE.md) | REST API endpoints |
+| [API Security](docs/API_SECURITY.md) | Authentication and API security model |
+| [CI/CD Deployment](docs/CICD_DEPLOYMENT.md) | Deployment pipeline and release process |
+| [Dependencies](docs/DEPENDENCIES.md) | Third-party packages and services |
+| [Runbook](docs/RUNBOOK.md) | Local development, deployment, operational procedures and troubleshooting |
+| [Coding Standards](docs/CODING_STYLE_GUIDE.md) | Coding conventions and development standards |
+| [Contributing Guide](CONTRIBUTING.md) | How to contribute to the project |
+| [Code of Conduct](CODE_OF_CONDUCT.md) | Community participation guidelines |
+| [Security Policy](SECURITY.md) | Reporting security vulnerabilities |
+| [License](LICENSE) | GNU General Public License v3.0 |
+
+### Additional Resources
+
+- [Project Wiki](https://github.com/UNICEFECAR/parenting-app-bebbo-CMS/wiki) – Additional implementation notes, FAQs, and project-specific guidance.
+
 ## CI/CD Security Practices
 The automated pipeline defined in [.github/workflows/pipelines.yml](.github/workflows/pipelines.yml) enforces several security measures that contributors should be aware of:
 
@@ -179,11 +253,16 @@ CI checks (`composer validate`, PHPCS, `drupal-check`, `phplint`) run on every p
 
 ![Branching strategy diagram](docs/BranchingStrategy.png)
 
+## License
+
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0).
+
+See the [LICENSE link](LICENSE) file for the complete license text.
+
 ## Maintainers
-The Bebbo CMS is actively maintained by UNICEF's Regional Office for Europe and Central Asia in collaboration with various partners. It is part of the larger Bebbo project, a digital parenting platform aimed at providing parents and caregivers with essential early childhood development resources.
+The Bebbo CMS is actively maintained by UNICEF (United Nations Children's Fund) in collaboration with various partners. It is part of the larger Bebbo project, a digital parenting platform aimed at providing parents and caregivers with essential early childhood development resources. Bebbo is a DPGA-recognized Digital Public Good.
 
 For ongoing maintenance, please reach out to the following maintainers:
-- [Evrim Sahin](https://github.com/evrimm)
 - [Saurabh Agarwal](https://github.com/saurabhEDU)
 - [Neha Ruparel](https://github.com/neharuparel)
 

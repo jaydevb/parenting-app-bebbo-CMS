@@ -27,7 +27,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting us anonymously through admin@bebbo.apps. All complaints will be reviewed and investigated promptly and fairly and will result in a response that is deemed necessary and appropriate to the circumstances.  
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting us anonymously through admin@bebbo.app. All complaints will be reviewed and investigated promptly and fairly and will result in a response that is deemed necessary and appropriate to the circumstances.  
 The project team is obligated to maintain confidentiality with regard to the reporter of an incident.  
 
 Project maintainers who do not follow or enforce the Code of Conduct in good faith may face temporary or permanent repercussions as determined by other members of the project's leadership.  

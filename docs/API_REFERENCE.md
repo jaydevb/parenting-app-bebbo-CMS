@@ -2,9 +2,9 @@
 
 > **Audience:** mobile-integration engineers, backend maintainers, support, QA.
 > **Scope:** every HTTP API the CMS exposes to clients — the legacy **V1 REST** (`/api/*`), the current **V2 REST** (`/v2/api/*`), the **Force-Update / check-update endpoint** (`/api/check-update/{country}` + `/v2/api/check-update/{country}`), and **JSON:API** (`/jsonapi/*`). Field shapes, envelopes, query params, auth, and the V1→V2 changes.
-> **Verified against codebase on 2026-06-29** (repository `HEAD`). Endpoint paths come from the Views configs; envelopes/field transforms from the serializer source. Items that could not be confirmed in code are flagged inline. **No GraphQL exists** (see `ARCHITECTURE.md`).
+> **Verified against codebase on 2026-07-03.** Endpoint paths come from the Views configs; envelopes/field transforms from the serializer source. **No GraphQL exists** (see `ARCHITECTURE.md`).
 >
-> **V1 implementation note (2026-06):** V1 `/api/*` is now served by the **`bebbo_v1_serializer`** Views style (class `BebboV1Serializer`) on the **`bebbo_v1_apis`** view — it shares the `BebboSerializerHelpers` trait with V2's `bebbo_serializer`, dispatches via `match()` on the Views display id, and uses the same batched media resolution. It emits plain `json` (escaped slashes/unicode) to preserve the legacy V1 byte-for-byte JSON contract. The old `custom_serialization`, `pb_custom_standard_deviation`, and `pb_custom_rest_api` modules (and the `views.view.articles.yml` view) have been **removed**. The V1 endpoints were also cut over from the interim `/v1/api/*` paths to the canonical **`/api/*`** (commit `199a0b06e`).
+> **V1 implementation:** V1 `/api/*` is served by the **`bebbo_v1_serializer`** Views style (class `BebboV1Serializer`) on the **`bebbo_v1_apis`** view — it shares the `BebboSerializerHelpers` trait with V2's `bebbo_serializer`, dispatches via `match()` on the Views display id, and uses the same batched media resolution. It emits plain `json` (escaped slashes/unicode) to preserve the legacy V1 byte-for-byte JSON contract.
 
 ---
 
@@ -56,7 +56,7 @@ json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 Only those two flags. **No pretty-print, and no `&nbsp;` substitution** — earlier documentation that claimed pretty-print/`&nbsp;` is incorrect. Empty/error envelopes are encoded as plain `json`, success envelopes as `bebbo_json` (`getOutputFormat()`).
 
 ### Authentication
-- **V1 & V2 content endpoints:** the Views displays declare **no auth provider** (`auth: {}`) and gate only on the `access content` permission (held by anonymous). They are effectively **public reads**. Some displays set `disable_sql_rewrite: true` (in V2: `articles_rest_export`, `child_dev_boy_rest_export`, `child_dev_girl_rest_export`, `child_growth_rest_export` — 4 of ~22 displays, not all).
+- **V1 & V2 content endpoints:** the Views displays declare **no auth provider** (`auth: {}`) and gate only on the `access content` permission (held by anonymous). They are effectively **public reads**. Some displays set `disable_sql_rewrite: true` (in V2: `articles_rest_export`, `child_dev_boy_rest_export`, `child_dev_girl_rest_export`, `child_growth_rest_export` — 4 of 20 displays, not all).
 - **Device/JWT protection:** the `bebbo_api_security` subscriber can require a Bearer JWT on `/v2/api/*` when enforcement is on. **V1 `/api/*` endpoints (content *and* `/api/check-update/`) are NOT in the default protected set.** Full detail: **`API_SECURITY.md`**.
 - **`/api/check-update/{country}`:** public (V1, route `_access: TRUE`); the V2 path `/v2/api/check-update/{country}` is JWT-gated via the `/v2/api/` protected pattern (see [§9](#9-force-update--check-update-endpoint)).
 
@@ -70,10 +70,10 @@ V1 (`bebbo_v1_serializer`) and V2 (`bebbo_serializer`) now share the **same arch
 |--------|-----------------------------|--------------------------|
 | Output encoder | plain `json` (escaped slashes/unicode — byte-parity with the legacy V1 contract) | `bebbo_json` (`JSON_UNESCAPED_SLASHES` + `JSON_UNESCAPED_UNICODE`) |
 | `total` | deduped `count($rows)` for de-duplicating displays, else `view->total_rows` | `view->total_rows` (falls back to `count($rows)`) |
-| ETag / 304 | not implemented | 5 displays (see §5.6) |
+| ETag / 304 | — | 5 displays (see §5.6) |
 | Engagement counts | — | `read_count`, `love_count` on activities/articles/video-articles/course |
 | V2-only content types | — | **Course** (`/v2/api/course`), **Quiz** (`/v2/api/quiz`), **Guide** (`/v2/api/guide`), **Weekly-overview** (`/v2/api/weekly-overview`) |
-| V1-only endpoints | full **pinned-contents** set (`child_growth`, `faq`, `health_check_ups`, `vaccinations`) + `related-article-contents/*/milestone` + `updated-pinned-contents/*/faq` + `sponsors` | — (not re-implemented in V2) |
+| V1-only endpoints | full **pinned-contents** set (`child_growth`, `faq`, `health_check_ups`, `vaccinations`) + `related-article-contents/*/milestone` + `updated-pinned-contents/*/faq` + `sponsors` | — |
 | V2 URL aliases | — | `/v2/api/strings/%` and `/v2/api/check-update/{country}` — same view/controller as the V1 paths, identical responses |
 
 **Endpoint asymmetry (verified):**
@@ -141,7 +141,7 @@ Applied per-row (via the same helpers V2 uses) to whichever short keys are prese
 ### 4.3 V1 query parameters
 
 - **`pregnancy=true`** — honored on **two** endpoints (verified):
-  - **articles** — `bebbo_serializer.module`'s `hook_views_query_alter()` injects the Pregnancy `child_age` TID into the `bebbo_v1_apis`/`v1_articles_rest_export` filter (commit `87ab0e989`).
+  - **articles** — `bebbo_serializer.module`'s `hook_views_query_alter()` injects the Pregnancy `child_age` TID into the `bebbo_v1_apis`/`v1_articles_rest_export` filter.
   - **taxonomies** — `BebboV1Serializer` keeps the otherwise-hidden Pregnancy `child_age` term in the taxonomy output.
   - It is **not** an exposed Views filter.
 - **`datetime="YYYY-MM-DD HH:MM"`** and the other filter params ([§6](#6-query-parameters)) are Views **contextual-filter arguments** (`query_parameter` default-argument plugin) on the `bebbo_v1_apis` view, not exposed filters. The V1 view has **no exposed filters** at all — `nid` is an output field, and the `%` path segment is a contextual filter argument, not an exposed filter.
@@ -210,7 +210,7 @@ Every `data[]` row includes both **typed keys** (explicitly cast by the transfor
 | **daily-homescreen-messages** | `id`(int), `title`(decoded) |
 | **vaccinations** | `id`(int), `growth_period`(int), `pinned_video_article`(int), `old_calendar`(int), `pinned_article`(int), `related_articles`(int[]), `title`(decoded), `uuid` |
 | **milestones** | `id`(int), `mandatory`(int), `child_age`(int[]), `related_activities`(int[]), `related_articles`(int[]), `related_video_articles`(int[]), `title`(decoded), `body`(HTML) |
-| **pinned-contents .../40 & .../41** | `id`(int), `category`(int), `child_gender`(int), `parent_gender`(int), `licensed`(int), `premature`(int), `mandatory`(int), `child_age`(int[]), `keywords`(int[]), `related_articles`(int[]), `title`(decoded); dedup by `id`; Video-Article rows: `cover_video`{url,name,site}, `cover_image`{url,name,alt}; passthrough: `body`(HTML), `summary`(HTML) |
+| **pinned-contents .../40 & .../41** | `id`(int), `category`(int), `child_gender`(int), `parent_gender`(int), `licensed`(int), `premature`(int), `mandatory`(int), `child_age`(int[]), `keywords`(int[]), `related_articles`(int[]), `embedded_images`(str[], batch-loaded from `field_embedded_images` — not a view field on these displays), `title`(decoded); dedup by `id`; Video-Article rows: `cover_video`{url,name,site}, `cover_image`{url,name,alt}; passthrough: `body`(HTML), `summary`(HTML) |
 | **child-development-data** | `id`(int), `boy_video_article`(int), `girl_video_article`(int), `mandatory`(int), `child_age`(int[]), `title`(decoded), `milestone` |
 | **child-growth-data** | `id`(int), `growth_type`(int), `standard_deviation`(int), `mandatory`(int), `child_age`(int[]), `pinned_articles`(int[]), `title`, `body`(HTML) |
 | **health-checkup-data** | `id`(int), `growth_period`(int), `pinned_article`(int), `pinned_video_article`(int), `title`(decoded); dedup by `id`. Note: the transform casts additional fields (`category`, `child_gender`, etc.) but the View display only provides the 8 fields listed here — the extra casts are no-ops. |
@@ -521,7 +521,8 @@ Response contains both Article-type and Video-Article-type rows in the same `dat
       "mandatory": 0,
       "child_age": [30],
       "keywords": [45],
-      "related_articles": [124]
+      "related_articles": [124],
+      "embedded_images": ["https://example.com/sites/default/files/img1.webp"]
     },
     {
       "id": 201,
@@ -540,6 +541,7 @@ Response contains both Article-type and Video-Article-type rows in the same `dat
       "child_age": [30],
       "keywords": [45],
       "related_articles": [123],
+      "embedded_images": [],
       "cover_video": {"url": "https://www.youtube.com/watch?v=xyz", "name": "motor-skills", "site": "youtube"},
       "cover_image": {"url": "https://example.com/thumb.webp", "name": "thumbnail", "alt": "Motor skills video"}
     }
@@ -655,7 +657,7 @@ Response contains both Article-type and Video-Article-type rows in the same `dat
 }
 ```
 
-> `type` here is from `field_type` (the survey's own type field), **not** the content-type label. This is the only endpoint where `type` does not mean the Drupal bundle label. No common `type` passthrough from `node_field_data.type`.
+> `type` here is from `field_type` (the survey's own type field), **not** the content-type label — allowed values: `survey`, `special_survey`, `feedback`, `user_guide`, `donate`. This is the only endpoint where `type` does not mean the Drupal bundle label. No common `type` passthrough from `node_field_data.type`.
 
 ---
 
@@ -1185,7 +1187,7 @@ Both versions return **keyed objects**, not flat arrays.
   - basic vocabs: `{id,name}`
   - `keywords` is always skipped.
 
-V1 (`bebbo_v1_serializer`) produces an equivalent keyed map (byte-identical to V2 after the D11 vid-token fix, commit `d27fda9f9`); both envelopes omit `total`.
+V1 (`bebbo_v1_serializer`) produces an equivalent keyed map (byte-identical to V2); both envelopes omit `total`.
 
 ---
 
@@ -1289,7 +1291,7 @@ The `{country}` argument for check-update is a **group entity ID** (`countries_i
 | Bangladesh | 1 | Bangladesh | Babuni |
 | Turkey | 1 | Türkiye | merhababebek |
 | Ecuador | 1 | Ecuador | Wawamor |
-| Pakistan | 1 | Pakistan | pakistan |
+| PK | 1 | Pakistan | pakistan |
 | Pacific Islands (`somoa`) | 1 | Samoa | BebboPacific |
 | Pacific Islands (`somoa`) | 6 | Fiji | BebboPacific |
 | Zimbabwe | 1 | Zimbabwe | reraiumntwana |
@@ -1332,7 +1334,7 @@ API requests pass through these event subscribers in priority order:
 |----------|-----------|--------|--------|
 | **0** | `EtagResponseSubscriber` | `bebbo_serializer` | Sets ETag header; converts to 304 on matching `If-None-Match`. |
 
-> The former `language_visibility_control` `ApiResponseSubscriber` (which post-filtered languages on `/api/country-groups`) was **removed** (commit `aa17725b2`). Both serializers now call `filterLanguageDataForApi()` inline inside `transformCountryGroups()`, so no response-phase language filter remains.
+> Both serializers call `filterLanguageDataForApi()` inline inside `transformCountryGroups()`; there is no response-phase language filter (no `language_visibility_control` `ApiResponseSubscriber`).
 
 ---
 
@@ -1345,11 +1347,9 @@ Both serializers use the same caching/batching mechanisms (verified in `BebboSer
 | Layer | Scope | Details |
 |-------|-------|---------|
 | **ETag / 304** | Per-endpoint | V2 only — 5 displays (see [§5.6](#56-etag--conditional-requests)). V1 has no ETag. |
-| **Batched media resolution** | Per request | `resolveMediaIds()` / `parseViewCoverImage()` resolve all media IDs in a row set together (WebP image styles), avoiding the per-row N+1 entity loads of the old V1 `custom_serialization`. |
+| **Batched media resolution** | Per request | `resolveMediaIds()` / `parseViewCoverImage()` resolve all media IDs in a row set together (WebP image styles) — one query per row set, no per-row N+1 entity loads. |
 | **Batched taxonomy/title lookups** | Per request | `queryBasicTermsBatch()` / `queryUniqueNameTermsBatch()` (taxonomy transforms); `getEnglishNodeTitles()` (shared) load in one query per request. |
 | **Persistent cache** | Across requests | Pregnancy term TID: permanent, cid `bebbo_serializer:pregnancy_tid`, tag `taxonomy_term_list` (`bebbo_serializer.module`). |
-
-> The previous Vimeo-response persistent cache and the `CustomSerializerHelper` service no longer exist — they belonged to the removed `custom_serialization` module. Porting V1 onto the V2 batched helpers (single query for multiple IDs vs. per-row loads) is the main V1 performance improvement.
 
 ---
 
@@ -1546,8 +1546,6 @@ The security endpoints (`/api/security/*`) return **real HTTP status codes** via
 | **429** | `error: "rate_limited"` | `{"error": "rate_limited", "message": "Too many requests. Try again later."}` | Flood threshold exceeded | `/api/security/register`, `/device/register`, `/device/verify` |
 
 > **Replay detection:** When a revoked refresh token is reused, the server revokes the **entire token family** (all tokens in the same rotation chain) and logs `"Refresh token replay detected"`. However, the client receives the same **401** `{status: "invalid"}` response — there is no distinct replay error code. The replay is only distinguishable server-side via the security log.
-
-> **Rate limiting on refresh:** The config key `refresh_rate_limit` (default 30) exists in `bebbo_api_security.settings` but is **not enforced** in the `refresh()` controller method. This is a known gap (see `API_SECURITY.md` §13).
 
 ---
 

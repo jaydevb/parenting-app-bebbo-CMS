@@ -2,7 +2,7 @@
 
 > **Audience:** developers, maintainers, operations, release managers.
 > **Scope:** the four environments (Local / Dev / Stage / Prod), how Drupal settings resolve per environment, multisite domains per environment, the deploy pipeline + Acquia cloud hooks, and cross-site content sync.
-> **Verified against:** repository `HEAD` (branch `bug/issue-fixes`), **verified 2026-06-29**. Every value below was read from the live files named in each section — `.ddev/config.yaml`, `docroot/sites/`, `hooks/`, `.github/workflows/pipelines.yml` — and the per-site language/group tables (§11–§12) were DB-verified on that date. Where a setting lives on Acquia's servers (outside this repo) it is marked as such and **not** guessed.
+> **Verified 2026-07-03.** Every value below was read from the live files named in each section — `.ddev/config.yaml`, `docroot/sites/`, `hooks/`, `.github/workflows/pipelines.yml` — the per-site language/group tables (§11–§12) were DB-verified 2026-06-29. Where a setting lives on Acquia's servers (outside this repo) it is marked as such and **not** guessed.
 
 ---
 
@@ -12,10 +12,10 @@
 |-------------|-------|-----|----------------|---------------|---------------|
 | **Local** | DDEV (`bebbo.app`) | 8.4 | n/a (manual `ddev start`) | — | `config/sync` + active split |
 | **Dev** | Acquia Cloud | **8.4** | push to `develop` | `@parentbuddy2.dev` | `config/sync` + active split |
-
-> Acquia Dev runs MySQL 5.7.44 — below Drupal 11's MySQL 8.0 minimum. The `drupal/mysql57` contrib module backports the database driver. Its settings include is loaded in `post.settings.php` after the Acquia include so `$databases` is already populated.
 | **Stage** | Acquia Cloud | **8.3** | push to `stage` | `@parentbuddy2.test` | `config/sync` + active split |
 | **Prod** | Acquia Cloud | **8.4**¹ | **manual only** | `@parentbuddy2.prod`¹ | `config/sync` + active split |
+
+> Acquia Dev runs MySQL 5.7.44 — below Drupal 11's MySQL 8.0 minimum. The `drupal/mysql57` contrib module backports the database driver. Its settings include is loaded in `post.settings.php` after the Acquia include so `$databases` is already populated.
 
 ¹ There is **no** `deploy-prod` job and **no** `@parentbuddy2.prod` reference in `pipelines.yml`. Prod is deployed manually; the cloud hook explicitly **skips** DB/config steps on prod (see [§6](#6-acquia-cloud-hooks)).
 
@@ -68,7 +68,7 @@ Verified against `docroot/sites/sites.php` lines 58–93 on **2026-06-29**. PROD
 | Bangladesh (`bangladesh` / `bangla`) | `babuni.app`, `bangla.bebbo.app` | `bangla-stage.bebbo.app` | `bangla-dev.bebbo.app` | `bangla.bebbo.app.ddev.site` |
 | Turkey (`turkey` / `turkey`) | `merhababebek.app`, `tr.bebbo.app` | `tr-stage.bebbo.app` | `tr-dev.bebbo.app` | `tr.bebbo.app.ddev.site` |
 | Ecuador (`ecuador` / `ecuador`) | `wawamor.ec`, `ec.bebbo.app` | `ec-stage.bebbo.app` | `ec-dev.bebbo.app` | `ec.bebbo.app.ddev.site` |
-| Pakistan (`pakistan` / `pakistan`) | `pk.bebbo.app` | `pk-stage.bebbo.app` | `pk-dev.bebbo.app` | `pk.bebbo.app.ddev.site` |
+| PK (`pakistan` / `pakistan`) | `pk.bebbo.app` | `pk-stage.bebbo.app` | `pk-dev.bebbo.app` | `pk.bebbo.app.ddev.site` |
 | Pacific Islands (`somoa` / `somoa`) | `ws.bebbo.app`, `bebbopacific.app` | `ws-stage.bebbo.app` | `ws-dev.bebbo.app` | `ws.bebbo.app.ddev.site` |
 | Zimbabwe (`zimbabwe` / `zimbabwe`) | `umntwana.app`, `zw.bebbo.app`, `rerai.umntwana.app` | `zw-stage.bebbo.app` | `zw-dev.bebbo.app` | `zw.bebbo.app.ddev.site` |
 
@@ -178,7 +178,7 @@ All 7 `site.splits.php` follow the identical one-line pattern, each enabling its
 
 ### 6.1 `config/envs/` is an empty placeholder
 
-`config/envs/` contains **only** `README.md` — no `dev/`, `test/`, or `prod/` subdirectories and no `*.yml`. The README is a legacy BLT-style placeholder describing environment-based config_split directories that were never populated here. **There is no committed per-environment config override.** Environment differences come from Acquia env detection (§5) and the deploy pipeline, not from `config/envs/`.
+`config/envs/` contains **only** `README.md` — no `dev/`, `test/`, or `prod/` subdirectories and no `*.yml`. The README is a legacy placeholder describing environment-based config_split directories that were never populated here. **There is no committed per-environment config override.** Environment differences come from Acquia env detection (§5) and the deploy pipeline, not from `config/envs/`.
 
 ---
 
@@ -233,7 +233,7 @@ $DRUSH cr              # [5/5] final cache rebuild
 
 Content is **not** shared at the database level — each site has its own DB (local: per-site `*_db`; Acquia: separate DB per site). Moving content **between sites or between environments** is done with the **Entity Share** module (`drupal/entity_share`, present in `composer.json`; see [`DEPENDENCIES.md`](DEPENDENCIES.md) §3.7).
 
-Entity Share exposes per-site channels and pulls content over JSON:API from a remote (e.g. pulling Prod content down to a local/Dev site). Channel and remote configuration is per-site and lives in each site's config split. (Detailed channel mechanics and known pull gotchas are operational knowledge, not committed pipeline config.)
+Entity Share exposes channels and pulls content over JSON:API from a remote (e.g. pulling Prod content down to a local/Dev site). Channel and remote configuration is standardized across all 7 sites and lives in shared `config/sync/` — 42 server channels plus `prod`/`stage` client remotes; only the Basic-Auth credential is environment-managed (key-level `config_ignore`). See [`CONFIGURATION.md`](CONFIGURATION.md) §13.
 
 ---
 
@@ -263,7 +263,7 @@ DB-verified **2026-06-29**. Total across all sites: **46** distinct language ent
 | Bangladesh | 2 | `en` English · `bn` Bengali |
 | Turkey | 2 | `en` English · `tr` Turkish |
 | Ecuador | 3 | `en` English · `es` Spanish · `ec-es` Ecuador-Spanish |
-| Pakistan | 2 | `en` English · `ur` Urdu |
+| PK | 2 | `en` English · `ur` Urdu |
 | Pacific Islands (`somoa`) | 5 | `en` Global English · `fj-fj` Fijian · `fj-en` Fiji-English · `ws-sm` Samoan · `ws-en` Samoa-English |
 | Zimbabwe | 4 | `en` Global English · `zw-en` Zimbabwe-English · `zw-sn` Zimbabwe-Shona · `zw-nd` Zimbabwe-Ndebele |
 
@@ -305,7 +305,7 @@ DB-verified **2026-06-29**. The group `id` equals the in-app "CountryID"; each n
 | Bangladesh | 1 | Bangladesh | Babuni |
 | Turkey | 1 | Türkiye | merhababebek |
 | Ecuador | 1 | Ecuador | Wawamor |
-| Pakistan | 1 | Pakistan | pakistan |
+| PK | 1 | Pakistan | pakistan |
 | Pacific Islands | 1 | Samoa | BebboPacific |
 | Pacific Islands | 6 | Fiji | BebboPacific |
 | Zimbabwe | 1 | Zimbabwe | reraiumntwana |

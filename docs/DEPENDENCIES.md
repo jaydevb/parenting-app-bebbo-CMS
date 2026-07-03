@@ -2,8 +2,8 @@
 
 > **Audience:** maintainers, code reviewers, onboarding developers, operations.
 > **Scope:** every Composer-managed dependency (runtime + dev), version constraints, applied patches, Composer tooling configuration, and the external services the codebase talks to.
-> **Verified against:** repository `HEAD`. Declared constraints were read from `composer.json`; locked versions were read from `composer.lock`. Patch file existence was confirmed on disk. Nothing below is copied from older documentation — where this doc disagrees with any older note, the live files (`composer.json` / `composer.lock`) win.
-> **Verified 2026-06-29** (branch `bug/issue-fixes`): composer facts re-confirmed and custom-module `dependencies:` re-read from each `.info.yml`.
+> **Verified:** declared constraints were read from `composer.json`; locked versions were read from `composer.lock`. Patch file existence was confirmed on disk. Nothing below is copied from older documentation — where this doc disagrees with any older note, the live files (`composer.json` / `composer.lock`) win.
+> **Verified 2026-07-03**: composer facts re-confirmed against `composer.json` / `composer.lock` and custom-module `dependencies:` re-read from each `.info.yml`.
 
 ---
 
@@ -11,11 +11,11 @@
 
 | Property | Value | Source |
 |----------|-------|--------|
-| Drupal core | **11.3.12** | `composer.lock` (`drupal/core`) |
+| Drupal core | **11.3.13** | `composer.lock` (`drupal/core`) |
 | Core constraint | `drupal/core-recommended ^11.2` | `composer.json` `require` |
 | PHP | **>= 8.4** (platform pinned `8.4`) | `composer.json` `require.php`, `config.platform.php` |
 | Drush | **13.7.3** (constraint `^13`) | `composer.lock`, `composer.json` |
-| Locked runtime packages | **262** (incl. transitive) | `composer.lock` `packages` |
+| Locked runtime packages | **263** (incl. transitive) | `composer.lock` `packages` |
 | Locked dev packages | **52** (incl. transitive) | `composer.lock` `packages-dev` |
 | Stability | `minimum-stability: dev`, `prefer-stable: true` | `composer.json` |
 | Patches applied | **30** entries (22 local files + 8 remote URLs) | `composer.json` `extra.patches` |
@@ -54,11 +54,9 @@ Web root is `./docroot` (`extra.drupal-scaffold.locations.web-root`).
 
 ### 2.3 Allowed Composer plugins (`config.allow-plugins`)
 
-All 11 set to `true`:
+All 10 set to `true`:
 
-`acquia/blt` · `composer/installers` · `cweagans/composer-patches` · `dealerdirect/phpcodesniffer-composer-installer` · `drupal/core-composer-scaffold` · `drupal/core-project-message` · `grasmash/drupal-security-warning` · `mglaman/composer-drupal-lenient` · `oomphinc/composer-installers-extender` · `php-http/discovery` · `phpstan/extension-installer`
-
-> `acquia/blt` is allow-listed as a plugin but **is not** in `require`/`require-dev` — BLT is legacy here (CI invokes `vendor/bin/*` and `acli` directly; see [`CICD_DEPLOYMENT.md`](CICD_DEPLOYMENT.md)).
+`composer/installers` · `cweagans/composer-patches` · `dealerdirect/phpcodesniffer-composer-installer` · `drupal/core-composer-scaffold` · `drupal/core-project-message` · `grasmash/drupal-security-warning` · `mglaman/composer-drupal-lenient` · `oomphinc/composer-installers-extender` · `php-http/discovery` · `phpstan/extension-installer`
 
 ---
 
@@ -253,7 +251,7 @@ Grouped by function for readability. **Constraint** is the exact string from `co
 
 | Package | Constraint | Role |
 |---------|-----------|------|
-| `drupal/smtp` | `^1.0` | SMTP mail transport (Basic Auth; superseded by Symfony Mailer O365, not yet removed) |
+| `drupal/smtp` | `^1.0` | SMTP mail transport (Basic Auth). Superseded by Symfony Mailer O365 — the module is **uninstalled on all sites** (not in `core.extension.yml`); the Composer package remains declared |
 | `drupal/symfony_mailer` | `^1.4` | Symfony Mailer framework (mail transport layer) |
 | `drupal/symfony_mailer_office365` | `^1.0@alpha` | Office 365 OAuth (XOAUTH2) transport for Symfony Mailer |
 | `drupal/mobile_app_links` | `^2.0` | `.well-known` deep-link files |
@@ -279,7 +277,7 @@ Exact strings from `composer.lock`. These are the **installed** versions, not th
 
 | Package | Locked version |
 |---------|----------------|
-| `drupal/core` / `drupal/core-recommended` | `11.3.12` |
+| `drupal/core` / `drupal/core-recommended` | `11.3.13` |
 | `drush/drush` | `13.7.3` |
 | `drupal/group` | `3.3.5` |
 | `drupal/access_policy` | `2.0.0-rc1` |
@@ -290,13 +288,13 @@ Exact strings from `composer.lock`. These are the **installed** versions, not th
 | `drupal/memcache` | `2.8.0` |
 | `drupal/simple_oauth` | `6.1.1` |
 | `drupal/jsonapi_extras` | `3.28.0` |
-| `drupal/paragraphs` | `1.20.0` |
+| `drupal/paragraphs` | `1.21.0` |
 | `drupal/metatag` | `2.2.0` |
 | `drupal/pathauto` | `1.15.0` |
 | `drupal/views_data_export` | `1.10.0` |
 | `drupal/feeds` | `3.2.0` |
 | `drupal/migrate_plus` | `6.0.10` |
-| `drupal/ai` | `1.4.2` |
+| `drupal/ai` | `1.4.3` |
 | `drupal/webp` | `1.0.0-rc2` |
 | `drupal/imagemagick` | `5.0.1` |
 | `drupal/csv_serialization` | `4.0.1` |
@@ -389,7 +387,7 @@ What the codebase reaches out to over the network, and which dependency drives i
 | OpenAI | `ai` + `ai_provider_openai` | AI API | AI-assisted translation/content |
 | BigQuery | **custom** `pb_content_analytics` | HTTP analytics | No contrib package — custom HTTP sync (see `MODULES.md`) |
 | Apple App Attest / Google Play Integrity | **custom** `bebbo_api_security` | Device attestation | Uses `firebase/php-jwt` + `spomky-labs/cbor-php` + OpenSSL; not a contrib integration package (see `API_SECURITY.md`) |
-| Microsoft 365 (Office 365 OAuth mail) | `symfony_mailer` + `symfony_mailer_office365` | Mail | OAuth 2.0 (Authorization Code) via `smtp.office365.com:587`; sends as `admin@bebbo.app`. Intended to supersede `drupal/smtp` (Basic Auth blocked by M365 Security Defaults), but **both `drupal/smtp ^1.0` and `drupal/symfony_mailer ^1.4` remain declared in `composer.json`** (smtp not yet removed). OAuth credentials managed per-environment via `config_ignore`. See [`CONFIGURATION.md`](CONFIGURATION.md) §1 and [`RUNBOOK.md`](RUNBOOK.md) §14 |
+| Microsoft 365 (Office 365 OAuth mail) | `symfony_mailer` + `symfony_mailer_office365` | Mail | OAuth 2.0 (Authorization Code) via `smtp.office365.com:587`; sends as `admin@bebbo.app`. Supersedes the `smtp` module (Basic Auth blocked by M365 Security Defaults) — `smtp` is uninstalled on all sites though the `drupal/smtp ^1.0` Composer package remains declared. OAuth credential keys (`client_id`/`client_secret`/`tenant_id`) managed per-environment via key-level `config_ignore`. See [`CONFIGURATION.md`](CONFIGURATION.md) §1 and [`RUNBOOK.md`](RUNBOOK.md) §12 |
 | Acquia Cloud (Varnish/CDN, memcache) | `acquia_connector` · `acquia_purge` · `memcache` · `acquia/memcache-settings` | Hosting/cache | Production platform |
 
 ---

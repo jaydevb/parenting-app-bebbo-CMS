@@ -2,7 +2,7 @@
 
 > **Audience:** developers and operators running, maintaining, and troubleshooting Bebbo locally and on Acquia.
 > **Scope:** day-to-day operational procedures — local lifecycle, per-site Drush, config import/export, code-quality gate, custom Drush commands, maintenance scripts, deploy steps, troubleshooting.
-> **Verified against:** repository `HEAD` (branch `develop`), **Verified 2026-06-29**. Every command, alias, script path, and binary below was confirmed in the repo. Items that do **not** work as a naive reader might expect are flagged ⚠️. Deep dives live in the sibling docs linked in [§17](#17-related-docs).
+> **Verified 2026-07-03.** Every command, alias, script path, and binary below was confirmed in the repo. Items that do **not** work as a naive reader might expect are flagged ⚠️. Deep dives live in the sibling docs linked in [§17](#17-related-docs).
 
 ---
 
@@ -52,7 +52,7 @@ The local Drush alias key, the site directory, and the config folder do **not** 
 | Default (Bebbo) | `@ddev.bebbo` · `@ddev.default` | `default` | `bebbo` |
 | Bangladesh | `@ddev.bangla` · `@ddev.bangladesh` | `bangladesh` | `bangla` |
 | Ecuador | `@ddev.ec` · `@ddev.ecuador` | `ecuador` | `ecuador` |
-| Pakistan | `@ddev.pakistan` | `pakistan` | `pakistan` |
+| PK | `@ddev.pakistan` | `pakistan` | `pakistan` |
 | Pacific Islands (Bebbo Pacific) | `@ddev.ws` · `@ddev.somoa` | `somoa` | `somoa` |
 | Turkey | `@ddev.tr` · `@ddev.turkey` | `turkey` | `turkey` |
 | Zimbabwe | `@ddev.zw` · `@ddev.zimbabwe` | `zimbabwe` | `zimbabwe` |
@@ -362,8 +362,8 @@ Bebbo is a **7-site multisite**. All sites share a base config, with per-site ov
 
 | Layer | Path | What lives here |
 |-------|------|-----------------|
-| Shared base | `config/sync/` (1,581 files) | Core settings, content types, fields, views, permissions — everything common to all 7 sites |
-| Per-site split | `config/{folder}/` | Site-specific modules, theme overrides, Entity Share channels/remotes, language config, site-specific views |
+| Shared base | `config/sync/` (1,586 files) | Core settings, content types, fields, views, permissions, Entity Share channels/remotes — everything common to all 7 sites |
+| Per-site split | `config/{folder}/` | Site-specific overrides: language entities, blocks, system.site, timezone patches, landing pages / language redirects, mobile app links |
 
 Each site activates its own split via `docroot/sites/{site}/site.splits.php`:
 ```php
@@ -375,7 +375,7 @@ $config['config_split.config_split.{name}_site']['status'] = TRUE;
 | Default (Bebbo) | `bebbo_site` | `config/bebbo/` |
 | Bangladesh | `bangladesh_site` | `config/bangla/` |
 | Ecuador | `ecuador_site` | `config/ecuador/` |
-| Pakistan | `pakistan_site` | `config/pakistan/` |
+| PK | `pakistan_site` | `config/pakistan/` |
 | Pacific Islands | `somoa_site` | `config/somoa/` |
 | Turkey | `turkey_site` | `config/turkey/` |
 | Zimbabwe | `zimbabwe_site` | `config/zimbabwe/` |
@@ -397,7 +397,7 @@ Content is **not** shared at the database level — each site has its own DB (lo
 | Prod → Dev/Local | Entity Share pull (JSON:API channels on Prod, configured remote on target) |
 | Site A → Site B | Entity Share pull (each site exposes channels for its content) |
 
-Entity Share channel/remote configuration is per-site and lives in each site's config split. There is no automated content sync on deploy — it is always a manual pull operation.
+Entity Share channel and remote configuration is standardized and lives in shared `config/sync/` (42 server channels; `prod` and `stage` client remotes). The Basic-Auth credential is environment-managed via a key-level `config_ignore` entry. There is no automated content sync on deploy — it is always a manual pull operation.
 
 See [`DEPENDENCIES.md`](DEPENDENCIES.md) §3.7 and [`ENVIRONMENTS.md`](ENVIRONMENTS.md) §9 for channel mechanics.
 
@@ -405,7 +405,7 @@ See [`DEPENDENCIES.md`](DEPENDENCIES.md) §3.7 and [`ENVIRONMENTS.md`](ENVIRONME
 
 ## 12. Email (Symfony Mailer + Office 365 OAuth)
 
-Email is sent via `drupal/symfony_mailer` with the `drupal/symfony_mailer_office365` transport, using OAuth 2.0 Authorization Code flow against Microsoft 365 (`smtp.office365.com:587`). The `drupal/smtp` module was removed — Basic Auth is blocked by M365 Security Defaults at the tenant level.
+Email is sent via `drupal/symfony_mailer` with the `drupal/symfony_mailer_office365` transport, using OAuth 2.0 Authorization Code flow against Microsoft 365 (`smtp.office365.com:587`). The `smtp` module is uninstalled on all sites — Basic Auth is blocked by M365 Security Defaults at the tenant level (the `drupal/smtp` Composer package remains declared in `composer.json`).
 
 ### 12.1 Post-deployment OAuth setup (required per environment)
 
@@ -435,9 +435,9 @@ After deploying to a new environment (Stage, Prod), email will **not** work unti
 
 ### 12.2 Config protection
 
-Two config entries are in `config_ignore` to prevent `drush cim` from overwriting live OAuth credentials:
-- `symfony_mailer.mailer_transport.office_365_oauth`
-- `symfony_mailer_office365.config`
+The OAuth credential keys are in `config_ignore` at **key level**, so `drush cim` never overwrites live credentials while the rest of the transport config stays in Git:
+- `symfony_mailer.mailer_transport.office_365_oauth:configuration.client_id` / `:configuration.client_secret` / `:configuration.tenant_id`
+- `symfony_mailer_office365.config:client_id` / `:client_secret` / `:tenant_id`
 
 ### 12.3 Troubleshooting email
 
@@ -493,9 +493,8 @@ Email TFA depends on working email delivery. If Symfony Mailer / OAuth is not co
 | Symptom | Cause / Fix |
 |---------|-------------|
 | `@ddev.<site>` "alias not found" | Both short keys and directory names are defined in `drush/sites/ddev.site.yml`. If still failing, run from project root and check the alias file (see [§3](#3-site--alias-map)). |
-| `composer post-create-project-cmd` fails: `blt: command not found` | ⚠️ Expected — `acquia/blt` is **not installed** (legacy). Don't run the create-project script. `composer nuke` is fine (it does not call blt). |
 | Config keeps re-importing / drift after `cim` | Confirm you exported from `@ddev.bebbo` and committed only the intended YAML; check the change belongs to `config/sync` vs the right `config/<folder>` split. |
-| Country API 500s with `Undefined array key "table"` (Views handler) | A config_split partial `removing:` block applied as a stale partial removal, leaving a Views handler (sort/filter/field) stub with no `table` key — e.g. the Ecuador `country_listing` sort patch crashing `/v2/api/country-groups/wawamor` (fixed in `305f94702`). **Fix:** drop the offending split patch and re-import that site's config so the split matches `config/sync` (handler then inherits the complete definition). Re-import: `ddev drush @ddev.<alias> cim -y && ddev drush @ddev.<alias> cr`. See [§16](#16-api-quick-reference-operators). |
+| Country API 500s with `Undefined array key "table"` (Views handler) | A config_split partial `removing:` block applied as a stale partial removal, leaving a Views handler (sort/filter/field) stub with no `table` key. **Fix:** drop the offending split patch and re-import that site's config so the split matches `config/sync` (handler then inherits the complete definition). Re-import: `ddev drush @ddev.<alias> cim -y && ddev drush @ddev.<alias> cr`. See [§16](#16-api-quick-reference-operators). |
 | Custom Drush command "writes nothing" | Most are dry-run by default — add `--execute` (file-sanitizer/rm-tr) once verified. |
 | `file-paths:fix` refuses to run | By design it will not run on the default site — target a country alias. |
 | Container / port issues | `ddev restart`, then `ddev poweroff && ddev start`. Check `ddev describe`. |
@@ -512,7 +511,7 @@ Per-site domains by environment (verified from `docroot/sites/sites.php`). Use t
 | Bangladesh | babuni.app · bangla.bebbo.app | bangla-stage.bebbo.app | bangla-dev.bebbo.app | bangla.bebbo.app.ddev.site |
 | Turkey | merhababebek.app · tr.bebbo.app | tr-stage.bebbo.app | tr-dev.bebbo.app | tr.bebbo.app.ddev.site |
 | Ecuador | wawamor.ec · ec.bebbo.app | ec-stage.bebbo.app | ec-dev.bebbo.app | ec.bebbo.app.ddev.site |
-| Pakistan | pk.bebbo.app | pk-stage.bebbo.app | pk-dev.bebbo.app | pk.bebbo.app.ddev.site |
+| PK | pk.bebbo.app | pk-stage.bebbo.app | pk-dev.bebbo.app | pk.bebbo.app.ddev.site |
 | Pacific Islands (Bebbo Pacific) | ws.bebbo.app · bebbopacific.app | ws-stage.bebbo.app | ws-dev.bebbo.app | ws.bebbo.app.ddev.site |
 | Zimbabwe | umntwana.app · zw.bebbo.app · rerai.umntwana.app | zw-stage.bebbo.app | zw-dev.bebbo.app | zw.bebbo.app.ddev.site |
 
@@ -536,7 +535,7 @@ JWT enforcement: the `bebbo_api_security` event subscriber protects **only** `/v
 | Endpoint | Auth | Backing |
 |----------|------|---------|
 | `/api/check-update/{country}` | Public | `CheckUpdateController` (route `bebbo_serializer.v1_check_update`) |
-| `/v2/api/check-update/{country}` | JWT | Same controller; route has `no_cache: TRUE` (JWT page-cache bypass fix, `13ddbdcb7`) |
+| `/v2/api/check-update/{country}` | JWT | Same controller; route has `no_cache: TRUE` (never page-cached) |
 | `/api/country-groups/{slug}` | Public | View `country_listing`; `{slug}` is an app/site slug (e.g. `wawamor`), **not** a language |
 | `/v2/api/country-groups/{slug}` | JWT | Same view, V2 display |
 | `/api/taxonomies/{lang}/all` | Public | View `tax`; `all` returns terms for every vocabulary |
@@ -545,8 +544,8 @@ JWT enforcement: the `bebbo_api_security` event subscriber protects **only** `/v
 
 **When a country API 500s:**
 
-1. **`Undefined array key "table"`** (Views handler stub) → a config_split partial `removing:` block left a sort/filter/field handler without its `table` key. This is the recurring class of bug — e.g. the Ecuador `country_listing` sort patch crashing `/v2/api/country-groups/wawamor` (`305f94702`). **Fix:** delete the stale split patch and re-import that site's config so the split matches `config/sync` (`ddev drush @ddev.<alias> cim -y && cr`). See [§14](#14-troubleshooting).
-2. **Orphan group translations** → enabling Group translations produced duplicate/orphan rows that surface as 500s or duplicated `country-groups` output; the `country_listing` default display now carries a `default_langcode = 1` filter and an orphan-translation purge (`498ea5aaf`). If a fresh DB regresses, confirm that filter is present and re-import config.
+1. **`Undefined array key "table"`** (Views handler stub) → a config_split partial `removing:` block left a sort/filter/field handler without its `table` key. **Fix:** delete the stale split patch and re-import that site's config so the split matches `config/sync` (`ddev drush @ddev.<alias> cim -y && cr`). See [§14](#14-troubleshooting).
+2. **Duplicate or orphan group translations** → duplicate/orphan group-translation rows surface as 500s or duplicated `country-groups` output. The `country_listing` default display carries a `default_langcode = 1` filter and an orphan-translation purge — confirm the filter is present and re-import config.
 3. **Check the dblog first:** `ddev drush @ddev.<alias> ws --count=50` (or `/admin/reports/dblog`) to see the exact handler/route that threw.
 
 ---

@@ -1,8 +1,8 @@
 # CI/CD & Deployment
 
-> **Verified 2026-06-29** against `.github/workflows/pipelines.yml` and `hooks/common/code-deploy.sh`.
+> **Verified 2026-07-03** against `.github/workflows/pipelines.yml` and `hooks/common/code-deploy.sh`.
 
-Reference for the build, test, and deploy pipeline. Every claim below is sourced **directly from the files in the repo** — `.github/workflows/pipelines.yml`, the Acquia Cloud hooks under `hooks/`, `blt/`, `drush/sites/`, `buildspec.yml`, `composer.json`, and `phpcs.xml.dist`. Nothing is inferred from convention; where the repo contradicts itself (stale comments, version drift), that is called out explicitly.
+Reference for the build, test, and deploy pipeline. Every claim below is sourced **directly from the files in the repo** — `.github/workflows/pipelines.yml`, the Acquia Cloud hooks under `hooks/`, `drush/sites/`, `buildspec.yml`, `composer.json`, and `phpcs.xml.dist`. Nothing is inferred from convention; where the repo contradicts itself (stale comments, version drift), that is called out explicitly.
 
 ---
 
@@ -42,7 +42,7 @@ workflow_dispatch:        # manual run button
 | Drupal Check | `./vendor/bin/drupal-check -d docroot/modules/custom` |
 | PHPLint | `./vendor/bin/phplint` |
 
-All three quality gates must pass; both deploy jobs declare `needs: ci-checks`.
+All quality gates (composer validate, PHPCS, drupal-check, PHPLint) must pass; both deploy jobs declare `needs: ci-checks`.
 
 > **Local secret scanning:** A pre-commit hook (`scripts/git-hooks/pre-commit`) scans staged files for hardcoded secrets before they reach CI. Auto-installed via `composer install`. See [`RUNBOOK.md`](RUNBOOK.md) §6.1 for details.
 
@@ -152,35 +152,7 @@ Separate from the Acquia pipeline. Builds and pushes a Docker image to Amazon EC
 
 ---
 
-## 8. BLT Configuration — `blt/` (legacy / not installed)
-
-> ⚠️ **`acquia/blt` is NOT a Composer dependency** — it appears in neither `require` nor `require-dev` of `composer.json`. The `blt/` config files remain in the repo, but BLT itself is not installed and the GitHub Actions pipeline does **not** invoke `blt` (it calls `vendor/bin/phpcs|drupal-check|phplint` and `acli` directly). Treat `blt/` as legacy configuration retained from the project's BLT origins.
-
-For reference, the retained `blt/blt.yml` declares:
-
-| Key | Value |
-|---|---|
-| `project.machine_name` | `parentbuddy` |
-| `project.human_name` | `BLTed 10` |
-| `project.profile.name` | `standard` |
-| `git.default_branch` | `master` |
-| `deploy.tag_source` | `true` |
-| `drush.aliases.remote` | `parentbuddy.test` |
-
-Per-environment module enable/uninstall lists (`modules:` in `blt.yml`) — would only apply if BLT ran:
-| Env | Enable | Uninstall |
-|---|---|---|
-| local | dblog, devel, seckit, views_ui | acquia_connector, shield |
-| ci | — | acquia_connector, shield |
-| dev | acquia_connector, shield | — |
-| test | acquia_connector, shield | devel, views_ui |
-| prod | acquia_connector, shield | devel, views_ui |
-
-`blt/ci.blt.yml`: `tests.run-server: true`, `tests.drupal.sudo-run-tests: false`, `project.local.hostname: 127.0.0.1:8888`, `drush.debug: false`. `blt/deploy-exclude-additions.txt` is empty.
-
----
-
-## 9. Platform Facts
+## 8. Platform Facts
 
 - **Drupal core:** `drupal/core-recommended: ^11.2` (`composer.json`)
 - **PHP:** 8.4 for `ci-checks` and `deploy-dev`; **8.3** for `deploy-stage` (`pipelines.yml` line 111)
@@ -190,4 +162,4 @@ Per-environment module enable/uninstall lists (`modules:` in `blt.yml`) — woul
 
 ---
 
-*Generated from repo source: `.github/workflows/pipelines.yml`, `hooks/`, `drush/sites/parentbuddy2.site.yml`, `phpcs.xml.dist`, `buildspec.yml`, `blt/*.yml`, `composer.json`. Every value traced to a file; no conventions assumed.*
+*Generated from repo source: `.github/workflows/pipelines.yml`, `hooks/`, `drush/sites/parentbuddy2.site.yml`, `phpcs.xml.dist`, `buildspec.yml`, `composer.json`. Every value traced to a file; no conventions assumed.*
