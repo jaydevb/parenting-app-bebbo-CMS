@@ -180,10 +180,9 @@ CI checks (`composer validate`, PHPCS, `drupal-check`, `phplint`) run on every p
 ![Branching strategy diagram](docs/BranchingStrategy.png)
 
 ## Maintainers
-The Bebbo CMS is actively maintained by UNICEF's Regional Office for Europe and Central Asia in collaboration with various partners. It is part of the larger Bebbo project, a digital parenting platform aimed at providing parents and caregivers with essential early childhood development resources.
+The Bebbo CMS is actively maintained by UNICEF (United Nations Children's Fund) in collaboration with various partners. It is part of the larger Bebbo project, a digital parenting platform aimed at providing parents and caregivers with essential early childhood development resources. Bebbo is a DPGA-recognized Digital Public Good.
 
 For ongoing maintenance, please reach out to the following maintainers:
-- [Evrim Sahin](https://github.com/evrimm)
 - [Saurabh Agarwal](https://github.com/saurabhEDU)
 - [Neha Ruparel](https://github.com/neharuparel)
 
