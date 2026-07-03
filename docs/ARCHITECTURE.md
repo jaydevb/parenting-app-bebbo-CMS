@@ -18,7 +18,7 @@ Bebbo (a.k.a. *Parent Buddy*) is the **headless Drupal CMS** behind UNICEF's par
 | CLI tooling | **Drush ^13** | `composer.json` |
 | Admin theme | **Gin** (`drupal/gin ^5.0`) | `config/sync/system.theme.yml` |
 | Default theme | **Gin** (headless — no separate frontend theme) | `config/sync/system.theme.yml` |
-| Hosting | **Acquia Cloud** — application `parentbuddy2` (`blt/` config is legacy; BLT is not installed) | `drush/sites/parentbuddy2.site.yml`, `hooks/`, `README.acquia` |
+| Hosting | **Acquia Cloud** — application `parentbuddy2` | `drush/sites/parentbuddy2.site.yml`, `hooks/`, `README.acquia` |
 | Caching | Memcache (Acquia) | `acquia/memcache-settings`, `docroot/sites/common_settings/cloud-memcache-d8+.php` |
 | Local dev | DDEV (`bebbo.app`) | `.ddev/` |
 | Architecture | Single codebase, **7-site Drupal multisite**, per-site config via Config Split | `docroot/sites/`, `config/` |
@@ -323,7 +323,7 @@ sequenceDiagram
 
 | Concern | Mechanism | Where |
 |---------|-----------|-------|
-| Hosting | Acquia Cloud — application `parentbuddy2` (`blt/` config is legacy; BLT is not installed) | `hooks/`, `README.acquia` |
+| Hosting | Acquia Cloud — application `parentbuddy2` | `hooks/`, `README.acquia` |
 | CI / checks | GitHub Actions — `composer validate`, PHPCS, `drupal-check`, `phplint`. Runs on **push to `develop`/`stage`** and **PRs to `feature/**`, `bug/**`, `hotfix/**`, `develop`, `stage`** | `.github/workflows/pipelines.yml` (`on:`) |
 | Deploy (dev) | **Push to `develop`** → `acli push:artifact @parentbuddy2.dev` (Acquia Dev) | `pipelines.yml` `deploy-dev` (`if … refs/heads/develop`) |
 | Deploy (stage) | **Push to `stage`** → `acli push:artifact @parentbuddy2.test` (Acquia Stage) | `pipelines.yml` `deploy-stage` (`if … refs/heads/stage`) |

@@ -54,11 +54,9 @@ Web root is `./docroot` (`extra.drupal-scaffold.locations.web-root`).
 
 ### 2.3 Allowed Composer plugins (`config.allow-plugins`)
 
-All 11 set to `true`:
+All 10 set to `true`:
 
-`acquia/blt` · `composer/installers` · `cweagans/composer-patches` · `dealerdirect/phpcodesniffer-composer-installer` · `drupal/core-composer-scaffold` · `drupal/core-project-message` · `grasmash/drupal-security-warning` · `mglaman/composer-drupal-lenient` · `oomphinc/composer-installers-extender` · `php-http/discovery` · `phpstan/extension-installer`
-
-> `acquia/blt` is allow-listed as a plugin but **is not** in `require`/`require-dev` — BLT is legacy here (CI invokes `vendor/bin/*` and `acli` directly; see [`CICD_DEPLOYMENT.md`](CICD_DEPLOYMENT.md)).
+`composer/installers` · `cweagans/composer-patches` · `dealerdirect/phpcodesniffer-composer-installer` · `drupal/core-composer-scaffold` · `drupal/core-project-message` · `grasmash/drupal-security-warning` · `mglaman/composer-drupal-lenient` · `oomphinc/composer-installers-extender` · `php-http/discovery` · `phpstan/extension-installer`
 
 ---
 

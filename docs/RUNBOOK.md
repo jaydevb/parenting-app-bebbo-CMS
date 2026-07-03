@@ -493,7 +493,6 @@ Email TFA depends on working email delivery. If Symfony Mailer / OAuth is not co
 | Symptom | Cause / Fix |
 |---------|-------------|
 | `@ddev.<site>` "alias not found" | Both short keys and directory names are defined in `drush/sites/ddev.site.yml`. If still failing, run from project root and check the alias file (see [§3](#3-site--alias-map)). |
-| `composer post-create-project-cmd` fails: `blt: command not found` | ⚠️ Expected — `acquia/blt` is **not installed** (legacy). Don't run the create-project script. `composer nuke` is fine (it does not call blt). |
 | Config keeps re-importing / drift after `cim` | Confirm you exported from `@ddev.bebbo` and committed only the intended YAML; check the change belongs to `config/sync` vs the right `config/<folder>` split. |
 | Country API 500s with `Undefined array key "table"` (Views handler) | A config_split partial `removing:` block applied as a stale partial removal, leaving a Views handler (sort/filter/field) stub with no `table` key. **Fix:** drop the offending split patch and re-import that site's config so the split matches `config/sync` (handler then inherits the complete definition). Re-import: `ddev drush @ddev.<alias> cim -y && ddev drush @ddev.<alias> cr`. See [§16](#16-api-quick-reference-operators). |
 | Custom Drush command "writes nothing" | Most are dry-run by default — add `--execute` (file-sanitizer/rm-tr) once verified. |

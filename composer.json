@@ -132,7 +132,6 @@
         "sort-packages": true,
         "discard-changes": true,
         "allow-plugins": {
-            "acquia/blt": true,
             "composer/installers": true,
             "cweagans/composer-patches": true,
             "dealerdirect/phpcodesniffer-composer-installer": true,
@@ -316,9 +315,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
-        "post-create-project-cmd": [
-            "blt internal:create-project:init-repo"
-        ],
         "install-git-hooks": [
             "if [ -d .git ] && [ -f scripts/git-hooks/pre-commit ] && [ -z \"$CI\" ] && [ -z \"$ACQUIA_HOSTING_DRUPAL_LOG\" ]; then cp scripts/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit && echo 'Git pre-commit hook installed.'; fi"
         ],

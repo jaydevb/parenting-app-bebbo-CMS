@@ -178,7 +178,7 @@ All 7 `site.splits.php` follow the identical one-line pattern, each enabling its
 
 ### 6.1 `config/envs/` is an empty placeholder
 
-`config/envs/` contains **only** `README.md` — no `dev/`, `test/`, or `prod/` subdirectories and no `*.yml`. The README is a legacy BLT-style placeholder describing environment-based config_split directories that were never populated here. **There is no committed per-environment config override.** Environment differences come from Acquia env detection (§5) and the deploy pipeline, not from `config/envs/`.
+`config/envs/` contains **only** `README.md` — no `dev/`, `test/`, or `prod/` subdirectories and no `*.yml`. The README is a legacy placeholder describing environment-based config_split directories that were never populated here. **There is no committed per-environment config override.** Environment differences come from Acquia env detection (§5) and the deploy pipeline, not from `config/envs/`.
 
 ---
 
