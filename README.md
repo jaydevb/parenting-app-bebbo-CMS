@@ -156,6 +156,7 @@ The project documentation is organised under the `/docs` directory.
 | [Contributing Guide](CONTRIBUTING.md) | How to contribute to the project |
 | [Code of Conduct](CODE_OF_CONDUCT.md) | Community participation guidelines |
 | [Security Policy](SECURITY.md) | Reporting security vulnerabilities |
+| [License](LICENSE) | GNU General Public License v3.0 |
 
 ### Additional Resources
 
