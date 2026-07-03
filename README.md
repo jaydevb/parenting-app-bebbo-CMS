@@ -51,10 +51,13 @@ git config --global core.longpaths true
    ```
    ddev composer install
    ```
-4. Download the database from the Acquia server and import it locally. If you don’t have access to Acquia, you can download the dump database [here](https://drive.google.com/file/d/1SuBFYpNYARkHceyPoiLBWaa7zBAZfYsz/view).
+4. Download the latest development database from the Acquia server and import it locally. If you do not have access to Acquia, you can download the latest development database dump from [here](https://drive.google.com/file/d/1SuBFYpNYARkHceyPoiLBWaa7zBAZfYsz/view).
+
+   The development database is provided solely for local development and testing. It contains development content only and does **not** contain production personal data. It should never be used in production environments.
    ```
    ddev import-db --src=/path/to/bebbo.sql.gz
    ```
+   For complete database setup, multisite configuration, and local environment instructions, see the [Runbook](docs/RUNBOOK.md).
 5. Import public files if required:
    ```
    ddev import-files --src=/path/to/files.tar.gz
