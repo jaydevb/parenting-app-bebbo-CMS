@@ -64,13 +64,13 @@ documentation standards. Following these guidelines will help facilitate
 collaboration and improve the overall quality of our contributions.
 
 For detailed information on our coding standards and practices, please
-refer to the [coding style guide](CODING_STYLE_GUIDE.md).
+refer to the [coding style guide](docs/CODING_STYLE_GUIDE.md).
 
 ## **Pull request checklist**
 
 Below are extensive steps you can follow to easily open a pull request.
 
-- Be sure to follow our coding standards outlined in the [coding style guide](CODING_STYLE_GUIDE.md).
+- Be sure to follow our coding standards outlined in the [coding style guide](docs/CODING_STYLE_GUIDE.md).
 
 - Create and switch to a new branch from the `develop` branch, using the `feature/`, `bug/`, or `hotfix/` prefix. Example: `git checkout -b feature/add-user-profile-page`
 
@@ -190,7 +190,7 @@ pull request (PR).
 
 #### **5. Merging**
 
-- Approved pull requests are merged into the repository's `develop` branch by a maintainer (pushes to `develop` deploy to the Acquia Dev environment; see [`CICD_DEPLOYMENT.md`](CICD_DEPLOYMENT.md)).
+- Approved pull requests are merged into the repository's `develop` branch by a maintainer (pushes to `develop` deploy to the Acquia Dev environment; see [`CICD_DEPLOYMENT.md`](docs/CICD_DEPLOYMENT.md)).
 
 - The PR will be closed, and you'll be notified when the changes are live.
 
@@ -218,7 +218,7 @@ pull request (PR).
 
 ## **Custom modules**
 
-The following custom modules live in `docroot/modules/custom/` (full reference: [`MODULES.md`](MODULES.md)):
+The following custom modules live in `docroot/modules/custom/` (full reference: [`MODULES.md`](docs/MODULES.md)):
 
 - bebbo_api_security
 

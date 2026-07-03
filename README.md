@@ -16,7 +16,7 @@
 ## Introduction
 Parent Buddy CMS application is a headless implementation of Drupal 11 CMS where the content is added through the web interface and serves as REST APIs for a mobile app. This application assists editors in adding different types of content under various content types and taxonomies configured in Drupal CMS. Go through the [onboarding document](./docs/ONBOARDING.md) before continuing with the Installation guidelines below.
 
-For more information on setup and getting started, check out our [guidelines for contributors](./docs/CONTRIBUTING.md).
+For more information on setup and getting started, check out our [guidelines for contributors](./CONTRIBUTING.md).
 
 ## Installation
 
@@ -151,11 +151,15 @@ The project documentation is organised under the `/docs` directory.
 | [API Security](docs/API_SECURITY.md) | Authentication and API security model |
 | [CI/CD Deployment](docs/CICD_DEPLOYMENT.md) | Deployment pipeline and release process |
 | [Dependencies](docs/DEPENDENCIES.md) | Third-party packages and services |
-| [Runbook](docs/RUNBOOK.md) | Operational runbook and troubleshooting |
-| [Coding Standards](docs/CODING_STYLE_GUIDE.md) | Development standards |
-| [Contributing Guide](docs/CONTRIBUTING.md) | How to contribute |
-| [Code of Conduct](docs/CODE_OF_CONDUCT.md) | Community guidelines |
+| [Runbook](docs/RUNBOOK.md) | Local development, deployment, operational procedures and troubleshooting |
+| [Coding Standards](docs/CODING_STYLE_GUIDE.md) | Coding conventions and development standards |
+| [Contributing Guide](CONTRIBUTING.md) | How to contribute to the project |
+| [Code of Conduct](CODE_OF_CONDUCT.md) | Community participation guidelines |
 | [Security Policy](SECURITY.md) | Reporting security vulnerabilities |
+
+### Additional Resources
+
+- [Project Wiki](https://github.com/UNICEFECAR/parenting-app-bebbo-CMS/wiki) – Additional implementation notes, FAQs, and project-specific guidance.
 
 ## CI/CD Security Practices
 The automated pipeline defined in [.github/workflows/pipelines.yml](.github/workflows/pipelines.yml) enforces several security measures that contributors should be aware of:

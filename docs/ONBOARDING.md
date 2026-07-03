@@ -28,18 +28,18 @@ document to learn more about Bebbo.
 
 At UNICEF Bebbo, we believe in the power of collaboration to create a
 better world for children. To ensure everyone feels welcome and
-respected, we follow a [Code of Conduct](CODE_OF_CONDUCT.md)
+respected, we follow a [Code of Conduct](../CODE_OF_CONDUCT.md)
 that promotes a culture of inclusivity. By contributing to Bebbo, you
 agree to uphold these principles. Together, we can foster a positive and
 respectful community where everyone feels valued and empowered to
-contribute. Learn more in our [Code of Conduct](CODE_OF_CONDUCT.md) document.
+contribute. Learn more in our [Code of Conduct](../CODE_OF_CONDUCT.md) document.
 
 **How to Contribute**
 
 1.  Contribute to Bebbo Projects:
 
     - Explore our GitHub repositories: The Bebbo CMS repository is [here](https://github.com/UNICEFECAR/parenting-app-bebbo-CMS),
-      and its contribution guidelines are [here](CONTRIBUTING.md).
+      and its contribution guidelines are [here](../CONTRIBUTING.md).
 
     - Bebbo mobile app repository can be found [here](https://github.com/UNICEFECAR/parenting-app-bebbo-mobile).
       Set up your development environment with our tech stack (e.g., React Native, PHP) using the instructions in the respective guidelines.
