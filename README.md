@@ -16,7 +16,7 @@
 * [Community](#community)
 
 ## Introduction
-Parent Buddy CMS application is a headless implementation of Drupal 11 CMS where the content is added through the web interface and serves as REST APIs for a mobile app. This application assists editors in adding different types of content under various content types and taxonomies configured in Drupal CMS. Go through the [onboarding document](./docs/ONBOARDING.md) before continuing with the Installation guidelines below.
+Bebbo CMS application is a headless implementation of Drupal 11 CMS where the content is added through the web interface and serves as REST APIs for a mobile app. This application assists editors in adding different types of content under various content types and taxonomies configured in Drupal CMS. Go through the [onboarding document](./docs/ONBOARDING.md) before continuing with the Installation guidelines below.
 
 For more information on setup and getting started, check out our [guidelines for contributors](./CONTRIBUTING.md).
 
