@@ -890,11 +890,11 @@ Full response (standard envelope; `langcode` resolves to the active/site languag
       "country_email": "admin@babuni.app",
       "app_name": "Babuni",
       "content_toggle": "1, 2",
-      "all_logos": "...",
       "country_national_partner": {"url": "https://example.com/partner.webp", "name": "partner", "alt": "National Partner"},
       "country_sponsor_logo": {"url": "https://example.com/sponsor.webp", "name": "sponsor", "alt": "Sponsor"},
       "unicef_logo": {"url": "https://example.com/unicef.webp", "name": "unicef", "alt": "UNICEF"},
-      "field_2_0_branding": {"url": "https://example.com/branding.webp", "name": "branding", "alt": "Branding"},
+      "all_logos": {"url": "https://example.com/branding.webp", "name": "branding", "alt": "Branding"},
+      "country_flag": {"url": "https://example.com/flag.webp", "name": "flag", "alt": "Country Flag"},
       "languages": [
         {
           "name": "Bangladesh",
@@ -914,11 +914,11 @@ Full response (standard envelope; `langcode` resolves to the active/site languag
       "country_email": "",
       "app_name": "Bebbo",
       "content_toggle": "",
-      "all_logos": "...",
       "country_national_partner": {"url": "", "name": "", "alt": ""},
       "country_sponsor_logo": {"url": "", "name": "", "alt": ""},
       "unicef_logo": {"url": "", "name": "", "alt": ""},
-      "field_2_0_branding": {"url": "", "name": "", "alt": ""},
+      "all_logos": {"url": "", "name": "", "alt": ""},
+      "country_flag": {"url": "", "name": "", "alt": ""},
       "languages": [
         {"name": "Rest of the world", "displayName": "English", "languageCode": "en", "locale": "en_US", "luxonLocale": "en", "pluralShow": "1"},
         {"name": "Rest of the world", "displayName": "Русский", "languageCode": "ru", "locale": "ru_RU", "luxonLocale": "ru", "pluralShow": "1"}
@@ -1109,11 +1109,11 @@ Full response shape:
 | `country_email` | string | Contact email (passthrough) |
 | `app_name` | string | App display name (passthrough) |
 | `content_toggle` | string | Default-language content toggle (overridden by transform from Group entity) |
-| `all_logos` | string | Raw 2.0 branding field (passthrough) |
 | `country_national_partner` | {url,name,alt} | National partner logo (parsed from view embed) |
 | `country_sponsor_logo` | {url,name,alt} | Sponsor logo (parsed from view embed) |
 | `unicef_logo` | {url,name,alt} | UNICEF logo (parsed from view embed) |
-| `field_2_0_branding` | {url,name,alt} | 2.0 branding image (parsed from view embed) |
+| `all_logos` | {url,name,alt} | 2.0 branding image (parsed from view embed, WebP) |
+| `country_flag` | {url,name,alt} | Country flag image (parsed from view embed, WebP) |
 | `languages` | array | Language objects — see below |
 | `displayName` | string | **Only on CountryID 126** ("Rest of the world"); absent on other groups |
 
@@ -1596,7 +1596,8 @@ These fields store **taxonomy term IDs** (integers). The IDs are **subsite-speci
 | `country_national_partner` | Logo image of the national implementing partner organization. |
 | `country_sponsor_logo` | Logo image of the funding sponsor for this country deployment. |
 | `unicef_logo` | UNICEF logo variant used in this country. |
-| `all_logos` / `field_2_0_branding` | Combined branding image for the 2.0 app version. |
+| `all_logos` | Branding image for the 2.0 app version (WebP). |
+| `country_flag` | Flag image for this country (WebP). |
 | `content_toggle` | Comma-separated list of feature IDs to **hide** in the app for this country. Controls which app sections (e.g. growth tracking, vaccinations) are visible. |
 | `languages[].displayName` | Language name as it should appear in the app — usually includes both the local script name and English name. |
 | `languages[].languageCode` | BCP-47 language code used to segregate content in the CMS and APIs. |
