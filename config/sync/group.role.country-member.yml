@@ -11,6 +11,7 @@ group_type: country
 permissions:
   - 'access group_node overview'
   - 'view group_membership content'
+  - 'view group_membership entity'
   - 'view latest version'
 admin: false
 scope: insider
