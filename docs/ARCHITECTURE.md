@@ -14,7 +14,7 @@ Bebbo (a.k.a. *Parent Buddy*) is the **headless Drupal CMS** behind UNICEF's par
 |----------|-------|--------|
 | Drupal core | **11.3.13** | `composer.lock` (`drupal/core`) |
 | PHP | **>= 8.4** | `composer.json` `require.php`; DDEV `php_version: "8.4"` |
-| Database | MariaDB (DDEV local; **10.11**) | `.ddev/config.yaml` |
+| Database | MariaDB local (DDEV; **10.11**); MySQL on Acquia Cloud | `.ddev/config.yaml`; `ENVIRONMENTS.md` |
 | CLI tooling | **Drush ^13** | `composer.json` |
 | Admin theme | **Gin** (`drupal/gin ^5.0`) | `config/sync/system.theme.yml` |
 | Default theme | **Gin** (headless — no separate frontend theme) | `config/sync/system.theme.yml` |
