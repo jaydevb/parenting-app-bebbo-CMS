@@ -1716,6 +1716,7 @@ class BebboSerializer extends Serializer {
       'country_sponsor_logo',
       'unicef_logo',
       'all_logos',
+      'country_flag',
     ];
     foreach ($rows as &$row) {
       foreach ($mediaKeys as $key) {
