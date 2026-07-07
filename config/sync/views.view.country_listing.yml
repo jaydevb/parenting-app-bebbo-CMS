@@ -1140,7 +1140,7 @@ display:
           admin_label: ''
           plugin_id: field
           label: ''
-          exclude: false
+          exclude: true
           alter:
             alter_text: false
             text: ''
@@ -1714,9 +1714,6 @@ display:
             field_country_email:
               alias: country_email
               raw_output: false
-            field_2_0_branding:
-              alias: all_logos
-              raw_output: false
             field_language:
               alias: langcode
               raw_output: true
@@ -1736,7 +1733,7 @@ display:
               alias: unicef_logo
               raw_output: false
             view_3:
-              alias: field_2_0_branding
+              alias: all_logos
               raw_output: false
       query:
         type: views_query
