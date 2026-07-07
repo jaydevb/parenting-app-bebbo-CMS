@@ -69,18 +69,18 @@ sequenceDiagram
     participant Google as playintegrity.googleapis.com
     participant DB as bebbo_api_devices
 
-    App->>Ctrl: POST /register (platform=android, device_id, integrity_token, nonce?)
-    Ctrl->>Ctrl: Flood bebbo_register (register_rate_limit/hr)
-    Ctrl->>GPI: verifyToken(integrity_token, expectedNonce)
+    App->>Ctrl: POST /register — platform=android + device_id + integrity_token + optional nonce
+    Ctrl->>Ctrl: Flood bebbo_register — register_rate_limit/hr
+    Ctrl->>GPI: verifyToken with integrity_token + expectedNonce
     Note over GPI: expectedNonce = stored challenge → body nonce → device_id
     GPI->>Key: load SA private_key
-    GPI->>Google: SA JWT (RS256, scope playintegrity) → OAuth2 token (cached 3300s)
-    GPI->>Google: POST {package}:decodeIntegrityToken (timeout google_api_timeout)
+    GPI->>Google: SA JWT RS256 scope playintegrity → OAuth2 token cached 3300s
+    GPI->>Google: POST package:decodeIntegrityToken — timeout google_api_timeout
     Google-->>GPI: tokenPayloadExternal
-    GPI->>GPI: verifyVerdicts — nonce hash_equals, package, freshness (600s),<br/>MEETS_DEVICE_INTEGRITY, appRecognitionVerdict PLAY_RECOGNIZED
-    GPI-->>Ctrl: device public data (auth_method=play_integrity)
+    GPI->>GPI: verifyVerdicts — nonce hash_equals + package + freshness 600s<br/>+ MEETS_DEVICE_INTEGRITY + appRecognitionVerdict PLAY_RECOGNIZED
+    GPI-->>Ctrl: device public data — auth_method=play_integrity
     Ctrl->>DB: UPSERT device status=active
-    Ctrl-->>App: token response (JWT + refresh)
+    Ctrl-->>App: token response — JWT + refresh
 ```
 
 ### iOS — Apple App Attest (offline)
@@ -113,18 +113,18 @@ sequenceDiagram
     participant SV as SideloadedVerificationService
     participant DB
 
-    App->>Ctrl: POST /device/register (device_id, public_key PEM)
-    Ctrl->>Ctrl: Flood bebbo_device_register (per IP, device_register_ip_rate_limit/hr)
+    App->>Ctrl: POST /device/register — device_id + public_key PEM
+    Ctrl->>Ctrl: Flood bebbo_device_register — per IP, device_register_ip_rate_limit/hr
     Ctrl->>SV: registerDevice()
     SV->>SV: validate EC prime256v1
-    SV->>DB: UPSERT device=pending; insert challenge (random_bytes(32), TTL challenge_expiry_seconds)
-    SV-->>App: { challenge (64-hex), expires_in }
+    SV->>DB: UPSERT device=pending; insert challenge — random_bytes 32, TTL challenge_expiry_seconds
+    SV-->>App: challenge 64-hex + expires_in
     App->>App: sign challenge bytes with device private key
-    App->>Ctrl: POST /device/verify (device_id, challenge, signature)
-    Ctrl->>Ctrl: Flood bebbo_device_verify (per device, verify_rate_limit/hr)
+    App->>Ctrl: POST /device/verify — device_id + challenge + signature
+    Ctrl->>Ctrl: Flood bebbo_device_verify — per device, verify_rate_limit/hr
     Ctrl->>SV: verify()
-    SV->>DB: lookup challenge (device+challenge+purpose), reject if used/expired
-    SV->>SV: openssl_verify(hex2bin(challenge), base64_decode(signature), key, SHA256)
+    SV->>DB: lookup challenge by device+challenge+purpose; reject if used/expired
+    SV->>SV: openssl_verify — SHA256 over challenge bytes with registered key
     SV->>DB: mark challenge used (regardless); on success device=active
     SV-->>App: success → token response | fail → 403
 ```

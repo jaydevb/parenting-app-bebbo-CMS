@@ -8,6 +8,63 @@
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
+ * Purges orphan entity_reference_revisions fields targeting paragraph.
+ *
+ * The paragraphs module is uninstalled on every site, but several sites still
+ * carry deleted entity_reference_revisions fields (node.field_module,
+ * node.field_question) whose data is queued for purge. Cron's field purge
+ * (field_purge_batch) reads those queued items, which builds the field schema
+ * via EntityReferenceRevisionsItem::schema() -> getDefinition('paragraph').
+ * With the paragraph entity type gone this throws PluginNotFoundException and
+ * aborts the whole cron purge batch — so those fields (and any other queued
+ * deleted fields behind them) never clear and cron keeps failing.
+ *
+ * This finalises the purge for exactly those fields without reading their data:
+ * field_purge_field_storage() -> node storage finalizePurge() drops the deleted
+ * field's dedicated data/revision tables by name and clears its schema record.
+ * That path never computes the field's column schema, so it does not need the
+ * paragraph entity type. The remaining (non-paragraph) deleted fields then
+ * purge normally on the next cron run.
+ *
+ * Runs per site (the deploy hook loops every site running `drush updb`) and is
+ * idempotent: once the fields are gone — or if paragraphs is ever reinstalled —
+ * it does nothing.
+ */
+function bebbo_custom_general_post_update_purge_orphan_paragraph_fields(): string {
+  // If the paragraph entity type is available, normal cron purge works; leave
+  // it alone.
+  if (\Drupal::entityTypeManager()->hasDefinition('paragraph')) {
+    return 'Paragraph entity type is available; orphan-field purge not needed.';
+  }
+
+  /** @var \Drupal\Core\Field\DeletedFieldsRepositoryInterface $repository */
+  $repository = \Drupal::service('entity_field.deleted_fields_repository');
+
+  $purged = [];
+  foreach ($repository->getFieldStorageDefinitions() as $field_storage) {
+    if ($field_storage->getType() !== 'entity_reference_revisions'
+      || $field_storage->getSetting('target_type') !== 'paragraph') {
+      continue;
+    }
+
+    // Purge the field definitions first, then the storage:
+    // field_purge_field_storage() only proceeds once no field definitions
+    // remain for the storage.
+    $unique_id = $field_storage->getUniqueStorageIdentifier();
+    foreach ($repository->getFieldDefinitions($unique_id) as $field) {
+      field_purge_field($field);
+    }
+    field_purge_field_storage($field_storage);
+
+    $purged[] = $field_storage->getTargetEntityTypeId() . '.' . $field_storage->getName();
+  }
+
+  return $purged
+    ? 'Purged orphan paragraph-reference fields: ' . implode(', ', $purged) . '. Their dedicated tables were dropped; remaining deleted fields purge on the next cron.'
+    : 'No orphan paragraph-reference fields queued for purge on this site.';
+}
+
+/**
  * Remove defunct modules and stale view configs before cim.
  *
  * Custom_serialization, pb_custom_rest_api, and pb_custom_standard_deviation

@@ -32,7 +32,7 @@ Source: `.ddev/config.yaml`.
 | `docroot` | `docroot` |
 | `php_version` | `8.4` |
 | `webserver_type` | `apache-fpm` |
-| `database` | MariaDB **10.11** |
+| `database` | MariaDB **10.11** (local only; Acquia Cloud runs MySQL — see the callout above) |
 | `xdebug_enabled` | `false` |
 | `composer_version` | `2` |
 | `corepack_enable` | `false` |
