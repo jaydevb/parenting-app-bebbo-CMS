@@ -1473,29 +1473,17 @@ class BebboV1Serializer extends Serializer {
   private function queryGrowthPeriodTerms(string $langcode): array {
     $query = $this->buildTermBaseQuery('growth_period', $langcode);
     $query->leftJoin('taxonomy_term__field_vaccination_opens', 'vo', 'vo.entity_id = td.tid');
-    $query->leftJoin('taxonomy_term__field_short_name', 'sn', 'sn.entity_id = td.tid AND sn.langcode = td.langcode');
-    $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
     $query->addField('vo', 'field_vaccination_opens_value', 'vaccination_opens');
-    $query->addField('sn', 'field_short_name_value', 'short_name');
-    $query->addField('un', 'field_unique_name_value', 'unique_name');
 
     $results = $query->execute()->fetchAll();
     $terms = [];
-    $needsMachineName = [];
-    foreach ($results as $idx => $row) {
+    foreach ($results as $row) {
       $terms[] = [
         'id' => (int) $row->tid,
         'name' => $row->name,
         'vaccination_opens' => (int) ($row->vaccination_opens ?? 0),
-        'short_name' => $row->short_name ?? '',
-        'unique_name' => $row->unique_name ?? '',
       ];
-      if (empty($row->unique_name)) {
-        $needsMachineName[$idx] = (int) $row->tid;
-      }
     }
-
-    $this->batchResolveMachineNames($terms, $needsMachineName);
 
     return $terms;
   }
