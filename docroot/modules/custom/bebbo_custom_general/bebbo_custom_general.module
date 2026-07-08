@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
+use Drupal\views\Plugin\views\filter\FilterPluginBase;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
@@ -674,6 +675,15 @@ function bebbo_custom_general_form_tmgmt_overview_form_alter(&$form, FormStateIn
     return;
   }
 
+  // Remove inline-only bundles (e.g. quiz_questions) from the content type
+  // filter on the TMGMT sources overview (/admin/tmgmt/sources). The node
+  // bundle key is "type"; the select is only present when >1 bundle exists.
+  if (isset($form['search_wrapper']['search']['type']['#options'])) {
+    foreach (_bebbo_custom_general_hidden_node_types() as $hidden_type) {
+      unset($form['search_wrapper']['search']['type']['#options'][$hidden_type]);
+    }
+  }
+
   // Handle manual sorting if the query alter didn't work.
   $request = \Drupal::request();
   $order = $request->query->get('order');
@@ -1008,19 +1018,30 @@ function bebbo_custom_general_menu_links_discovered_alter(&$links) {
 /**
  * Implements hook_form_views_exposed_form_alter().
  *
- * Removes hidden bundles from the exposed "Type" dropdown on the admin
- * content listing views so they cannot be selected as a filter option.
+ * Removes hidden bundles from any exposed node "Type" (bundle) dropdown so
+ * they cannot be selected as a filter option. Works on every view generically
+ * (content listings, country/child-growth/global reports, etc.) by inspecting
+ * the view's exposed bundle filters rather than a hardcoded view whitelist.
  */
 function bebbo_custom_general_form_views_exposed_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $listings = ['content', 'global_content_listing', 'country_content_listing'];
   $view = $form_state->get('view');
-  if (!$view || !in_array($view->id(), $listings, TRUE)) {
+  if (!$view || empty($view->filter)) {
     return;
   }
-  if (!isset($form['type']['#options'])) {
-    return;
-  }
-  foreach (_bebbo_custom_general_hidden_node_types() as $type) {
-    unset($form['type']['#options'][$type]);
+  $hidden = _bebbo_custom_general_hidden_node_types();
+  foreach ($view->filter as $filter) {
+    // Only exposed bundle filters render a selectable node-type dropdown.
+    if (!$filter instanceof FilterPluginBase
+      || empty($filter->options['exposed'])
+      || $filter->getPluginId() !== 'bundle') {
+      continue;
+    }
+    $identifier = $filter->options['expose']['identifier'] ?? '';
+    if ($identifier === '' || !isset($form[$identifier]['#options'])) {
+      continue;
+    }
+    foreach ($hidden as $type) {
+      unset($form[$identifier]['#options'][$type]);
+    }
   }
 }
