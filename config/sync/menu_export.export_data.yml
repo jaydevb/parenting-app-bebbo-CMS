@@ -1924,7 +1924,7 @@
   enabled:
     value: '1'
   title:
-    value: 'Keywords link to content'
+    value: 'Keywords linked to content'
   description: false
   menu_name:
     value: editorial-menu
