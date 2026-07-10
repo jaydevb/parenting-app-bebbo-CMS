@@ -7,12 +7,12 @@ dependencies:
 id: country-member
 label: Member
 weight: -100
+admin: false
+scope: insider
+global_role: authenticated
 group_type: country
 permissions:
   - 'access group_node overview'
   - 'view group_membership content'
   - 'view group_membership entity'
   - 'view latest version'
-admin: false
-scope: insider
-global_role: authenticated

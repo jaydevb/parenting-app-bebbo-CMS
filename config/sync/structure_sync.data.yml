@@ -772,7 +772,7 @@ menus:
     options: {  }
   -
     menu_name: editorial-menu
-    title: 'Keyword link to content'
+    title: 'Keywords linked to content'
     parent: 'menu_link_content:3c7e267a-6c10-4efd-8654-41d657c1ecf6'
     uri: 'internal:/keyword-link-to-content'
     link_title: ''

@@ -45,3 +45,71 @@ function bebbo_custom_general_update_10001(): string {
   }
   return 'No defunct modules found in core.extension; schema entries cleaned.';
 }
+
+/**
+ * Sync editorial menu items across all sites from menu_export config.
+ *
+ * Deletes orphan editorial-menu items whose UUIDs don't match config,
+ * then imports/updates all 43 canonical items via menu_export.
+ */
+function bebbo_custom_general_update_10002(): string {
+  $config = \Drupal::config('menu_export.export_data');
+  $export_data = $config->get();
+
+  // Collect canonical UUIDs from menu_export config.
+  $canonical_uuids = [];
+  foreach ($export_data as $item) {
+    if (is_array($item) && isset($item['uuid']['value'])) {
+      $canonical_uuids[] = $item['uuid']['value'];
+    }
+  }
+
+  if (empty($canonical_uuids)) {
+    return 'No menu_export config found — skipping editorial menu sync.';
+  }
+
+  // Delete orphan editorial-menu items (UUIDs not in config).
+  $storage = \Drupal::entityTypeManager()->getStorage('menu_link_content');
+  $query = $storage->getQuery()
+    ->condition('menu_name', 'editorial-menu')
+    ->condition('uuid', $canonical_uuids, 'NOT IN')
+    ->accessCheck(FALSE);
+  $orphan_ids = $query->execute();
+  $deleted_count = 0;
+
+  if (!empty($orphan_ids)) {
+    $orphans = $storage->loadMultiple($orphan_ids);
+    $storage->delete($orphans);
+    $deleted_count = count($orphans);
+  }
+
+  // Import canonical items from menu_export config (inline logic from
+  // MenuImportForm::importMenus to avoid constructor dependency).
+  $created = 0;
+  $updated = 0;
+  foreach ($export_data as $menu) {
+    if (!is_array($menu) || !isset($menu['menu_name']['value'])) {
+      continue;
+    }
+    if ($menu['menu_name']['value'] !== 'editorial-menu') {
+      continue;
+    }
+    unset($menu['id'], $menu['revision_id']);
+    $existing = $storage->loadByProperties(['uuid' => $menu['uuid']['value']]);
+
+    if ($existing) {
+      $entity = reset($existing);
+      $updated++;
+    }
+    else {
+      $entity = $storage->create();
+      $created++;
+    }
+    foreach ($menu as $field_name => $value) {
+      $entity->set($field_name, $value);
+    }
+    $entity->save();
+  }
+
+  return "Editorial menu sync: deleted $deleted_count orphans, created $created, updated $updated items.";
+}

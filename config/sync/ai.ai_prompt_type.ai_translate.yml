@@ -30,4 +30,8 @@ variables:
     name: inputText
     help_text: 'The input text to translate'
     required: true
+  -
+    name: countryName
+    help_text: 'Country name set on the prompt'
+    required: false
 tokens: {  }
