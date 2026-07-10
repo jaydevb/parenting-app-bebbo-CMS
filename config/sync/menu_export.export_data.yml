@@ -2049,7 +2049,7 @@
   menu_name:
     value: editorial-menu
   link:
-    uri: 'internal:/taxonomy-export/en'
+    uri: 'internal:/taxonomy-export'
     title: ''
     options: {  }
   external:
@@ -2231,7 +2231,7 @@
   menu_name:
     value: editorial-menu
   link:
-    uri: 'internal:/taxonomy-export-standard-deviation/en'
+    uri: 'internal:/taxonomy-export-standard-deviation'
     title: ''
     options: {  }
   external:
@@ -2579,3 +2579,4 @@
     value: '1'
   content_translation_created:
     value: '1780403334'
+

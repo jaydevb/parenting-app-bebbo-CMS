@@ -1442,7 +1442,7 @@ display:
     display_plugin: data_export
     position: 1
     display_options:
-      title: 'Keyword link to content'
+      title: 'Keywords linked to content'
       fields:
         name:
           id: name
@@ -1888,7 +1888,7 @@ display:
     display_plugin: page
     position: 1
     display_options:
-      title: 'Keyword link to content'
+      title: 'Keywords linked to content'
       fields:
         tid:
           id: tid
@@ -2389,7 +2389,7 @@ display:
     display_plugin: page
     position: 2
     display_options:
-      title: 'Keyword Not linked to content'
+      title: 'Keywords not linked to content'
       fields:
         tid:
           id: tid
@@ -3564,7 +3564,7 @@ display:
     display_plugin: page
     position: 1
     display_options:
-      title: 'Keyword link to content'
+      title: 'Keywords linked to content'
       fields:
         tid:
           id: tid
@@ -4144,3 +4144,4 @@ display:
         - url.query_args
         - user.permissions
       tags: {  }
+
