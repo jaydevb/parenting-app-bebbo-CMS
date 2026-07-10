@@ -279,6 +279,9 @@
             },
             "drupal/symfony_mailer_office365": {
                 "Pass event dispatcher to EsmtpTransport so MessageEvent fires (SendAsDenied fix)": "patches/symfony_mailer_office365-pass-event-dispatcher.patch"
+            },
+            "drupal/structure_sync": {
+                "PHP 8.4: explicit nullable params (3563762)": "patches/structure_sync-implicit-nullable-php84-3563762.patch"
             }
         },
         "drupal-lenient": {
