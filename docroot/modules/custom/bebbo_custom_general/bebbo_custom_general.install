@@ -58,7 +58,7 @@ function bebbo_custom_general_update_10002(): string {
 
   // Collect canonical UUIDs from menu_export config.
   $canonical_uuids = [];
-  foreach ($export_data as $key => $item) {
+  foreach ($export_data as $item) {
     if (is_array($item) && isset($item['uuid']['value'])) {
       $canonical_uuids[] = $item['uuid']['value'];
     }
@@ -87,7 +87,7 @@ function bebbo_custom_general_update_10002(): string {
   // MenuImportForm::importMenus to avoid constructor dependency).
   $created = 0;
   $updated = 0;
-  foreach ($export_data as $key => $menu) {
+  foreach ($export_data as $menu) {
     if (!is_array($menu) || !isset($menu['menu_name']['value'])) {
       continue;
     }
