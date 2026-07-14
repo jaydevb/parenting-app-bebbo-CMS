@@ -78,4 +78,62 @@ class RowFragmentCacheTest extends KernelTestBase {
     $this->assertSame([10], $calls, 'only node 10 re-rendered');
   }
 
+  /**
+   * A render aborted partway through still persists the rows already built.
+   *
+   * @covers ::render
+   */
+  public function testPartialRenderPersistsCompletedRows(): void {
+    /** @var \Drupal\bebbo_serializer\Cache\RowFragmentCache $svc */
+    $svc = $this->container->get('bebbo_serializer.row_fragment_cache');
+
+    $rows = [(object) ['nid' => 10], (object) ['nid' => 11]];
+
+    // First pass aborts while rendering the second row (mimics a gateway
+    // timeout mid-render).
+    $failing = function (int $i, object $row) {
+      if ($row->nid === 11) {
+        throw new \RuntimeException('aborted');
+      }
+      return 'R' . $row->nid;
+    };
+    try {
+      $svc->render('d', 'en', 'https://h', $rows, $failing, new BubbleableMetadata());
+      $this->fail('render should have propagated the abort');
+    }
+    catch (\RuntimeException) {
+      // Expected.
+    }
+
+    // Second pass completes: node 10 is already cached, only node 11 renders.
+    $calls = [];
+    $renderRow = function (int $i, object $row) use (&$calls) {
+      $calls[] = $row->nid;
+      return 'R' . $row->nid;
+    };
+    $out = $svc->render('d', 'en', 'https://h', $rows, $renderRow, new BubbleableMetadata());
+    $this->assertSame(['R10', 'R11'], $out);
+    $this->assertSame([11], $calls, 'node 10 survived the aborted pass; only node 11 re-rendered');
+  }
+
+  /**
+   * Warm markers report warmth and expire with the article list tags.
+   *
+   * @covers ::markWarm
+   * @covers ::isWarm
+   */
+  public function testWarmFlagLifecycle(): void {
+    /** @var \Drupal\bebbo_serializer\Cache\RowFragmentCache $svc */
+    $svc = $this->container->get('bebbo_serializer.row_fragment_cache');
+
+    $this->assertFalse($svc->isWarm('api/articles', 'en', 'https://h'));
+
+    $svc->markWarm('api/articles', 'en', 'https://h');
+    $this->assertTrue($svc->isWarm('api/articles', 'en', 'https://h'));
+
+    // A content change invalidates the list tag and re-cools the marker.
+    Cache::invalidateTags(['node_list']);
+    $this->assertFalse($svc->isWarm('api/articles', 'en', 'https://h'), 'node_list edit expires the warm marker');
+  }
+
 }
