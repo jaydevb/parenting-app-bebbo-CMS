@@ -1441,6 +1441,9 @@ class BebboV1Serializer extends Serializer {
       }
     }
 
+    // Return vocabularies in alphabetical order by machine name.
+    ksort($result);
+
     return $result;
   }
 
