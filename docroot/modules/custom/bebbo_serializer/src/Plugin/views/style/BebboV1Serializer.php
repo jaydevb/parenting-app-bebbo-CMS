@@ -648,6 +648,10 @@ class BebboV1Serializer extends Serializer {
     }
     unset($row);
 
+    // old_calendar is a translatable field; read it from the entity
+    // translation so the response reflects the requested language's toggle.
+    $this->overrideIntFromTranslation($rows, 'field_old_calendar', 'old_calendar');
+
     return $rows;
   }
 
