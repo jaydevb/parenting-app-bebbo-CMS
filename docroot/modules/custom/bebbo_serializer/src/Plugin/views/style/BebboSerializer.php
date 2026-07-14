@@ -205,11 +205,20 @@ class BebboSerializer extends Serializer {
       $langcode = $this->view->args[0] ?? $this->languageManager->getCurrentLanguage()->getId();
       $bubble   = new BubbleableMetadata();
       $rows     = $this->rowFragmentCache->render($displayId, $langcode, $host, $this->view->result, $renderRow, $bubble);
-      // Re-bubble row cache tags to the view so the page cache invalidates
-      // exactly as the uncached render would.
+      // Invalidate the page on any node/media change via list tags only.
+      // We deliberately do NOT bubble the hundreds of per-row entity tags
+      // ($bubble->getCacheTags()) onto the response: acquia_purge emits every
+      // response cache tag as a CDN Surrogate-Key header and queues each for
+      // purging, so hundreds of node:ID tags overflow the response header
+      // (Apache "premature end of script headers" → HTTP 500) and flood the
+      // purge queue. The individual node:ID/media:ID tags live on the fragment
+      // cache entries instead (set inside RowFragmentCache), which drives
+      // selective per-row re-render. The article payload only references node
+      // and media entities (categories/keywords are emitted as IDs, so term
+      // edits never change output), so node_list + media_list is complete.
       $this->view->element['#cache']['tags'] = Cache::mergeTags(
         $this->view->element['#cache']['tags'] ?? [],
-        $bubble->getCacheTags(),
+        ['node_list', 'media_list'],
       );
     }
     else {
