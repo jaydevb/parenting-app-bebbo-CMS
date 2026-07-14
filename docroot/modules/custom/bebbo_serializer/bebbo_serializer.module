@@ -16,6 +16,17 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\views\Plugin\views\query\Sql;
 
 /**
+ * Implements hook_cron().
+ *
+ * Pre-renders the large article list endpoints into the fragment cache so a
+ * visitor never triggers the cold render that exceeds the gateway timeout.
+ * Discovered and scheduled as its own isolated job by ultimate_cron.
+ */
+function bebbo_serializer_cron(): void {
+  \Drupal::service('bebbo_serializer.article_fragment_warmer')->warm();
+}
+
+/**
  * Implements hook_node_predelete().
  *
  * Deletes orphaned quiz_questions nodes when a Quiz node is deleted.
