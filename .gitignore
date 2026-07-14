@@ -152,3 +152,6 @@ credentials.json
 
 # misc
 # .ddev/*
+
+# Local dev-only API byte-parity gate (not shipped)
+scripts/api-parity-snapshot.php
