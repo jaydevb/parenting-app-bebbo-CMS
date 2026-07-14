@@ -367,9 +367,18 @@ trait BebboSerializerHelpers {
       $imageField = $media->get('field_media_image')->getValue();
       $alt = (string) ($imageField[0]['alt'] ?? '');
 
+      $fileUri = $file->getFileUri();
+
+      // SVG/GIF — serve original URL without image style or WebP conversion.
+      if (preg_match('/\.(svg|gif)$/i', $fileUri)) {
+        $url = $this->fileUrlGenerator->generateAbsoluteString($fileUri);
+        $resolved[$id] = ['url' => $url, 'name' => $name, 'alt' => $alt];
+        continue;
+      }
+
       $url = '';
       if ($imageStyle) {
-        $url = $imageStyle->buildUrl($file->getFileUri());
+        $url = $imageStyle->buildUrl($fileUri);
       }
 
       if ($url !== '' && !str_starts_with($url, 'http')) {
