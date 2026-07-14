@@ -2,6 +2,7 @@
 
 namespace Drupal\bebbo_serializer\Plugin\views\style;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Connection;
 use Drupal\file\FileInterface;
 use Drupal\Core\Database\Query\SelectInterface;
@@ -9,6 +10,8 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\bebbo_serializer\Cache\RowFragmentCache;
 use Drupal\group\Entity\Group;
 use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\language_visibility_control\LanguageVisibilityService;
@@ -48,6 +51,13 @@ use Symfony\Component\Serializer\SerializerInterface;
 class BebboSerializer extends Serializer {
 
   use BebboSerializerHelpers;
+
+  /**
+   * Displays whose rows are 1:1 with a node and are safe to fragment-cache.
+   */
+  private const CACHEABLE_DISPLAYS = [
+    'articles_rest_export',
+  ];
 
   /**
    * The current path stack.
@@ -92,6 +102,13 @@ class BebboSerializer extends Serializer {
   protected LanguageVisibilityService $languageVisibilityService;
 
   /**
+   * The row fragment cache.
+   *
+   * @var \Drupal\bebbo_serializer\Cache\RowFragmentCache
+   */
+  protected RowFragmentCache $rowFragmentCache;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -107,6 +124,7 @@ class BebboSerializer extends Serializer {
     EntityTypeManagerInterface $entity_type_manager,
     Connection $database,
     LanguageVisibilityService $language_visibility_service,
+    RowFragmentCache $row_fragment_cache,
   ) {
     parent::__construct(
       $configuration,
@@ -122,6 +140,7 @@ class BebboSerializer extends Serializer {
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
     $this->languageVisibilityService = $language_visibility_service;
+    $this->rowFragmentCache = $row_fragment_cache;
   }
 
   /**
@@ -141,6 +160,7 @@ class BebboSerializer extends Serializer {
       $container->get('entity_type.manager'),
       $container->get('database'),
       $container->get('language_visibility_control.service'),
+      $container->get('bebbo_serializer.row_fragment_cache'),
     );
   }
 
@@ -172,12 +192,31 @@ class BebboSerializer extends Serializer {
       return $etagResponse;
     }
 
-    // Collect rows via the parent row plugin.
-    $rows = [];
-    foreach ($this->view->result as $rowIndex => $row) {
+    // Collect rows via the parent row plugin, routing 1:1 node displays
+    // through the fragment cache so only edited rows are re-rendered.
+    $renderRow = function (int $rowIndex, object $row): mixed {
       $this->view->row_index = $rowIndex;
-      $rendered = $this->view->rowPlugin->render($row);
-      $rows[] = $this->normalizeMarkup($rendered);
+      return $this->normalizeMarkup($this->view->rowPlugin->render($row));
+    };
+
+    if (in_array($displayId, self::CACHEABLE_DISPLAYS, TRUE)) {
+      $request  = $this->requestStack->getCurrentRequest();
+      $host     = $request !== NULL ? $request->getSchemeAndHttpHost() : '';
+      $langcode = $this->view->args[0] ?? $this->languageManager->getCurrentLanguage()->getId();
+      $bubble   = new BubbleableMetadata();
+      $rows     = $this->rowFragmentCache->render($displayId, $langcode, $host, $this->view->result, $renderRow, $bubble);
+      // Re-bubble row cache tags to the view so the page cache invalidates
+      // exactly as the uncached render would.
+      $this->view->element['#cache']['tags'] = Cache::mergeTags(
+        $this->view->element['#cache']['tags'] ?? [],
+        $bubble->getCacheTags(),
+      );
+    }
+    else {
+      $rows = [];
+      foreach ($this->view->result as $rowIndex => $row) {
+        $rows[] = $renderRow($rowIndex, $row);
+      }
     }
     unset($this->view->row_index);
 
