@@ -61,7 +61,6 @@ class RowFragmentCache {
 
     $cached = $this->cache->getMultiple($cids);
     $out = [];
-    $sets = [];
     foreach ($resultRows as $i => $row) {
       $cid = $this->cid($displayId, (int) $row->nid, $langcode, $host);
       if (isset($cached[$cid])) {
@@ -81,15 +80,47 @@ class RowFragmentCache {
       }
       $out[$i] = $rendered;
       $bubble->addCacheTags($tags);
-      $sets[$cid] = ['row' => $rendered, 'tags' => $tags, 'nid' => (int) $row->nid];
-    }
 
-    foreach ($sets as $cid => $item) {
-      $this->cache->set($cid, ['row' => $item['row'], 'tags' => $item['tags']], Cache::PERMANENT, $item['tags']);
+      // Persist each fragment as soon as it is rendered. Writing per-row (not
+      // in a single batch after the loop) means a request aborted mid-render
+      // — e.g. a cold /api/articles/{lang} killed by the gateway timeout —
+      // still saves the rows it managed to build, so successive requests
+      // render only what remains and the endpoint converges to fully warm.
+      $this->cache->set($cid, ['row' => $rendered, 'tags' => $tags], Cache::PERMANENT, $tags);
     }
 
     ksort($out);
     return array_values($out);
+  }
+
+  /**
+   * Builds the cache id for a per-language warm marker.
+   */
+  public function warmFlagCid(string $key, string $langcode, string $host): string {
+    return 'bebbo_api:warm:' . $key . ':' . $langcode . ':' . $host;
+  }
+
+  /**
+   * Whether the given endpoint/language/host has already been warmed.
+   */
+  public function isWarm(string $key, string $langcode, string $host): bool {
+    return (bool) $this->cache->get($this->warmFlagCid($key, $langcode, $host));
+  }
+
+  /**
+   * Records that the given endpoint/language/host has been warmed.
+   *
+   * The marker carries the same list tags as the article response, so any
+   * node or media change (and any full cache flush) expires it and the cron
+   * warmer re-renders that endpoint on its next pass.
+   */
+  public function markWarm(string $key, string $langcode, string $host): void {
+    $this->cache->set(
+      $this->warmFlagCid($key, $langcode, $host),
+      TRUE,
+      Cache::PERMANENT,
+      ['node_list', 'media_list'],
+    );
   }
 
 }
