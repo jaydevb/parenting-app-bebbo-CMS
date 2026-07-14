@@ -2,12 +2,17 @@
 
 namespace Drupal\bebbo_serializer\Plugin\views\style;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\bebbo_serializer\Cache\RowFragmentCache;
 use Drupal\group\Entity\Group;
 use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\language_visibility_control\LanguageVisibilityService;
@@ -55,6 +60,13 @@ class BebboV1Serializer extends Serializer {
   use BebboSerializerHelpers;
 
   /**
+   * Displays whose rows are 1:1 with a node and are safe to fragment-cache.
+   */
+  private const CACHEABLE_DISPLAYS = [
+    'v1_articles_rest_export',
+  ];
+
+  /**
    * The current path stack.
    *
    * @var \Drupal\Core\Path\CurrentPathStack
@@ -97,6 +109,20 @@ class BebboV1Serializer extends Serializer {
   protected LanguageVisibilityService $languageVisibilityService;
 
   /**
+   * The row fragment cache.
+   *
+   * @var \Drupal\bebbo_serializer\Cache\RowFragmentCache
+   */
+  protected RowFragmentCache $rowFragmentCache;
+
+  /**
+   * The file URL generator.
+   *
+   * @var \Drupal\Core\File\FileUrlGeneratorInterface
+   */
+  protected FileUrlGeneratorInterface $fileUrlGenerator;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -112,6 +138,9 @@ class BebboV1Serializer extends Serializer {
     EntityTypeManagerInterface $entity_type_manager,
     Connection $database,
     LanguageVisibilityService $language_visibility_service,
+    RowFragmentCache $row_fragment_cache,
+    FileUrlGeneratorInterface $file_url_generator,
+    RendererInterface $renderer,
   ) {
     parent::__construct(
       $configuration,
@@ -127,6 +156,9 @@ class BebboV1Serializer extends Serializer {
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
     $this->languageVisibilityService = $language_visibility_service;
+    $this->rowFragmentCache = $row_fragment_cache;
+    $this->fileUrlGenerator = $file_url_generator;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -146,6 +178,9 @@ class BebboV1Serializer extends Serializer {
       $container->get('entity_type.manager'),
       $container->get('database'),
       $container->get('language_visibility_control.service'),
+      $container->get('bebbo_serializer.row_fragment_cache'),
+      $container->get('file_url_generator'),
+      $container->get('renderer'),
     );
   }
 
@@ -171,12 +206,40 @@ class BebboV1Serializer extends Serializer {
       }
     }
 
-    // Collect rows via the parent row plugin.
-    $rows = [];
-    foreach ($this->view->result as $rowIndex => $row) {
+    // Collect rows via the parent row plugin, routing 1:1 node displays
+    // through the fragment cache so only edited rows are re-rendered.
+    $renderRow = function (int $rowIndex, object $row): mixed {
       $this->view->row_index = $rowIndex;
-      $rendered = $this->view->rowPlugin->render($row);
-      $rows[] = $this->normalizeMarkup($rendered);
+      return $this->normalizeMarkup($this->view->rowPlugin->render($row));
+    };
+
+    if (in_array($displayId, self::CACHEABLE_DISPLAYS, TRUE)) {
+      $request  = $this->requestStack->getCurrentRequest();
+      $host     = $request !== NULL ? $request->getSchemeAndHttpHost() : '';
+      $langcode = $this->view->args[0] ?? $this->languageManager->getCurrentLanguage()->getId();
+      $bubble   = new BubbleableMetadata();
+      $rows     = $this->rowFragmentCache->render($displayId, $langcode, $host, $this->view->result, $renderRow, $bubble);
+      // Invalidate the page on any node/media change via list tags only.
+      // We deliberately do NOT bubble the hundreds of per-row entity tags
+      // ($bubble->getCacheTags()) onto the response: acquia_purge emits every
+      // response cache tag as a CDN Surrogate-Key header and queues each for
+      // purging, so hundreds of node:ID tags overflow the response header
+      // (Apache "premature end of script headers" → HTTP 500) and flood the
+      // purge queue. The individual node:ID/media:ID tags live on the fragment
+      // cache entries instead (set inside RowFragmentCache), which drives
+      // selective per-row re-render. The article payload only references node
+      // and media entities (categories/keywords are emitted as IDs, so term
+      // edits never change output), so node_list + media_list is complete.
+      $this->view->element['#cache']['tags'] = Cache::mergeTags(
+        $this->view->element['#cache']['tags'] ?? [],
+        ['node_list', 'media_list'],
+      );
+    }
+    else {
+      $rows = [];
+      foreach ($this->view->result as $rowIndex => $row) {
+        $rows[] = $renderRow($rowIndex, $row);
+      }
     }
     unset($this->view->row_index);
 
@@ -647,6 +710,10 @@ class BebboV1Serializer extends Serializer {
       $this->decodeHtmlEntities($row, ['title']);
     }
     unset($row);
+
+    // old_calendar is a translatable field; read it from the entity
+    // translation so the response reflects the requested language's toggle.
+    $this->overrideIntFromTranslation($rows, 'field_old_calendar', 'old_calendar');
 
     return $rows;
   }
@@ -1344,6 +1411,9 @@ class BebboV1Serializer extends Serializer {
       ];
     }
 
+    // Return vocabularies in alphabetical order by machine name.
+    ksort($result);
+
     return $result;
   }
 
@@ -1437,6 +1507,9 @@ class BebboV1Serializer extends Serializer {
         $result[$vid] = $terms;
       }
     }
+
+    // Return vocabularies in alphabetical order by machine name.
+    ksort($result);
 
     return $result;
   }

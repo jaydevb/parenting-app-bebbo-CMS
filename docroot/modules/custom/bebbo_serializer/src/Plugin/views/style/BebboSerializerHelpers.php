@@ -3,6 +3,8 @@
 namespace Drupal\bebbo_serializer\Plugin\views\style;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\file\FileInterface;
 
 /**
@@ -60,6 +62,40 @@ trait BebboSerializerHelpers {
         $row[$field] = (int) ($row[$field] ?? 0);
       }
     }
+  }
+
+  /**
+   * Overwrites an integer row value from the entity translation.
+   *
+   * Views field joins on translatable fields can resolve the wrong
+   * translation, so the value is read directly from the loaded entity's
+   * translation for the response language (falling back to the entity's
+   * default translation). Rows must be aligned by index with
+   * $this->view->result.
+   *
+   * @param array $rows
+   *   Transformed rows (passed by reference), index-aligned with the view
+   *   result set.
+   * @param string $fieldName
+   *   The entity field machine name, e.g. "field_old_calendar".
+   * @param string $rowKey
+   *   The row array key to overwrite, e.g. "old_calendar".
+   */
+  private function overrideIntFromTranslation(array &$rows, string $fieldName, string $rowKey): void {
+    $langcode = $this->resolveLangcode();
+    $results = array_values($this->view->result);
+
+    foreach ($rows as $index => &$row) {
+      $entity = $results[$index]->_entity ?? NULL;
+      if (!$entity instanceof FieldableEntityInterface || !$entity->hasField($fieldName)) {
+        continue;
+      }
+      if ($entity instanceof TranslatableInterface && $entity->hasTranslation($langcode)) {
+        $entity = $entity->getTranslation($langcode);
+      }
+      $row[$rowKey] = (int) $entity->get($fieldName)->value;
+    }
+    unset($row);
   }
 
   /**
@@ -331,9 +367,18 @@ trait BebboSerializerHelpers {
       $imageField = $media->get('field_media_image')->getValue();
       $alt = (string) ($imageField[0]['alt'] ?? '');
 
+      $fileUri = $file->getFileUri();
+
+      // SVG/GIF — serve original URL without image style or WebP conversion.
+      if (preg_match('/\.(svg|gif)$/i', $fileUri)) {
+        $url = $this->fileUrlGenerator->generateAbsoluteString($fileUri);
+        $resolved[$id] = ['url' => $url, 'name' => $name, 'alt' => $alt];
+        continue;
+      }
+
       $url = '';
       if ($imageStyle) {
-        $url = $imageStyle->buildUrl($file->getFileUri());
+        $url = $imageStyle->buildUrl($fileUri);
       }
 
       if ($url !== '' && !str_starts_with($url, 'http')) {
