@@ -7,6 +7,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
 use Drupal\Core\Render\BubbleableMetadata;
@@ -115,6 +116,13 @@ class BebboV1Serializer extends Serializer {
   protected RowFragmentCache $rowFragmentCache;
 
   /**
+   * The file URL generator.
+   *
+   * @var \Drupal\Core\File\FileUrlGeneratorInterface
+   */
+  protected FileUrlGeneratorInterface $fileUrlGenerator;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -131,6 +139,7 @@ class BebboV1Serializer extends Serializer {
     Connection $database,
     LanguageVisibilityService $language_visibility_service,
     RowFragmentCache $row_fragment_cache,
+    FileUrlGeneratorInterface $file_url_generator,
     RendererInterface $renderer,
   ) {
     parent::__construct(
@@ -148,6 +157,7 @@ class BebboV1Serializer extends Serializer {
     $this->database = $database;
     $this->languageVisibilityService = $language_visibility_service;
     $this->rowFragmentCache = $row_fragment_cache;
+    $this->fileUrlGenerator = $file_url_generator;
     $this->renderer = $renderer;
   }
 
@@ -169,6 +179,7 @@ class BebboV1Serializer extends Serializer {
       $container->get('database'),
       $container->get('language_visibility_control.service'),
       $container->get('bebbo_serializer.row_fragment_cache'),
+      $container->get('file_url_generator'),
       $container->get('renderer'),
     );
   }
