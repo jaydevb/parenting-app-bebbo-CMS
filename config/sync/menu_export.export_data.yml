@@ -42,7 +42,11 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    - target_id: editor
+    - target_id: global_admin
+    - target_id: reviewer
+    - target_id: se
+    - target_id: sme
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -101,7 +105,9 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: se
+    - target_id: translator
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -160,7 +166,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -219,7 +225,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -278,7 +284,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: global_admin
+    - target_id: reviewer
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -337,7 +344,10 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    - target_id: editor
+    - target_id: global_admin
+    - target_id: se
+    - target_id: sme
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -396,7 +406,10 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: editor
+    - target_id: global_admin
+    - target_id: reviewer
+    - target_id: se
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -456,7 +469,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -516,7 +529,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -576,7 +589,10 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: editor
+    - target_id: global_admin
+    - target_id: reviewer
+    - target_id: se
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -636,7 +652,10 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: editor
+    - target_id: global_admin
+    - target_id: reviewer
+    - target_id: se
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -696,7 +715,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -756,7 +775,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: global_admin
+    - target_id: reviewer
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -816,7 +836,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -876,7 +896,9 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    - target_id: editor
+    - target_id: global_admin
+    - target_id: se
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -935,7 +957,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: reviewer
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -995,7 +1017,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: reviewer
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1055,7 +1077,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1115,7 +1137,11 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    - target_id: editor
+    - target_id: global_admin
+    - target_id: reviewer
+    - target_id: se
+    - target_id: sme
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1175,7 +1201,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: reviewer
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1235,7 +1261,11 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    - target_id: editor
+    - target_id: global_admin
+    - target_id: reviewer
+    - target_id: se
+    - target_id: sme
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1295,7 +1325,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: editor
+    - target_id: editor
+    - target_id: se
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1354,7 +1385,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1413,7 +1444,11 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: editor
+    - target_id: global_admin
+    - target_id: reviewer
+    - target_id: se
+    - target_id: sme
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1472,7 +1507,10 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
+    - target_id: reviewer
+    - target_id: se
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1532,7 +1570,10 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
+    - target_id: reviewer
+    - target_id: se
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1591,7 +1632,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1651,7 +1693,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1711,7 +1754,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1771,7 +1815,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1831,7 +1876,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1891,7 +1937,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -1950,8 +1997,7 @@
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role:
-    target_id: administrator
+  menu_per_role__show_role: false
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -2010,8 +2056,7 @@
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role:
-    target_id: administrator
+  menu_per_role__show_role: false
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -2070,8 +2115,7 @@
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role:
-    target_id: administrator
+  menu_per_role__show_role: false
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -2130,8 +2174,7 @@
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role:
-    target_id: administrator
+  menu_per_role__show_role: false
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -2191,7 +2234,8 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -2252,8 +2296,7 @@
     value: '1'
   revision_translation_affected:
     value: '1'
-  menu_per_role__show_role:
-    target_id: administrator
+  menu_per_role__show_role: false
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -2314,7 +2357,9 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    - target_id: administrator
+    - target_id: global_admin
+    - target_id: reviewer
   menu_per_role__hide_role: false
   metatag:
     tag: meta
@@ -2438,7 +2483,7 @@
   revision_translation_affected:
     value: '1'
   menu_per_role__show_role:
-    target_id: administrator
+    target_id: authenticated
   menu_per_role__hide_role: false
   metatag:
     tag: meta

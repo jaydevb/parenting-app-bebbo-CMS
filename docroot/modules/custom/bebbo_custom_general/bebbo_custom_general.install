@@ -47,6 +47,54 @@ function bebbo_custom_general_update_10001(): string {
 }
 
 /**
+ * Re-apply menu_per_role roles on editorial menu links from menu_export config.
+ *
+ * Update 10002 already ran on sites installed before this hook existed, so it
+ * will not pick up later corrections to the show/hide role values in
+ * menu_export.export_data.yml. Importing that config via cim does not help
+ * either: the menu links are content entities, not config. This re-applies just
+ * the two menu_per_role fields, keyed by uuid, leaving titles/paths/weights
+ * untouched.
+ *
+ * Reads the sync storage rather than active config: the deploy hook runs updb
+ * before cim, so at this point active config still holds the previous values.
+ */
+function bebbo_custom_general_update_10003(): string {
+  $export_data = \Drupal::service('config.storage.sync')->read('menu_export.export_data');
+  if (empty($export_data)) {
+    // No sync directory available (e.g. a site configured without one).
+    $export_data = \Drupal::config('menu_export.export_data')->get();
+  }
+  $storage = \Drupal::entityTypeManager()->getStorage('menu_link_content');
+  $fields = ['menu_per_role__show_role', 'menu_per_role__hide_role'];
+  $updated = 0;
+
+  foreach ($export_data as $menu) {
+    if (!is_array($menu) || !isset($menu['uuid']['value'])) {
+      continue;
+    }
+    if (($menu['menu_name']['value'] ?? NULL) !== 'editorial-menu') {
+      continue;
+    }
+    $existing = $storage->loadByProperties(['uuid' => $menu['uuid']['value']]);
+    if (!$existing) {
+      continue;
+    }
+    $entity = reset($existing);
+    foreach ($fields as $field_name) {
+      // menu_export writes FALSE when a link carries no roles; an empty array
+      // is what clears a multi-value entity_reference field.
+      $value = $menu[$field_name] ?? NULL;
+      $entity->set($field_name, empty($value) ? [] : $value);
+    }
+    $entity->save();
+    $updated++;
+  }
+
+  return "Re-applied menu_per_role roles on $updated editorial menu link(s).";
+}
+
+/**
  * Sync editorial menu items across all sites from menu_export config.
  *
  * Deletes orphan editorial-menu items whose UUIDs don't match config,
