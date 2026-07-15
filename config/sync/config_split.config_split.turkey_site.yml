@@ -13,6 +13,7 @@ folder: ../config/turkey
 module: {  }
 theme: {  }
 complete_list:
+  - block.block.gin_logo
   - core.base_field_override.taxonomy_term.type_of_article.changed
   - system.site
   - core.base_field_override.taxonomy_term.type_of_article.description
@@ -160,9 +161,7 @@ complete_list:
   - workflows.workflow.group_workflow
 partial_list:
   - ai_translate.settings
-  - block.block.claro_help_search
   - block.block.languagedropdownswitcher
-  - block.block.logo
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library
   - core.entity_form_display.media.video.default

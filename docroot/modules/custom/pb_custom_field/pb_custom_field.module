@@ -1124,13 +1124,13 @@ function pb_custom_field_redirect_to_add_member_page($form, FormStateInterface $
     $nid = $entity->id();
   }
 
-  $query = \Drupal::database()->select('group_content_field_data');
+  $query = \Drupal::database()->select('group_relationship_field_data');
   if (isset($nid)) {
     $query->condition('entity_id', $nid);
   }
   $query->orderBy('id', 'DESC');
   $query->range(0, 1);
-  $query->fields('group_content_field_data');
+  $query->fields('group_relationship_field_data');
   $result = $query->execute()->fetchAll();
   if (!empty($result)) {
     $group_content_id = $result[0]->id;
@@ -1430,9 +1430,9 @@ function pb_custom_field_views_query_alter(ViewExecutable $view, QueryPluginBase
 
           // If this is the part of the query filtering on title, change the
           // condition to filter on node ID.
-          if ($condition['field'] == 'groups_field_data_group_content_field_data.id') {
+          if ($condition['field'] == 'groups_field_data_group_relationship_field_data.id') {
             $condition = [
-              'field' => 'groups_field_data_group_content_field_data.id',
+              'field' => 'groups_field_data_group_relationship_field_data.id',
               'value' => $gid,
               'operator' => '=',
             ];
@@ -1706,19 +1706,35 @@ function pb_custom_field_user_login_form_submit($form, FormStateInterface $form_
 }
 
 /**
+ * Returns the homepage/landing page aliases that receive custom styling.
+ */
+function _pb_custom_field_homepage_paths() {
+  return [
+    "/homepage", "/about-us", "/terms-and-conditions",
+    "/privacy-policy", "/foleja", "/foleja-about-us",
+    "/foleja-privacy-policy",
+  ];
+}
+
+/**
  * Hook implements hook_preprocess_html.
  */
 function pb_custom_field_preprocess_html(&$variables) {
   $logged_in = \Drupal::currentUser()->isAuthenticated();
   $current_path = \Drupal::service('path.current')->getPath();
   $internal = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
-  $homepage_paths = [
-    "/homepage", "/about-us", "/terms-and-conditions",
-    "/privacy-policy", "/foleja", "/foleja-about-us",
-    "/foleja-privacy-policy",
-  ];
+  $homepage_paths = _pb_custom_field_homepage_paths();
   if (in_array($internal, $homepage_paths)) {
+    // Public landing styling and the scoped Bootstrap grid load for every user
+    // so the layout renders correctly for editors viewing the node too. The
+    // grid CSS is scoped under .pb-landing and confined to grid elements, so it
+    // never touches the Gin admin chrome.
     $variables['#attached']['library'][] = 'pb_custom_field/homepage';
+    $variables['#attached']['library'][] = 'pb_custom_field/homepage_grid';
+    // Shared content styling (and the grid scope) applies to all users.
+    $variables['attributes']['class'][] = 'pb-landing';
+    // Kiosk styling (fixed header, hidden admin chrome) is anonymous only so
+    // logged-in editors keep the Gin toolbar and local task tabs.
     if (!$logged_in) {
       $variables['attributes']['class'][] = 'pb-main-homepage';
     }

@@ -13,6 +13,7 @@ folder: ../config/ecuador
 module: {  }
 theme: {  }
 complete_list:
+  - block.block.gin_logo
   - system.site
   - entity_share_client.import_config.config_stage
   - entity_share_server.channel.content_article_en
@@ -152,9 +153,7 @@ complete_list:
   - views.view.bebbo_v2_apis
 partial_list:
   - ai_translate.settings
-  - block.block.claro_help_search
   - block.block.languagedropdownswitcher
-  - block.block.logo
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library
   - core.entity_form_display.media.video.default
