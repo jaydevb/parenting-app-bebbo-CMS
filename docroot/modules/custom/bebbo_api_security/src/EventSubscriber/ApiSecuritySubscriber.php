@@ -18,15 +18,6 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class ApiSecuritySubscriber implements EventSubscriberInterface {
 
-  private const PROTECTED_PATTERNS = [
-    '#^/v2/api/#',
-    '#^/api/check-update/#',
-  ];
-
-  private const EXCLUDED_PATTERNS = [
-    '#^/api/security/#',
-  ];
-
   public function __construct(
     protected readonly JwtService $jwtService,
     protected readonly ConfigFactoryInterface $configFactory,
@@ -94,16 +85,22 @@ class ApiSecuritySubscriber implements EventSubscriberInterface {
    * Check if a path should be protected by JWT validation.
    */
   private function isProtectedPath(string $path): bool {
-    foreach (self::EXCLUDED_PATTERNS as $pattern) {
-      if (preg_match($pattern, $path)) {
+    $config = $this->configFactory->get('bebbo_api_security.settings');
+
+    $excluded_raw = trim($config->get('excluded_api_patterns') ?? '');
+    foreach (array_filter(array_map('trim', explode("\n", $excluded_raw))) as $pattern) {
+      if (preg_match('#^' . $pattern . '#', $path)) {
         return FALSE;
       }
     }
-    foreach (self::PROTECTED_PATTERNS as $pattern) {
-      if (preg_match($pattern, $path)) {
+
+    $protected_raw = trim($config->get('protected_api_patterns') ?? '');
+    foreach (array_filter(array_map('trim', explode("\n", $protected_raw))) as $pattern) {
+      if (preg_match('#^' . $pattern . '#', $path)) {
         return TRUE;
       }
     }
+
     return FALSE;
   }
 

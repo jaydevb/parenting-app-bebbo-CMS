@@ -13,7 +13,7 @@ dependencies:
 id: gin_logo
 theme: gin
 region: header
-weight: -14
+weight: -8
 provider: null
 plugin: 'block_content:7b41d89c-eb0c-4bc0-b79c-16af7714dfc8'
 settings:

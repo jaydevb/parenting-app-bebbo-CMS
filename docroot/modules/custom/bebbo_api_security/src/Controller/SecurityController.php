@@ -77,7 +77,9 @@ class SecurityController extends ControllerBase {
     $device_id = $body['device_id'];
     $ip = $request->getClientIp() ?? '0.0.0.0';
 
-    $rate_error = $this->rateLimit($device_id, 'bebbo_register', 10, 3600);
+    $config = $this->config('bebbo_api_security.settings');
+    $limit = (int) $config->get('register_rate_limit') ?: 10;
+    $rate_error = $this->rateLimit($device_id, 'bebbo_register', $limit, 3600);
     if ($rate_error) {
       return $rate_error;
     }
@@ -90,7 +92,21 @@ class SecurityController extends ControllerBase {
             'message' => 'integrity_token is required for Android.',
           ], 400);
         }
-        $this->googleService->verifyToken($body['integrity_token'], $device_id);
+        // Prefer the server-issued challenge stored at issuance time; fall
+        // back to a client-supplied nonce for callers without a challenge.
+        $expected_hash = !empty($body['nonce']) ? $body['nonce'] : NULL;
+        $stored_challenge = $this->registry->getActiveChallenge($device_id);
+        if ($stored_challenge) {
+          $expected_hash = $stored_challenge->challenge;
+        }
+        if ((bool) $config->get('debug_logging')) {
+          $this->logger->debug('Play Integrity nonce source for @device: stored challenge from DB: @stored | body nonce: @body', [
+            '@device' => $device_id,
+            '@stored' => $stored_challenge->challenge ?? '(none)',
+            '@body' => $body['nonce'] ?? '(none)',
+          ]);
+        }
+        $this->googleService->verifyToken($body['integrity_token'], $device_id, $expected_hash);
         $auth_method = 'play_integrity';
 
         $this->registry->registerDevice([
@@ -168,7 +184,9 @@ class SecurityController extends ControllerBase {
     }
 
     $ip = $request->getClientIp() ?? '0.0.0.0';
-    $rate_error = $this->rateLimit($ip, 'bebbo_device_register', 5, 3600);
+    $config = $this->config('bebbo_api_security.settings');
+    $limit = (int) $config->get('device_register_ip_rate_limit') ?: 5;
+    $rate_error = $this->rateLimit($ip, 'bebbo_device_register', $limit, 3600);
     if ($rate_error) {
       return $rate_error;
     }
@@ -186,10 +204,11 @@ class SecurityController extends ControllerBase {
       ], 400);
     }
 
+    $challenge_expiry = (int) $config->get('challenge_expiry_seconds') ?: 120;
     return new JsonResponse([
       'status' => 'challenge_issued',
       'challenge' => $challenge,
-      'expires_in' => 120,
+      'expires_in' => $challenge_expiry,
     ]);
   }
 
@@ -209,7 +228,9 @@ class SecurityController extends ControllerBase {
     $device_id = $body['device_id'];
     $ip = $request->getClientIp() ?? '0.0.0.0';
 
-    $rate_error = $this->rateLimit($device_id, 'bebbo_device_verify', 10, 3600);
+    $config = $this->config('bebbo_api_security.settings');
+    $limit = (int) $config->get('verify_rate_limit') ?: 10;
+    $rate_error = $this->rateLimit($device_id, 'bebbo_device_verify', $limit, 3600);
     if ($rate_error) {
       return $rate_error;
     }

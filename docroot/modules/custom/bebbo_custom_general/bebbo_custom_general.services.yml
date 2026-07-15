@@ -1,0 +1,12 @@
+services:
+  bebbo_custom_general.mailer_sender_override:
+    class: Drupal\bebbo_custom_general\EventSubscriber\MailerSenderOverride
+    arguments: ['@config.factory']
+    tags:
+      - { name: event_subscriber }
+
+  bebbo_custom_general.internal_content_node_redirect:
+    class: Drupal\bebbo_custom_general\EventSubscriber\InternalContentNodeRedirect
+    arguments: ['@current_route_match', '@language_manager', '@current_user', '@entity_type.manager', '@path.current', '@path_alias.manager', '@page_cache_kill_switch', '@config.factory']
+    tags:
+      - { name: event_subscriber }

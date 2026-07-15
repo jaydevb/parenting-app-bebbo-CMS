@@ -15,12 +15,6 @@ theme: {  }
 complete_list:
   - block.block.gin_logo
   - system.site
-  - entity_share_client.import_config.config_stage
-  - entity_share_server.channel.content_article_en
-  - entity_share_server.channel.content_article_nonm_health_tr_
-  - entity_share_server.channel.content_article_nonm_play_kg_
-  - entity_share_server.channel.content_basic_page_kg_
-  - google_analytics.settings
   - language.entity.ec-es
   - language.entity.es
   - language/en/system.menu.footer
@@ -146,13 +140,13 @@ complete_list:
   - mobile_app_links.android_packages
   - mobile_app_links.ios
   - 'mobile_app_links.ios copy'
-  - pb_custom_form.landing_pages
-  - pb_custom_form.language_redirects
-  - pb_custom_form.mobile_app_share_link_form
-  - smtp.settings
+  - bebbo_custom_general.landing_pages
+  - bebbo_custom_general.language_redirects
+  - bebbo_custom_general.mobile_app_share_link_form
   - views.view.bebbo_v2_apis
 partial_list:
   - ai_translate.settings
+  - system.date
   - block.block.languagedropdownswitcher
   - core.entity_form_display.media.image.default
   - core.entity_form_display.media.image.media_library
@@ -168,8 +162,6 @@ partial_list:
   - core.entity_view_display.user.user.default
   - core.menu.static_menu_link_overrides
   - editor.editor.admin_full_html
-  - entity_share_server.channel.content_child_development_age_periods
-  - entity_share_server.channel.content_health_check_ups
   - feeds.feed_type.taxonomy_age_period_language
   - feeds.feed_type.taxonomy_categories_serbia_serbi
   - feeds.feed_type.taxonomy_charbot_child_age_langu

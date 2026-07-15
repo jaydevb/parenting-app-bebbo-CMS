@@ -245,4 +245,62 @@ class JwtServiceTest extends KernelTestBase {
     $service->createToken('device', 'android', 'play_integrity');
   }
 
+  /**
+   * Tests that refresh rotates the token by default (refresh_rotation_enabled).
+   *
+   * @covers ::refreshTokens
+   */
+  public function testRefreshRotatesByDefault(): void {
+    $this->insertDevice('device-006', 'android', 'play_integrity');
+    $created = $this->service->createRefreshToken('device-006');
+
+    $result = $this->service->refreshTokens($created['token']);
+
+    $this->assertNotNull($result);
+    $this->assertNotEquals($created['token'], $result['refresh_token']);
+    $this->assertNotNull($this->service->validateToken($result['access_token']));
+
+    // The presented (now rotated) token must be revoked: reusing it triggers
+    // replay detection and returns NULL.
+    $this->assertNull($this->service->refreshTokens($created['token']));
+  }
+
+  /**
+   * Tests that refresh reuses the token when rotation is disabled.
+   *
+   * @covers ::refreshTokens
+   */
+  public function testRefreshWithoutRotationReusesToken(): void {
+    $this->config('bebbo_api_security.settings')
+      ->set('refresh_rotation_enabled', FALSE)
+      ->save();
+
+    $this->insertDevice('device-007', 'ios', 'app_attest');
+    $created = $this->service->createRefreshToken('device-007');
+
+    $result = $this->service->refreshTokens($created['token']);
+
+    $this->assertNotNull($result);
+    // Same refresh token returned, not a rotated one.
+    $this->assertEquals($created['token'], $result['refresh_token']);
+    $this->assertNotNull($this->service->validateToken($result['access_token']));
+
+    // The token is still valid and reusable (not revoked).
+    $this->assertNotNull($this->service->refreshTokens($created['token']));
+  }
+
+  /**
+   * Inserts a minimal active device row.
+   */
+  private function insertDevice(string $device_id, string $platform, string $auth_method): void {
+    $this->container->get('database')->insert('bebbo_api_devices')->fields([
+      'device_id' => $device_id,
+      'platform' => $platform,
+      'auth_method' => $auth_method,
+      'status' => 'active',
+      'created' => time(),
+      'updated' => time(),
+    ])->execute();
+  }
+
 }

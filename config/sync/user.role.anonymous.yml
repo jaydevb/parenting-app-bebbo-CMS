@@ -2,8 +2,6 @@ uuid: 29faaa14-c2c4-4cd9-882c-12905cfe3190
 langcode: en
 status: true
 dependencies:
-  config:
-    - rest.resource.custom_rest_resource
   module:
     - media
     - pb_custom_form
@@ -18,5 +16,4 @@ is_admin: false
 permissions:
   - 'access content'
   - 'manage mobile javascript'
-  - 'restful get custom_rest_resource'
   - 'view media'

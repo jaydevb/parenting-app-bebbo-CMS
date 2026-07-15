@@ -1,5 +1,5 @@
 name: bebbo.app
-type: drupal10
+type: drupal11
 docroot: docroot
 php_version: "8.4"
 webserver_type: apache-fpm

@@ -2,15 +2,19 @@
 
 namespace Drupal\bebbo_serializer\Plugin\views\style;
 
-use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Connection;
 use Drupal\file\FileInterface;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\bebbo_serializer\Cache\RowFragmentCache;
 use Drupal\group\Entity\Group;
+use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\language_visibility_control\LanguageVisibilityService;
 use Drupal\rest\Plugin\views\style\Serializer;
 use Drupal\rest\Plugin\views\display\RestExport;
@@ -46,6 +50,15 @@ use Symfony\Component\Serializer\SerializerInterface;
  * )
  */
 class BebboSerializer extends Serializer {
+
+  use BebboSerializerHelpers;
+
+  /**
+   * Displays whose rows are 1:1 with a node and are safe to fragment-cache.
+   */
+  private const CACHEABLE_DISPLAYS = [
+    'articles_rest_export',
+  ];
 
   /**
    * The current path stack.
@@ -90,6 +103,20 @@ class BebboSerializer extends Serializer {
   protected LanguageVisibilityService $languageVisibilityService;
 
   /**
+   * The row fragment cache.
+   *
+   * @var \Drupal\bebbo_serializer\Cache\RowFragmentCache
+   */
+  protected RowFragmentCache $rowFragmentCache;
+
+  /**
+   * The file URL generator.
+   *
+   * @var \Drupal\Core\File\FileUrlGeneratorInterface
+   */
+  protected FileUrlGeneratorInterface $fileUrlGenerator;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -105,6 +132,8 @@ class BebboSerializer extends Serializer {
     EntityTypeManagerInterface $entity_type_manager,
     Connection $database,
     LanguageVisibilityService $language_visibility_service,
+    RowFragmentCache $row_fragment_cache,
+    FileUrlGeneratorInterface $file_url_generator,
   ) {
     parent::__construct(
       $configuration,
@@ -120,6 +149,8 @@ class BebboSerializer extends Serializer {
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
     $this->languageVisibilityService = $language_visibility_service;
+    $this->rowFragmentCache = $row_fragment_cache;
+    $this->fileUrlGenerator = $file_url_generator;
   }
 
   /**
@@ -139,6 +170,8 @@ class BebboSerializer extends Serializer {
       $container->get('entity_type.manager'),
       $container->get('database'),
       $container->get('language_visibility_control.service'),
+      $container->get('bebbo_serializer.row_fragment_cache'),
+      $container->get('file_url_generator'),
     );
   }
 
@@ -170,12 +203,40 @@ class BebboSerializer extends Serializer {
       return $etagResponse;
     }
 
-    // Collect rows via the parent row plugin.
-    $rows = [];
-    foreach ($this->view->result as $rowIndex => $row) {
+    // Collect rows via the parent row plugin, routing 1:1 node displays
+    // through the fragment cache so only edited rows are re-rendered.
+    $renderRow = function (int $rowIndex, object $row): mixed {
       $this->view->row_index = $rowIndex;
-      $rendered = $this->view->rowPlugin->render($row);
-      $rows[] = $this->normalizeMarkup($rendered);
+      return $this->normalizeMarkup($this->view->rowPlugin->render($row));
+    };
+
+    if (in_array($displayId, self::CACHEABLE_DISPLAYS, TRUE)) {
+      $request  = $this->requestStack->getCurrentRequest();
+      $host     = $request !== NULL ? $request->getSchemeAndHttpHost() : '';
+      $langcode = $this->view->args[0] ?? $this->languageManager->getCurrentLanguage()->getId();
+      $bubble   = new BubbleableMetadata();
+      $rows     = $this->rowFragmentCache->render($displayId, $langcode, $host, $this->view->result, $renderRow, $bubble);
+      // Invalidate the page on any node/media change via list tags only.
+      // We deliberately do NOT bubble the hundreds of per-row entity tags
+      // ($bubble->getCacheTags()) onto the response: acquia_purge emits every
+      // response cache tag as a CDN Surrogate-Key header and queues each for
+      // purging, so hundreds of node:ID tags overflow the response header
+      // (Apache "premature end of script headers" → HTTP 500) and flood the
+      // purge queue. The individual node:ID/media:ID tags live on the fragment
+      // cache entries instead (set inside RowFragmentCache), which drives
+      // selective per-row re-render. The article payload only references node
+      // and media entities (categories/keywords are emitted as IDs, so term
+      // edits never change output), so node_list + media_list is complete.
+      $this->view->element['#cache']['tags'] = Cache::mergeTags(
+        $this->view->element['#cache']['tags'] ?? [],
+        ['node_list', 'media_list'],
+      );
+    }
+    else {
+      $rows = [];
+      foreach ($this->view->result as $rowIndex => $row) {
+        $rows[] = $renderRow($rowIndex, $row);
+      }
     }
     unset($this->view->row_index);
 
@@ -253,27 +314,6 @@ class BebboSerializer extends Serializer {
       $this->getOutputFormat(),
       ['views_style_plugin' => $this],
     );
-  }
-
-  /**
-   * Resolves the response language code.
-   *
-   * Checks view arguments first (URL path segment such as /en or /ro),
-   * then falls back to the currently active site language.
-   *
-   * @return string
-   *   A BCP-47 language tag, e.g. "en" or "ro".
-   */
-  private function resolveLangcode(): string {
-    // View arguments carry URL path segments (set via contextual filter).
-    if (!empty($this->view->args[0])) {
-      $candidate = $this->view->args[0];
-      if ($this->languageManager->getLanguage($candidate) !== NULL) {
-        return $candidate;
-      }
-    }
-
-    return $this->languageManager->getCurrentLanguage()->getId();
   }
 
   /**
@@ -434,6 +474,10 @@ class BebboSerializer extends Serializer {
       $this->decodeHtmlEntities($row, ['title']);
     }
     unset($row);
+
+    // old_calendar is a translatable field; read it from the entity
+    // translation so the response reflects the requested language's toggle.
+    $this->overrideIntFromTranslation($rows, 'field_old_calendar', 'old_calendar');
 
     return $rows;
   }
@@ -636,22 +680,6 @@ class BebboSerializer extends Serializer {
   }
 
   /**
-   * Loads English node titles for the given node IDs.
-   */
-  private function getEnglishNodeTitles(array $nids): array {
-    if (empty($nids)) {
-      return [];
-    }
-
-    return $this->database->select('node_field_data', 'n')
-      ->fields('n', ['nid', 'title'])
-      ->condition('nid', array_filter(array_unique($nids)), 'IN')
-      ->condition('langcode', 'en')
-      ->execute()
-      ->fetchAllKeyed(0, 1);
-  }
-
-  /**
    * Transforms rows for the daily home screen messages display.
    *
    * Casts id to int and decodes HTML entities in title. This is one of the
@@ -744,6 +772,10 @@ class BebboSerializer extends Serializer {
       return TRUE;
     }));
 
+    // embedded_images is not a view field on these displays, so batch-load it
+    // from the pinned article nodes (the row id is the pinned article nid).
+    $embeddedByNid = $this->resolveEmbeddedImagesByNid(array_column($rows, 'id'), $this->resolveLangcode());
+
     foreach ($rows as &$row) {
       $this->castToInt($row, [
         'id', 'category', 'child_gender', 'parent_gender',
@@ -752,6 +784,8 @@ class BebboSerializer extends Serializer {
       ]);
       $this->toIntArray($row, ['child_age', 'keywords', 'related_articles']);
       $this->decodeHtmlEntities($row, ['title']);
+
+      $row['embedded_images'] = $embeddedByNid[(int) ($row['id'] ?? 0)] ?? [];
 
       $coverVideo = $this->parseViewVideoMedia($row['cover_video'] ?? NULL);
       $coverImage = $this->parseViewCoverImage($row['cover_image'] ?? NULL);
@@ -924,19 +958,46 @@ class BebboSerializer extends Serializer {
    *   Keyed object: {machine_name: {name: "Label"}, ...}.
    */
   private function transformVocabularies(array $rows): array {
+    $langcode = $this->resolveLangcode();
+    $vocab_storage = $this->entityTypeManager->getStorage('taxonomy_vocabulary');
     $result = [];
-    foreach ($rows as $row) {
-      $parts = explode(',', $row['name'] ?? '', 2);
-      $machineName = trim($parts[0]);
-      if ($machineName === '' || $machineName === 'keywords') {
+
+    // Derive vocabularies from the view's result entities rather than the
+    // rendered "name" field. That field uses an access-gated
+    // entity_reference_label render, so anonymous API callers (the real app
+    // authenticating via JWT) would otherwise get an empty list. Loading the
+    // vocabulary and reading its label is not access-gated.
+    foreach ($this->view->result as $row) {
+      $term = $row->_entity ?? NULL;
+      if ($term === NULL) {
         continue;
       }
-      $label = htmlspecialchars_decode(
-        trim($parts[1] ?? $machineName),
-        ENT_QUOTES | ENT_HTML5,
-      );
-      $result[$machineName] = ['name' => $label];
+      $machineName = $term->bundle();
+      if ($machineName === '' || $machineName === 'keywords' || isset($result[$machineName])) {
+        continue;
+      }
+
+      // Prefer the requested language's translated vocabulary label; fall back
+      // to the base (default-language) label.
+      $label = NULL;
+      if ($this->languageManager instanceof ConfigurableLanguageManagerInterface) {
+        $label = $this->languageManager
+          ->getLanguageConfigOverride($langcode, 'taxonomy.vocabulary.' . $machineName)
+          ->get('name');
+      }
+      if (!$label) {
+        $vocab = $vocab_storage->load($machineName);
+        $label = $vocab !== NULL ? $vocab->label() : $machineName;
+      }
+
+      $result[$machineName] = [
+        'name' => htmlspecialchars_decode((string) $label, ENT_QUOTES | ENT_HTML5),
+      ];
     }
+
+    // Return vocabularies in alphabetical order by machine name.
+    ksort($result);
+
     return $result;
   }
 
@@ -1001,13 +1062,24 @@ class BebboSerializer extends Serializer {
     $toUniqueName = [];
     $toBasic      = [];
 
-    foreach ($rows as $row) {
-      $vocabInfo    = explode(',', $row['vid'] ?? '', 2);
-      $vocabMachine = trim($vocabInfo[0]);
-      if ($vocabMachine === '' || $vocabMachine === 'keywords') {
-        // Skip empty entries and the keywords vocab (matches V1 behaviour).
+    // Derive vocabulary machine names from the view's result rows via the vid
+    // field handler rather than the rendered "vid" row output. The display's
+    // vid field uses an alter_text template ({{ vid__target_id }},{{ vid }})
+    // whose tokens resolve under Drupal 10 but return an empty string under
+    // Drupal 11, which would otherwise skip every vocabulary here. getValue()
+    // reads the raw bundle value directly and is token-independent.
+    $vidField = $this->view->field['vid'] ?? NULL;
+    $seen = [];
+    foreach ($this->view->result as $resultRow) {
+      $vocabMachine = $vidField !== NULL
+        ? trim((string) $vidField->getValue($resultRow))
+        : '';
+      if ($vocabMachine === '' || $vocabMachine === 'keywords' || isset($seen[$vocabMachine])) {
+        // Skip empty entries, the keywords vocab (matches V1 behaviour), and
+        // duplicates.
         continue;
       }
+      $seen[$vocabMachine] = TRUE;
 
       if (in_array($vocabMachine, $specialtyVocabs, TRUE)) {
         $toSpecialty[] = $vocabMachine;
@@ -1046,6 +1118,9 @@ class BebboSerializer extends Serializer {
         $result[$vid] = $terms;
       }
     }
+
+    // Return vocabularies in alphabetical order by machine name.
+    ksort($result);
 
     return $result;
   }
@@ -1709,7 +1784,8 @@ class BebboSerializer extends Serializer {
       'country_national_partner',
       'country_sponsor_logo',
       'unicef_logo',
-      'field_2_0_branding',
+      'all_logos',
+      'country_flag',
     ];
     foreach ($rows as &$row) {
       foreach ($mediaKeys as $key) {
@@ -2272,311 +2348,6 @@ class BebboSerializer extends Serializer {
   }
 
   /**
-   * Casts the given row fields to integers.
-   *
-   * Missing or empty values default to 0.
-   *
-   * @param array $row
-   *   A single row (passed by reference).
-   * @param array $fields
-   *   Field names to cast.
-   */
-  private function castToInt(array &$row, array $fields): void {
-    foreach ($fields as $field) {
-      if (array_key_exists($field, $row)) {
-        $row[$field] = (int) ($row[$field] ?? 0);
-      }
-    }
-  }
-
-  /**
-   * Casts the given row fields to booleans.
-   *
-   * Treats "1", "True", "true" as TRUE; everything else as FALSE.
-   *
-   * @param array $row
-   *   A single row (passed by reference).
-   * @param array $fields
-   *   Field names to cast.
-   */
-  private function castToBool(array &$row, array $fields): void {
-    foreach ($fields as $field) {
-      if (array_key_exists($field, $row)) {
-        $row[$field] = filter_var(
-          $row[$field],
-          FILTER_VALIDATE_BOOLEAN
-        );
-      }
-    }
-  }
-
-  /**
-   * Casts row fields to their natural numeric type without rounding.
-   *
-   * @param array $row
-   *   A single row (passed by reference).
-   * @param array $fields
-   *   Field names to cast.
-   */
-  private function castToNumber(array &$row, array $fields): void {
-    foreach ($fields as $field) {
-      if (array_key_exists($field, $row)) {
-        $row[$field] = ($row[$field] ?? 0) + 0;
-      }
-    }
-  }
-
-  /**
-   * Converts row fields to deduplicated integer arrays.
-   *
-   * Handles both raw arrays (raw_output:true) and comma-separated strings
-   * (raw_output:false) from the Views row plugin.
-   *
-   * @param array $row
-   *   A single row (passed by reference).
-   * @param array $fields
-   *   Field names to convert.
-   */
-  private function toIntArray(array &$row, array $fields): void {
-    foreach ($fields as $field) {
-      if (!array_key_exists($field, $row)) {
-        continue;
-      }
-      $raw = $row[$field] ?? [];
-      if (is_array($raw)) {
-        $ids = $raw;
-      }
-      else {
-        $ids = array_filter(
-          array_map('trim', explode(',', (string) $raw)),
-          'is_numeric'
-        );
-      }
-      $row[$field] = array_values(array_unique(array_map('intval', $ids)));
-    }
-  }
-
-  /**
-   * Converts comma-separated string fields to string arrays.
-   *
-   * Splits on comma, trims whitespace, removes empty values.
-   *
-   * @param array $row
-   *   A single row (passed by reference).
-   * @param array $fields
-   *   Field names to convert.
-   */
-  private function toStringArray(array &$row, array $fields): void {
-    foreach ($fields as $field) {
-      if (!array_key_exists($field, $row)) {
-        continue;
-      }
-      $raw = $row[$field] ?? [];
-      if (is_array($raw)) {
-        $values = $raw;
-      }
-      else {
-        $values = array_map('trim', explode(',', (string) $raw));
-      }
-      $row[$field] = array_values(array_filter($values, fn($v) => $v !== ''));
-    }
-  }
-
-  /**
-   * Decodes HTML entities in the given row fields.
-   *
-   * @param array $row
-   *   A single row (passed by reference).
-   * @param array $fields
-   *   Field names to decode.
-   */
-  private function decodeHtmlEntities(array &$row, array $fields): void {
-    foreach ($fields as $field) {
-      if (!empty($row[$field])) {
-        $row[$field] = htmlspecialchars_decode((string) $row[$field], ENT_QUOTES | ENT_HTML5);
-      }
-    }
-  }
-
-  /**
-   * Parses a cover_video view field HTML to {url, name, site}.
-   *
-   * The embedded media_details view renders unformatted HTML with
-   * labeled fields. An empty media reference has no "view-content"
-   * wrapper.
-   *
-   * @param mixed $raw
-   *   The raw field value (HTML string from the embedded view).
-   *
-   * @return array
-   *   Resolved {url, name, site}, or empty strings on failure.
-   */
-  private function parseViewVideoMedia(mixed $raw): array {
-    $empty = ['url' => '', 'name' => '', 'site' => ''];
-
-    if (empty($raw) || !is_string($raw)) {
-      return $empty;
-    }
-
-    if (!str_contains($raw, 'view-content')) {
-      return $empty;
-    }
-
-    // Match </span> or </div> — the field-content wrapper element varies
-    // by theme and display settings. Using only </span> causes the lazy
-    // capture to overshoot into the next field's label text.
-    $closingTag = '<\/(?:span|div)>';
-
-    $url = '';
-    $pattern = '/views-field-field-media-oembed-video"'
-      . '.*?field-content[^>]*>(.*?)' . $closingTag . '/s';
-    if (preg_match($pattern, $raw, $m)) {
-      $url = trim(strip_tags($m[1]));
-    }
-
-    $name = '';
-    if (preg_match('/views-field-name.*?field-content[^>]*>(.*?)' . $closingTag . '/s', $raw, $m)) {
-      $name = trim(strip_tags($m[1]));
-    }
-
-    $site = '';
-    $sitePattern = '/views-field-field-media-oembed-video-1'
-      . '.*?field-content[^>]*>(.*?)' . $closingTag . '/s';
-    if (preg_match($sitePattern, $raw, $m)) {
-      $site = trim(strip_tags($m[1]));
-    }
-
-    return ['url' => $url, 'name' => $name, 'site' => $site];
-  }
-
-  /**
-   * Parses a cover_image view field HTML to {url, name, alt}.
-   *
-   * The embedded media_details view renders unformatted HTML with
-   * labeled fields. The thumbnail URL is root-relative and made
-   * absolute using the current request's scheme and host.
-   *
-   * @param mixed $raw
-   *   The raw field value (HTML string from the embedded view).
-   *
-   * @return array
-   *   Resolved {url, name, alt}, or empty strings on failure.
-   */
-  private function parseViewCoverImage(mixed $raw): array {
-    $empty = ['url' => '', 'name' => '', 'alt' => ''];
-
-    if (empty($raw) || !is_string($raw)) {
-      return $empty;
-    }
-
-    // No view-content wrapper means empty media reference.
-    if (!str_contains($raw, 'view-content')) {
-      return $empty;
-    }
-
-    // Match </span> or </div> — the field-content wrapper element varies.
-    $closingTag = '<\/(?:span|div)>';
-
-    $name = '';
-    $namePattern = '/views-field-name'
-      . '.*?field-content[^>]*>(.*?)' . $closingTag . '/s';
-    if (preg_match($namePattern, $raw, $m)) {
-      $name = trim(strip_tags($m[1]));
-    }
-
-    $url = '';
-    $urlPattern = '/Thumbnail:\s*<\/(?:span|div)>'
-      . '\s*<(?:span|div)[^>]*>(.*?)' . $closingTag . '/s';
-    if (preg_match($urlPattern, $raw, $m)) {
-      $url = trim(strip_tags($m[1]));
-    }
-
-    $alt = '';
-    $altPattern = '/views-field-thumbnail__alt'
-      . '.*?field-content[^>]*>(.*?)' . $closingTag . '/s';
-    if (preg_match($altPattern, $raw, $m)) {
-      $alt = trim(strip_tags($m[1]));
-    }
-
-    // Make the URL absolute if it is a root-relative path.
-    if ($url !== '' && !str_starts_with($url, 'http')) {
-      $request = $this->requestStack->getCurrentRequest();
-      $url = ($request !== NULL
-        ? $request->getSchemeAndHttpHost()
-        : '') . $url;
-    }
-
-    return ['url' => $url, 'name' => $name, 'alt' => $alt];
-  }
-
-  /**
-   * Batch-resolves media IDs to {url, name, alt} arrays.
-   *
-   * Loads media entities, extracts the image file, generates a styled URL
-   * using the content_1200xh_ image style, and returns the media name and
-   * alt text.
-   *
-   * @param array $mediaIds
-   *   Array of media entity IDs.
-   *
-   * @return array
-   *   Keyed by media ID, each value has url, name, and alt keys.
-   */
-  private function resolveMediaIds(array $mediaIds): array {
-    $empty = ['url' => '', 'name' => '', 'alt' => ''];
-    $mediaIds = array_filter(array_unique($mediaIds));
-    if (empty($mediaIds)) {
-      return [];
-    }
-
-    $mediaEntities = $this->entityTypeManager
-      ->getStorage('media')
-      ->loadMultiple($mediaIds);
-    $imageStyle = $this->entityTypeManager
-      ->getStorage('image_style')
-      ->load('content_1200xh_');
-
-    $resolved = [];
-    foreach ($mediaIds as $id) {
-      if (!isset($mediaEntities[$id]) || !$mediaEntities[$id]->hasField('field_media_image')) {
-        $resolved[$id] = $empty;
-        continue;
-      }
-
-      $media = $mediaEntities[$id];
-      /** @var \Drupal\file\FileInterface|null $file */
-      $file = $media->get('field_media_image')->entity;
-      if (!$file instanceof FileInterface) {
-        $resolved[$id] = $empty;
-        continue;
-      }
-
-      $name = (string) ($media->get('name')->value ?? '');
-      $imageField = $media->get('field_media_image')->getValue();
-      $alt = (string) ($imageField[0]['alt'] ?? '');
-
-      $url = '';
-      if ($imageStyle) {
-        $url = $imageStyle->buildUrl($file->getFileUri());
-      }
-
-      if ($url !== '' && !str_starts_with($url, 'http')) {
-        $request = $this->requestStack->getCurrentRequest();
-        $url = ($request !== NULL ? $request->getSchemeAndHttpHost() : '') . $url;
-      }
-
-      // Replace original extension with .webp before query string.
-      if ($url !== '') {
-        $url = preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp$2', $url) ?? $url;
-      }
-
-      $resolved[$id] = ['url' => $url, 'name' => $name, 'alt' => $alt];
-    }
-
-    return $resolved;
-  }
-
-  /**
    * Determines the serialization format for the current display.
    *
    * @return string
@@ -2590,25 +2361,6 @@ class BebboSerializer extends Serializer {
       return $this->displayHandler->getContentType();
     }
     return !empty($this->options['formats']) ? reset($this->options['formats']) : 'json';
-  }
-
-  /**
-   * Converts MarkupInterface objects to plain strings recursively.
-   *
-   * @param mixed $value
-   *   A value, array, or MarkupInterface object.
-   *
-   * @return mixed
-   *   The value with all MarkupInterface objects cast to strings.
-   */
-  private function normalizeMarkup(mixed $value): mixed {
-    if ($value instanceof MarkupInterface) {
-      return (string) $value;
-    }
-    if (is_array($value)) {
-      return array_map([$this, 'normalizeMarkup'], $value);
-    }
-    return $value;
   }
 
   /**

@@ -14,7 +14,6 @@ module: {  }
 theme: {  }
 complete_list:
   - block.block.gin_kosovologo
-  - entity_share_server.channel.taxonomy_type_of_article_en
   - language.entity.al-sq
   - language.entity.bg-bg
   - language.entity.by-be
@@ -97,6 +96,7 @@ complete_list:
   - language/ro/core.entity_view_mode.taxonomy_term.full
   - language/ro/core.entity_view_mode.user.compact
   - language/ro/core.entity_view_mode.user.full
+  - language/ro/email_tfa.settings
   - language/ro/field.field.block_content.basic.body
   - language/ro/field.field.media.image.field_media_image
   - language/ro/field.field.node.article.body
@@ -173,14 +173,21 @@ complete_list:
   - language/ro/views.view.user_admin_people
   - language/ro/views.view.who_s_new
   - language/ro/views.view.who_s_online
+  - language/ro/views.view.watchdog
   - language/rs-en/language.entity.rs-en
   - language/rs-sr/language.entity.rs-sr
   - language/ru/core.entity_form_mode.media.media_library
   - language/ru/core.entity_view_mode.media.media_library
   - language/ru/core.entity_view_mode.paragraph.preview
+  - language/ru/email_tfa.settings
+  - language/ru/field.field.block_content.basic.body
   - language/ru/field.field.media.image.field_media_image
   - language/ru/field.field.media.remote_video.field_media_oembed_video
+  - language/ru/field.field.node.article.body
+  - language/ru/field.field.node.page.body
   - language/ru/filter.format.basic_html
+  - language/ru/filter.format.email_html
+  - language/ru/filter.format.plain_text
   - language/ru/language.entity.en
   - language/ru/language.entity.ro
   - language/ru/language.entity.ru
@@ -222,6 +229,8 @@ complete_list:
   - language/ru/views.view.user_admin_people
   - language/ru/views.view.who_s_new
   - language/ru/views.view.who_s_online
+  - language/ru/views.view.watchdog
+  - language/ru/symfony_mailer.mailer_policy.symfony_mailer.test
   - language/sk/block.block.claro_content
   - language/sk/block.block.claro_help
   - language/sk/block.block.claro_page_title
@@ -247,6 +256,7 @@ complete_list:
   - language/sk/core.entity_view_mode.paragraph.preview
   - language/sk/core.entity_view_mode.taxonomy_term.full
   - language/sk/core.entity_view_mode.user.full
+  - language/sk/email_tfa.settings
   - language/sk/field.field.block_content.basic.body
   - language/sk/field.field.media.image.field_media_image
   - language/sk/field.field.node.article.body
@@ -319,7 +329,12 @@ complete_list:
   - language/sk/views.view.user_admin_people
   - language/sk/views.view.who_s_new
   - language/sk/views.view.who_s_online
+  - language/sk/views.view.watchdog
   - language/sq/core.entity_view_mode.paragraph.preview
+  - language/sq/email_tfa.settings
+  - language/sq/field.field.block_content.basic.body
+  - language/sq/field.field.node.article.body
+  - language/sq/field.field.node.page.body
   - language/sq/language.entity.en
   - language/sq/language.entity.ro
   - language/sq/language.entity.ru
@@ -355,7 +370,12 @@ complete_list:
   - language/sq/views.view.user_admin_people
   - language/sq/views.view.who_s_new
   - language/sq/views.view.who_s_online
+  - language/sq/views.view.watchdog
   - language/sr/core.entity_view_mode.paragraph.preview
+  - language/sr/email_tfa.settings
+  - language/sr/field.field.block_content.basic.body
+  - language/sr/field.field.node.article.body
+  - language/sr/field.field.node.page.body
   - language/sr/filter.format.basic_html
   - language/sr/language.entity.en
   - language/sr/language.entity.ro
@@ -390,13 +410,19 @@ complete_list:
   - language/sr/views.view.user_admin_people
   - language/sr/views.view.who_s_new
   - language/sr/views.view.who_s_online
+  - language/sr/views.view.watchdog
   - language/tj-ru/language.entity.tj-ru
   - language/tj-tg/language.entity.tj-tg
   - language/uk/core.entity_form_mode.media.media_library
   - language/uk/core.entity_view_mode.media.media_library
   - language/uk/core.entity_view_mode.paragraph.preview
+  - language/uk/email_tfa.settings
+  - language/uk/field.field.block_content.basic.body
   - language/uk/field.field.media.image.field_media_image
+  - language/uk/field.field.node.article.body
+  - language/uk/field.field.node.page.body
   - language/uk/filter.format.basic_html
+  - language/uk/filter.format.plain_text
   - language/uk/language.entity.en
   - language/uk/language.entity.ro
   - language/uk/language.entity.ru
@@ -436,6 +462,7 @@ complete_list:
   - language/uk/views.view.user_admin_people
   - language/uk/views.view.who_s_new
   - language/uk/views.view.who_s_online
+  - language/uk/views.view.watchdog
   - language/uz-ru/language.entity.uz-ru
   - language/uz-uz/language.entity.uz-uz
   - language/xk-rs/language.entity.xk-rs
@@ -443,8 +470,8 @@ complete_list:
   - language/xk-sq/system.menu.main
   - mobile_app_links.android_packages
   - mobile_app_links.ios
-  - pb_custom_form.landing_pages
-  - pb_custom_form.language_redirects
+  - bebbo_custom_general.landing_pages
+  - bebbo_custom_general.language_redirects
   - system.site
 partial_list:
   - ai_translate.settings

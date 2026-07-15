@@ -650,13 +650,13 @@ display:
       style:
         type: table
         options:
+          grouping: {  }
           row_class: ''
           default_row_class: true
           columns:
             nid: nid
             title: title
             type: type
-            langcode: langcode
             field_like_count: field_like_count
             field_read_count: field_read_count
             field_analytics_updated: field_analytics_updated
@@ -677,14 +677,7 @@ display:
               empty_column: false
               responsive: ''
             type:
-              sortable: true
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            langcode:
-              sortable: true
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
@@ -1412,10 +1405,10 @@ display:
         page_1: page_1
       filename: content-analytics.csv
       automatic_download: true
+      export_filesystem: private
       custom_redirect_path: false
       redirect_to_display: page_1
       include_query_params: true
-      export_filesystem: private
     cache_metadata:
       max-age: -1
       contexts:

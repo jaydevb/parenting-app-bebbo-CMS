@@ -23,25 +23,6 @@ class AppleAppAttestService {
 
   private const AAGUID_DEVELOPMENT = "appattestdevelop";
 
-  // @codingStandardsIgnoreStart
-  private const APPLE_ROOT_CA_PEM = <<<'PEM'
------BEGIN CERTIFICATE-----
-MIICITCCAaegAwIBAgIQC/O+DvHN0uD7jG5yH2IXmDAKBggqhkjOPQQDAzBSMSYw
-JAYDVQQDDB1BcHBsZSBBcHAgQXR0ZXN0YXRpb24gUm9vdCBDQTETMBEGA1UECgwK
-QXBwbGUgSW5jLjETMBEGA1UECAwKQ2FsaWZvcm5pYTAeFw0yMDAzMTgxODMyNTNa
-Fw00NTAzMTUwMDAwMDBaMFIxJjAkBgNVBAMMHUFwcGxlIEFwcCBBdHRlc3RhdGlv
-biBSb290IENBMRMwEQYDVQQKDApBcHBsZSBJbmMuMRMwEQYDVQQIDApDYWxpZm9y
-bmlhMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAERTHhmLW07ATaFQIEVwTtT4dyctdh
-NbJhFs/Ii2FdCgAHGbpphY3+d8qjuDnzczMhM7Q8F2Iv+vha1sJQo/GKF6MIgcDm
-ouxUBEezky0IX5b+8/PCjR3TJQr90U0qo0IwQDAPBgNVHRMBAf8EBTADAQH/MB0G
-A1UdDgQWBBSskRBTM72+aEH/pwyp5frq5eWKoTAOBgNVHQ8BAf8EBAMCAQYwCgYI
-KoZIzj0EAwMDaAAwZQIwQgFGnByvsiVbpTKwSga0kP0e8EeDS4+sQmTvb7vn53O5
-+FRXgeLhd/U3DGMSr0G7AjEAp5U4xDgEgllF7En3VcE3iexZZtKeYnpqtijVoyFr
-aWVIyd/dganmrduC1bmTBGwD
------END CERTIFICATE-----
-PEM;
-  // @codingStandardsIgnoreEnd
-
   /**
    * Constructs an AppleAppAttestService object.
    *
@@ -140,7 +121,16 @@ PEM;
     $leaf_der = $x5c[0];
     $intermediate_der = $x5c[1];
 
-    $this->verifyCertificateChain($leaf_der, $intermediate_der);
+    $debug = (bool) $config->get('debug_logging');
+    if ($debug) {
+      $this->logger->debug('App Attest cert chain: x5c has @count certs, leaf DER @leaf_len bytes, intermediate DER @inter_len bytes.', [
+        '@count' => count($x5c),
+        '@leaf_len' => strlen($leaf_der),
+        '@inter_len' => strlen($intermediate_der),
+      ]);
+    }
+
+    $this->verifyCertificateChain($leaf_der, $intermediate_der, $debug);
 
     // Verify nonce in leaf certificate.
     $nonce = hash('sha256', $auth_data . hex2bin($client_data_hash), TRUE);
@@ -279,36 +269,134 @@ PEM;
    *   DER-encoded leaf certificate.
    * @param string $intermediate_der
    *   DER-encoded intermediate certificate.
+   * @param bool $debug
+   *   Whether to log detailed diagnostic information.
    *
    * @throws \RuntimeException
    *   If chain verification fails.
    */
-  private function verifyCertificateChain(string $leaf_der, string $intermediate_der): void {
+  private function verifyCertificateChain(string $leaf_der, string $intermediate_der, bool $debug): void {
     $leaf_pem = $this->derToPem($leaf_der, 'CERTIFICATE');
     $intermediate_pem = $this->derToPem($intermediate_der, 'CERTIFICATE');
 
+    $root_ca_pem = $this->configFactory->get('bebbo_api_security.settings')
+      ->get('apple_root_ca_pem');
+    if (empty($root_ca_pem)) {
+      throw new \RuntimeException('Apple Root CA PEM not configured. Set it in API Security settings.');
+    }
+
     $leaf_cert = openssl_x509_read($leaf_pem);
     if (!$leaf_cert) {
+      $this->logger->error('App Attest: failed to parse leaf certificate. OpenSSL error: @err', [
+        '@err' => openssl_error_string() ?: 'none',
+      ]);
       throw new \RuntimeException('Failed to parse leaf certificate.');
     }
 
     $intermediate_cert = openssl_x509_read($intermediate_pem);
     if (!$intermediate_cert) {
+      $this->logger->error('App Attest: failed to parse intermediate certificate. OpenSSL error: @err', [
+        '@err' => openssl_error_string() ?: 'none',
+      ]);
       throw new \RuntimeException('Failed to parse intermediate certificate.');
     }
 
-    $root_cert = openssl_x509_read(self::APPLE_ROOT_CA_PEM);
+    $root_cert = openssl_x509_read($root_ca_pem);
+    if (!$root_cert) {
+      $this->logger->error('App Attest: failed to parse configured root CA PEM. OpenSSL error: @err', [
+        '@err' => openssl_error_string() ?: 'none',
+      ]);
+      throw new \RuntimeException('Failed to parse Apple Root CA certificate from config.');
+    }
+
+    if ($debug) {
+      $leaf_parsed = openssl_x509_parse($leaf_cert);
+      $inter_parsed = openssl_x509_parse($intermediate_cert);
+      $root_parsed = openssl_x509_parse($root_cert);
+
+      $this->logger->debug('App Attest cert subjects — leaf: @leaf_subj (issuer: @leaf_iss), intermediate: @inter_subj (issuer: @inter_iss), root: @root_subj (issuer: @root_iss).', [
+        '@leaf_subj' => $leaf_parsed['subject']['CN'] ?? 'unknown',
+        '@leaf_iss' => $leaf_parsed['issuer']['CN'] ?? 'unknown',
+        '@inter_subj' => $inter_parsed['subject']['CN'] ?? 'unknown',
+        '@inter_iss' => $inter_parsed['issuer']['CN'] ?? 'unknown',
+        '@root_subj' => $root_parsed['subject']['CN'] ?? 'unknown',
+        '@root_iss' => $root_parsed['issuer']['CN'] ?? 'unknown',
+      ]);
+
+      $this->logger->debug('App Attest cert validity — leaf: @leaf_from to @leaf_to, intermediate: @inter_from to @inter_to.', [
+        '@leaf_from' => date('Y-m-d H:i:s', $leaf_parsed['validFrom_time_t'] ?? 0),
+        '@leaf_to' => date('Y-m-d H:i:s', $leaf_parsed['validTo_time_t'] ?? 0),
+        '@inter_from' => date('Y-m-d H:i:s', $inter_parsed['validFrom_time_t'] ?? 0),
+        '@inter_to' => date('Y-m-d H:i:s', $inter_parsed['validTo_time_t'] ?? 0),
+      ]);
+
+      $this->logger->debug('App Attest cert algorithms — leaf: @leaf_algo, intermediate: @inter_algo, root: @root_algo.', [
+        '@leaf_algo' => $leaf_parsed['signatureTypeSN'] ?? 'unknown',
+        '@inter_algo' => $inter_parsed['signatureTypeSN'] ?? 'unknown',
+        '@root_algo' => $root_parsed['signatureTypeSN'] ?? 'unknown',
+      ]);
+    }
 
     // Verify leaf is signed by intermediate.
-    $result = openssl_x509_verify($leaf_cert, openssl_pkey_get_public($intermediate_cert));
+    $inter_key = openssl_pkey_get_public($intermediate_cert);
+    if (!$inter_key) {
+      $this->logger->error('App Attest: failed to extract public key from intermediate cert. OpenSSL error: @err', [
+        '@err' => openssl_error_string() ?: 'none',
+      ]);
+      throw new \RuntimeException('Failed to extract public key from intermediate certificate.');
+    }
+
+    if ($debug) {
+      $inter_key_details = openssl_pkey_get_details($inter_key);
+      $this->logger->debug('App Attest intermediate key — type: @type, bits: @bits.', [
+        '@type' => $inter_key_details['type'] ?? 'unknown',
+        '@bits' => $inter_key_details['bits'] ?? 'unknown',
+      ]);
+    }
+
+    $result = openssl_x509_verify($leaf_cert, $inter_key);
     if ($result !== 1) {
+      $this->logger->error('App Attest: leaf not signed by intermediate. openssl_x509_verify returned @result (1=ok, 0=mismatch, -1=error). OpenSSL error: @err', [
+        '@result' => $result,
+        '@err' => openssl_error_string() ?: 'none',
+      ]);
       throw new \RuntimeException('Leaf certificate not signed by intermediate.');
     }
 
+    if ($debug) {
+      $this->logger->debug('App Attest: leaf → intermediate signature verified OK.');
+    }
+
     // Verify intermediate is signed by Apple Root CA.
-    $result = openssl_x509_verify($intermediate_cert, openssl_pkey_get_public($root_cert));
+    $root_key = openssl_pkey_get_public($root_cert);
+    if (!$root_key) {
+      $this->logger->error('App Attest: failed to extract public key from root CA. OpenSSL error: @err', [
+        '@err' => openssl_error_string() ?: 'none',
+      ]);
+      throw new \RuntimeException('Failed to extract public key from Apple Root CA.');
+    }
+
+    if ($debug) {
+      $root_key_details = openssl_pkey_get_details($root_key);
+      $this->logger->debug('App Attest root CA key — type: @type, bits: @bits.', [
+        '@type' => $root_key_details['type'] ?? 'unknown',
+        '@bits' => $root_key_details['bits'] ?? 'unknown',
+      ]);
+    }
+
+    $result = openssl_x509_verify($intermediate_cert, $root_key);
     if ($result !== 1) {
+      $inter_parsed = $inter_parsed ?? openssl_x509_parse($intermediate_cert);
+      $this->logger->error('App Attest: intermediate not signed by root CA. openssl_x509_verify returned @result (1=ok, 0=mismatch, -1=error). OpenSSL error: @err. Intermediate issuer CN: @issuer.', [
+        '@result' => $result,
+        '@err' => openssl_error_string() ?: 'none',
+        '@issuer' => $inter_parsed['issuer']['CN'] ?? 'unknown',
+      ]);
       throw new \RuntimeException('Intermediate certificate not signed by Apple Root CA.');
+    }
+
+    if ($debug) {
+      $this->logger->debug('App Attest: intermediate → root CA signature verified OK.');
     }
   }
 

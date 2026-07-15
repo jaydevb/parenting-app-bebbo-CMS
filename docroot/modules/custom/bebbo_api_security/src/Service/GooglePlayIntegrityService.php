@@ -75,6 +75,7 @@ class GooglePlayIntegrityService {
     }
 
     $access_token = $this->getGoogleAccessToken();
+    $timeout = (int) $config->get('google_api_timeout') ?: 10;
 
     try {
       $response = $this->httpClient->request('POST',
@@ -85,13 +86,18 @@ class GooglePlayIntegrityService {
             'Content-Type' => 'application/json',
           ],
           'json' => ['integrity_token' => $integrity_token],
-          'timeout' => 10,
+          'timeout' => $timeout,
         ]
       );
     }
     catch (GuzzleException $e) {
-      $this->logger->error('Google Play Integrity API error: @msg', [
+      $response_body = '';
+      if (method_exists($e, 'getResponse') && $e->getResponse()) {
+        $response_body = (string) $e->getResponse()->getBody();
+      }
+      $this->logger->error('Google Play Integrity API error: @msg | Full response: @body', [
         '@msg' => $e->getMessage(),
+        '@body' => $response_body ?: '(no response body)',
       ]);
       throw new \RuntimeException('Failed to verify integrity token with Google.');
     }
@@ -101,8 +107,14 @@ class GooglePlayIntegrityService {
       throw new \RuntimeException('Invalid response from Google Play Integrity API.');
     }
 
+    if ((bool) $config->get('debug_logging')) {
+      $this->logger->debug('Play Integrity decoded payload: @payload', [
+        '@payload' => json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+      ]);
+    }
+
     if ($expected_request_hash === NULL) {
-      $expected_request_hash = rtrim(strtr(base64_encode(hash('sha256', $device_id, TRUE)), '+/', '-_'), '=');
+      $expected_request_hash = $device_id;
     }
 
     $this->verifyVerdicts($payload, $device_id, $expected_request_hash);
@@ -118,7 +130,7 @@ class GooglePlayIntegrityService {
    * @param string $device_id
    *   Device identifier for error context.
    * @param string $expected_request_hash
-   *   Base64url-encoded SHA-256 hash the app used as nonce.
+   *   The challenge string the app passed verbatim as nonce.
    *
    * @throws \RuntimeException
    *   If any verdict check fails.
@@ -130,10 +142,16 @@ class GooglePlayIntegrityService {
 
     $details = $payload['tokenPayloadExternal'] ?? [];
 
-    // Verify requestHash — binds the integrity token to this registration.
-    $actual_hash = $details['requestDetails']['requestHash'] ?? '';
-    if (!hash_equals($expected_request_hash, $actual_hash)) {
-      throw new \RuntimeException('requestHash mismatch: integrity token not bound to this request.');
+    // Verify nonce — binds integrity token to this request.
+    $actual_nonce = $details['requestDetails']['nonce'] ?? '';
+    if ((bool) $config->get('debug_logging')) {
+      $this->logger->debug('Nonce comparison — expected: @expected | actual nonce: @actual', [
+        '@expected' => $expected_request_hash,
+        '@actual' => $actual_nonce,
+      ]);
+    }
+    if (!hash_equals($expected_request_hash, $actual_nonce)) {
+      throw new \RuntimeException('Nonce mismatch: integrity token not bound to this request.');
     }
 
     // Verify package name.
@@ -160,8 +178,17 @@ class GooglePlayIntegrityService {
 
     // Verify app recognition.
     $app_verdict = $details['appIntegrity']['appRecognitionVerdict'] ?? 'UNEVALUATED';
-    if ($app_verdict !== 'PLAY_RECOGNIZED') {
+    $allowed_verdicts = ['PLAY_RECOGNIZED'];
+    if ((bool) $config->get('google_allow_unrecognized_version')) {
+      $allowed_verdicts[] = 'UNRECOGNIZED_VERSION';
+    }
+    if (!in_array($app_verdict, $allowed_verdicts, TRUE)) {
       throw new \RuntimeException("App not recognized by Play Store: {$app_verdict}");
+    }
+    if ($app_verdict === 'UNRECOGNIZED_VERSION') {
+      $this->logger->warning('Accepted UNRECOGNIZED_VERSION app verdict for device @device — google_allow_unrecognized_version is enabled. This must be off in production.', [
+        '@device' => $device_id,
+      ]);
     }
   }
 
@@ -201,13 +228,14 @@ class GooglePlayIntegrityService {
 
     $assertion = JWT::encode($jwt_payload, $sa_json['private_key'], 'RS256');
 
+    $timeout = (int) $this->configFactory->get('bebbo_api_security.settings')->get('google_api_timeout') ?: 10;
     try {
       $response = $this->httpClient->request('POST', 'https://oauth2.googleapis.com/token', [
         'form_params' => [
           'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
           'assertion' => $assertion,
         ],
-        'timeout' => 10,
+        'timeout' => $timeout,
       ]);
     }
     catch (GuzzleException $e) {
