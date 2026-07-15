@@ -11,6 +11,7 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\group\Entity\Group;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\group\Entity\GroupMembership;
 use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -19,7 +20,6 @@ use Drupal\group\Entity;
 use Drupal\node\Entity\Node;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Language\LanguageManager;
-use Drupal\group\Entity\GroupContent;
 use Drupal\Core\Url;
  */
 /**
@@ -41,13 +41,6 @@ class AssigncontentAction extends ViewsBulkOperationsActionBase {
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
   protected $currentUser;
-
-  /**
-   * The group membership loader service.
-   *
-   * @var \Drupal\group\GroupMembershipLoaderInterface
-   */
-  protected $groupMembershipLoader;
 
   /**
    * The language manager.
@@ -108,10 +101,9 @@ class AssigncontentAction extends ViewsBulkOperationsActionBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, $current_user = NULL, $group_membership_loader = NULL, $language_manager = NULL, $messenger = NULL, $logger = NULL, $request_stack = NULL, $time = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, $current_user = NULL, $language_manager = NULL, $messenger = NULL, $logger = NULL, $request_stack = NULL, $time = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUser = $current_user;
-    $this->groupMembershipLoader = $group_membership_loader;
     $this->languageManager = $language_manager;
     $this->messenger = $messenger;
     $this->logger = $logger;
@@ -128,7 +120,6 @@ class AssigncontentAction extends ViewsBulkOperationsActionBase {
       $plugin_id,
       $plugin_definition,
       $container->get('current_user'),
-      $container->get('group.membership_loader'),
       $container->get('language_manager'),
       $container->get('messenger'),
       $container->get('logger.factory')->get('bulk_action'),
@@ -148,13 +139,16 @@ class AssigncontentAction extends ViewsBulkOperationsActionBase {
   }
 
   /**
-   * Get the group membership loader service.
+   * Load group memberships for the given user.
+   *
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   The user account.
+   *
+   * @return \Drupal\group\Entity\GroupRelationshipInterface[]
+   *   The group memberships.
    */
-  protected function getGroupMembershipLoader() {
-    if (!$this->groupMembershipLoader) {
-      $this->groupMembershipLoader = \Drupal::service('group.membership_loader');
-    }
-    return $this->groupMembershipLoader;
+  protected function loadGroupMemberships(?AccountInterface $account = NULL) {
+    return GroupMembership::loadByUser($account);
   }
 
   /**
@@ -226,8 +220,7 @@ class AssigncontentAction extends ViewsBulkOperationsActionBase {
     $language_options = [];
     /* Check the user roles */
     if (count(array_intersect($cur_user_roles, $authorized_roles)) != 0) {
-      $grp_membership_service = $this->getGroupMembershipLoader();
-      $grps = $grp_membership_service->loadByUser($currentAccount);
+      $grps = $this->loadGroupMemberships($currentAccount);
 
       if (!empty($grps)) {
         $groups = [];

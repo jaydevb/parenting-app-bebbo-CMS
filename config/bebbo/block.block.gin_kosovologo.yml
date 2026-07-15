@@ -1,4 +1,4 @@
-uuid: e585918e-d466-4cbc-9e6f-3aed49da970e
+uuid: 798954a5-15ba-4ecc-8a12-741707b63c79
 langcode: en
 status: true
 dependencies:
@@ -9,9 +9,9 @@ dependencies:
     - language
     - user
   theme:
-    - claro
-id: kosovologo
-theme: claro
+    - gin
+id: gin_kosovologo
+theme: gin
 region: header
 weight: -7
 provider: null

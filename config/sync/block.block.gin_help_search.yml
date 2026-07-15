@@ -1,3 +1,4 @@
+uuid: b274b62b-a07e-4e04-8e0b-5538303ee9d1
 langcode: en
 status: true
 dependencies:
@@ -5,12 +6,9 @@ dependencies:
     - search
     - system
   theme:
-    - claro
-  enforced:
-    config:
-      - search.page.help_search
-id: claro_help_search
-theme: claro
+    - gin
+id: gin_help_search
+theme: gin
 region: help
 weight: -4
 provider: null
@@ -25,5 +23,4 @@ visibility:
   request_path:
     id: request_path
     negate: false
-    context_mapping: {  }
     pages: /admin/help
