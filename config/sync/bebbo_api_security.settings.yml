@@ -6,6 +6,7 @@ dev_bypass_ips: ''
 google_package_name: ''
 google_project_number: ''
 google_verdict_freshness_seconds: 600
+google_allow_unrecognized_version: false
 apple_team_id: ''
 apple_bundle_id: ''
 apple_production_mode: true

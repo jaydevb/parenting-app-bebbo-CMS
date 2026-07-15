@@ -1,0 +1,17 @@
+uuid: 13d8727a-8a56-4474-86e9-5e3a5512ddfe
+langcode: en
+status: true
+dependencies:
+  module:
+    - symfony_mailer_office365
+title: 'Default cron handler'
+id: symfony_mailer_office365_cron
+weight: 0
+module: symfony_mailer_office365
+callback: 'symfony_mailer_office365#cron'
+scheduler:
+  id: simple
+launcher:
+  id: serial
+logger:
+  id: database

@@ -4,20 +4,22 @@ mode: simple
 ignored_config_entities:
   - admin_toolbar.settings
   - bebbo_api_security.settings
-  - 'entity_share_client.remote*'
-  - google_analytics.settings
+  - 'key.key.entity_share_basic_auth:key_provider_settings.key_value'
   - mobile_app_links.android_packages
   - mobile_app_links.ios
   - pb_content_analytics.settings
-  - pb_custom_form.landing_pages
-  - pb_custom_form.language_redirects
-  - pb_custom_form.mobile_app_share_link_form
   - purge.logger_channels
-  - smtp.settings
+  - 'symfony_mailer.mailer_transport.office_365_oauth:configuration.client_id'
+  - 'symfony_mailer.mailer_transport.office_365_oauth:configuration.client_secret'
+  - 'symfony_mailer.mailer_transport.office_365_oauth:configuration.tenant_id'
+  - 'symfony_mailer_office365.config:client_id'
+  - 'symfony_mailer_office365.config:client_secret'
+  - 'symfony_mailer_office365.config:tenant_id'
   - 'tmgmt.translator.*'
   - tmgmt.translator.deepl_free
   - tmgmt.translator.deepl_pro
   - tmgmt.translator.google
   - tmgmt.translator.memsource
   - tmgmt.translator.microsoft
+  - tmgmt_memsource.settings
   - views.view.entity_share_client_entity_import_status

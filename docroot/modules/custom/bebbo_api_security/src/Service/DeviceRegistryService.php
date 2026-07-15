@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\bebbo_api_security\Service;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Psr\Log\LoggerInterface;
 
@@ -12,20 +13,50 @@ use Psr\Log\LoggerInterface;
  */
 class DeviceRegistryService {
 
+  /**
+   * Constructs a DeviceRegistryService.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger channel.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
+   */
   public function __construct(
     protected readonly Connection $database,
     protected readonly LoggerInterface $logger,
+    protected readonly ConfigFactoryInterface $configFactory,
   ) {}
 
   /**
-   * Insert a new device record.
+   * Register or re-register a device (UPSERT).
+   *
+   * On re-registration, preserves the original created timestamp and
+   * invalidates any existing refresh tokens and challenges.
    *
    * @return int
-   *   The auto-increment ID of the inserted row.
+   *   Merge status constant.
    */
   public function registerDevice(array $fields): int {
-    return (int) $this->database->insert('bebbo_api_devices')
-      ->fields($fields)
+    $device_id = $fields['device_id'];
+
+    // Invalidate stale tokens and challenges on re-registration.
+    $this->database->delete('bebbo_api_refresh_tokens')
+      ->condition('device_id', $device_id)
+      ->execute();
+    $this->database->delete('bebbo_api_challenges')
+      ->condition('device_id', $device_id)
+      ->execute();
+
+    // Preserve original created timestamp on update.
+    $update_fields = $fields;
+    unset($update_fields['device_id'], $update_fields['created']);
+
+    return (int) $this->database->merge('bebbo_api_devices')
+      ->keys(['device_id' => $device_id])
+      ->fields($update_fields)
+      ->insertFields(['created' => $fields['created'] ?? time()])
       ->execute();
   }
 
@@ -47,6 +78,21 @@ class DeviceRegistryService {
     return $this->database->select('bebbo_api_devices', 'd')
       ->fields('d')
       ->condition('d.apple_key_id', $key_id)
+      ->execute()
+      ->fetchObject() ?: NULL;
+  }
+
+  /**
+   * Fetch the newest unused, unexpired challenge for a device.
+   */
+  public function getActiveChallenge(string $device_id): ?object {
+    return $this->database->select('bebbo_api_challenges', 'c')
+      ->fields('c')
+      ->condition('c.device_id', $device_id)
+      ->condition('c.used', 0)
+      ->condition('c.expires', time(), '>')
+      ->orderBy('c.created', 'DESC')
+      ->range(0, 1)
       ->execute()
       ->fetchObject() ?: NULL;
   }
@@ -100,19 +146,22 @@ class DeviceRegistryService {
       ->condition('expires', $now, '<')
       ->execute();
 
+    $config = $this->configFactory->get('bebbo_api_security.settings');
+    $retention_days = (int) $config->get('revoked_token_retention_days') ?: 7;
     $stats['tokens_revoked'] = $this->database->delete('bebbo_api_refresh_tokens')
       ->condition('revoked', 1)
-      ->condition('created', $now - 604800, '<')
+      ->condition('created', $now - ($retention_days * 86400), '<')
       ->execute();
 
     $stats['tokens_expired'] = $this->database->delete('bebbo_api_refresh_tokens')
       ->condition('expires', $now, '<')
       ->execute();
 
+    $max_entries = (int) $config->get('security_log_max_entries') ?: 10000;
     $max_id = $this->database->select('bebbo_api_security_log', 'l')
       ->fields('l', ['id'])
       ->orderBy('id', 'DESC')
-      ->range(10000, 1)
+      ->range($max_entries, 1)
       ->execute()
       ->fetchField();
 
@@ -123,6 +172,30 @@ class DeviceRegistryService {
         ->execute();
     }
 
+    return $stats;
+  }
+
+  /**
+   * Truncate all security tables, resetting auto-increment counters.
+   *
+   * @return array
+   *   Row counts per table before truncation.
+   */
+  public function truncateAll(): array {
+    $tables = [
+      'devices' => 'bebbo_api_devices',
+      'challenges' => 'bebbo_api_challenges',
+      'tokens' => 'bebbo_api_refresh_tokens',
+      'logs' => 'bebbo_api_security_log',
+    ];
+    $stats = [];
+    foreach ($tables as $key => $table) {
+      $stats[$key] = (int) $this->database->select($table)
+        ->countQuery()
+        ->execute()
+        ->fetchField();
+      $this->database->truncate($table)->execute();
+    }
     return $stats;
   }
 

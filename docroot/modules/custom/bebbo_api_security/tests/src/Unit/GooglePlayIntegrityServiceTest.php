@@ -217,6 +217,78 @@ class GooglePlayIntegrityServiceTest extends TestCase {
   }
 
   /**
+   * Build a payload that passes every check except app recognition.
+   */
+  private function buildUnrecognizedVersionPayload(string $nonce): array {
+    return [
+      'tokenPayloadExternal' => [
+        'requestDetails' => [
+          'requestPackageName' => 'org.unicef.bebbo',
+          'timestampMillis' => (string) (time() * 1000),
+          'nonce' => $nonce,
+        ],
+        'deviceIntegrity' => [
+          'deviceRecognitionVerdict' => ['MEETS_DEVICE_INTEGRITY'],
+        ],
+        'appIntegrity' => [
+          'appRecognitionVerdict' => 'UNRECOGNIZED_VERSION',
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * @covers ::verifyVerdicts
+   */
+  public function testVerifyVerdictsRejectsUnrecognizedVersionByDefault(): void {
+    $nonce = bin2hex(random_bytes(32));
+    $payload = $this->buildUnrecognizedVersionPayload($nonce);
+
+    $method = new \ReflectionMethod($this->service, 'verifyVerdicts');
+    $method->setAccessible(TRUE);
+
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage('not recognized by Play Store');
+    $method->invoke($this->service, $payload, 'test-device', $nonce);
+  }
+
+  /**
+   * @covers ::verifyVerdicts
+   */
+  public function testVerifyVerdictsAcceptsUnrecognizedVersionWhenToggled(): void {
+    $config = $this->createMock(ImmutableConfig::class);
+    $config->method('get')->willReturnMap([
+      ['google_package_name', 'org.unicef.bebbo'],
+      ['google_verdict_freshness_seconds', 600],
+      ['google_allow_unrecognized_version', TRUE],
+    ]);
+    $configFactory = $this->createMock(ConfigFactoryInterface::class);
+    $configFactory->method('get')
+      ->with('bebbo_api_security.settings')
+      ->willReturn($config);
+
+    $logger = $this->createMock(LoggerInterface::class);
+    $logger->expects($this->once())->method('warning');
+
+    $service = new GooglePlayIntegrityService(
+      $this->createMock(ClientInterface::class),
+      $this->createMock(KeyRepositoryInterface::class),
+      $configFactory,
+      $logger,
+    );
+
+    $nonce = bin2hex(random_bytes(32));
+    $payload = $this->buildUnrecognizedVersionPayload($nonce);
+
+    $method = new \ReflectionMethod($service, 'verifyVerdicts');
+    $method->setAccessible(TRUE);
+
+    // Should not throw.
+    $method->invoke($service, $payload, 'test-device', $nonce);
+    $this->assertTrue(TRUE);
+  }
+
+  /**
    * @covers ::verifyVerdicts
    */
   public function testVerifyVerdictsRejectsWrongRequestHash(): void {
@@ -245,6 +317,36 @@ class GooglePlayIntegrityServiceTest extends TestCase {
     $this->expectException(\RuntimeException::class);
     $this->expectExceptionMessage('requestHash mismatch');
     $method->invoke($this->service, $payload, $device_id, $request_hash);
+  }
+
+  /**
+   * @covers ::verifyVerdicts
+   */
+  public function testVerifyVerdictsAcceptsNonceBasedHash(): void {
+    $nonce = 'challenge-3372ac375291-test';
+    $request_hash = rtrim(strtr(base64_encode(hash('sha256', $nonce, TRUE)), '+/', '-_'), '=');
+
+    $payload = [
+      'tokenPayloadExternal' => [
+        'requestDetails' => [
+          'requestPackageName' => 'org.unicef.bebbo',
+          'timestampMillis' => (string) (time() * 1000),
+          'requestHash' => $request_hash,
+        ],
+        'deviceIntegrity' => [
+          'deviceRecognitionVerdict' => ['MEETS_DEVICE_INTEGRITY'],
+        ],
+        'appIntegrity' => [
+          'appRecognitionVerdict' => 'PLAY_RECOGNIZED',
+        ],
+      ],
+    ];
+
+    $method = new \ReflectionMethod($this->service, 'verifyVerdicts');
+    $method->setAccessible(TRUE);
+
+    $method->invoke($this->service, $payload, 'some-device-id', $request_hash);
+    $this->assertTrue(TRUE);
   }
 
   /**

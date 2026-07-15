@@ -15,6 +15,7 @@ dependencies:
     - field.storage.node.field_milestone_instructions
     - field.storage.node.field_parent_gender
     - field.storage.node.field_subcategory
+    - node.type.quiz_questions
     - taxonomy.vocabulary.activity_category
     - taxonomy.vocabulary.category
     - taxonomy.vocabulary.child_age
@@ -3327,13 +3328,16 @@ display:
         - 'user.node_grants:view'
         - user.roles
       tags:
+        - 'config:field.storage.node.body'
         - 'config:field.storage.node.field_activity_category'
+        - 'config:field.storage.node.field_body_rendered'
         - 'config:field.storage.node.field_child_age'
         - 'config:field.storage.node.field_child_gender'
         - 'config:field.storage.node.field_content_category'
         - 'config:field.storage.node.field_do_not_feature'
         - 'config:field.storage.node.field_licensed_content'
         - 'config:field.storage.node.field_mandatory_content'
+        - 'config:field.storage.node.field_milestone_instructions'
         - 'config:field.storage.node.field_parent_gender'
         - 'config:field.storage.node.field_subcategory'
         - 'config:workflow_list'
@@ -5152,6 +5156,48 @@ display:
             operator_limit_selection: false
             operator_list: {  }
             identifier: langcode_1
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        type_1:
+          id: type_1
+          table: node_field_data
+          field: type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          operator: 'not in'
+          value:
+            quiz_questions: quiz_questions
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
             required: false
             remember: false
             multiple: false

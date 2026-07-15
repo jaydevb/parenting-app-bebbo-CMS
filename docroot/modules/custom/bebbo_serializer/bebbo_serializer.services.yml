@@ -20,3 +20,30 @@ services:
       - '@renderer'
       - '@entity_type.manager'
       - '@file_url_generator'
+
+  cache.bebbo_api_fragment:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: ['@cache_factory', 'get']
+    arguments: [bebbo_api_fragment]
+
+  bebbo_serializer.row_fragment_cache:
+    class: Drupal\bebbo_serializer\Cache\RowFragmentCache
+    arguments:
+      - '@cache.bebbo_api_fragment'
+      - '@renderer'
+
+  bebbo_serializer.article_fragment_warmer:
+    class: Drupal\bebbo_serializer\Warmer\ArticleFragmentWarmer
+    arguments:
+      - '@http_kernel'
+      - '@language_manager'
+      - '@request_stack'
+      - '@bebbo_serializer.row_fragment_cache'
+      - '@logger.channel.bebbo_serializer'
+
+  logger.channel.bebbo_serializer:
+    parent: logger.channel_base
+    arguments:
+      - bebbo_serializer

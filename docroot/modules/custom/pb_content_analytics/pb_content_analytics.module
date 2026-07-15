@@ -64,7 +64,10 @@ function pb_content_analytics_cron(): void {
       '@ud' => $stats['skipped_up_to_date'],
     ]);
   }
-  catch (\RuntimeException $e) {
+  // Catch every Throwable so a failed analytics sync only fails itself and
+  // never aborts the rest of the cron run. Core's cron handler only catches
+  // \Exception, so an \Error escaping here would stop all remaining cron.
+  catch (\Throwable $e) {
     $sync_service->logSyncResult(
       ['processed' => 0, 'updated' => 0, 'skipped' => 0],
       'cron',

@@ -5,6 +5,6 @@ adding:
     default: Asia/Karachi
 removing:
   country:
-    default: RS
+    default: CH
   timezone:
-    default: Europe/Belgrade
+    default: Europe/Zurich
