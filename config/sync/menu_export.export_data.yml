@@ -106,6 +106,7 @@
     value: '1'
   menu_per_role__show_role:
     - target_id: administrator
+    - target_id: global_admin
     - target_id: se
     - target_id: translator
   menu_per_role__hide_role: false
