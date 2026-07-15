@@ -235,7 +235,7 @@
             "drupal/imagemagick": {
                 "Fix derivative generation - preserve URL-encoded filenames": "patches/imagemagick/fix-url-encoded-filenames.patch"
             },
-             "drupal/date_popup": {
+            "drupal/date_popup": {
                 "Add 1 day to the end so the query will include the selected date.": "https://www.drupal.org/files/issues/2020-10-18/range-selection-end-date-2983680-7.patch"
             },
             "drupal/mobile_app_links": {
@@ -282,6 +282,9 @@
             },
             "drupal/structure_sync": {
                 "PHP 8.4: explicit nullable params (3563762)": "patches/structure_sync-implicit-nullable-php84-3563762.patch"
+            },
+            "drupal/migrate_source_csv": {
+                "Fix league/csv 9.27 createFromStream deprecation": "patches/migrate_source_csv-league_csv_deprecation.patch"
             }
         },
         "drupal-lenient": {

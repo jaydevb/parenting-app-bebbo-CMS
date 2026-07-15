@@ -392,6 +392,36 @@ function _bebbo_custom_general_referenced_by_valid(string $target_type, $target_
 }
 
 /**
+ * Fix stale enforceIsNew flag on field_description and field_question.
+ *
+ * The D11 upgrade left enforceIsNew=TRUE in the stored field storage
+ * definitions (key_value) while code definitions have NULL. This causes
+ * "Mismatched entity and/or field definitions" on the status report despite
+ * identical schemas. Re-saving the definitions clears the flag.
+ */
+function bebbo_custom_general_post_update_fix_field_definition_mismatch(): string {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $code_defs = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('node');
+  $fixed = [];
+
+  foreach (['field_description', 'field_question'] as $field_name) {
+    if (!isset($code_defs[$field_name])) {
+      continue;
+    }
+    $installed = $manager->getFieldStorageDefinition($field_name, 'node');
+    if (!$installed) {
+      continue;
+    }
+    $manager->updateFieldStorageDefinition($code_defs[$field_name]);
+    $fixed[] = $field_name;
+  }
+
+  return $fixed
+    ? 'Fixed field definition mismatch for: ' . implode(', ', $fixed)
+    : 'No mismatched field definitions found.';
+}
+
+/**
  * Re-langcodes every row of an entity from orphan languages to a target.
  *
  * Updates the base table plus every data / field / revision table that carries
