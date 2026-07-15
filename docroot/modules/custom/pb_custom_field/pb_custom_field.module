@@ -2157,7 +2157,7 @@ function pb_custom_field_views_pre_render(ViewExecutable $view) {
     }
   }
   if ($view->id() == 'country_content_listing') {
-    $view->element['#attached']['library'][] = '/js/homepage.js';
+    $view->element['#attached']['library'][] = 'pb_custom_field/homepage';
   }
 }
 
