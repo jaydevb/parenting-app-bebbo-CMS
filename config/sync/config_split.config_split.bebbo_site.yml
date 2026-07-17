@@ -186,7 +186,6 @@ complete_list:
   - language/ru/field.field.node.article.body
   - language/ru/field.field.node.page.body
   - language/ru/filter.format.basic_html
-  - language/ru/filter.format.email_html
   - language/ru/filter.format.plain_text
   - language/ru/language.entity.en
   - language/ru/language.entity.ro
@@ -230,7 +229,6 @@ complete_list:
   - language/ru/views.view.who_s_new
   - language/ru/views.view.who_s_online
   - language/ru/views.view.watchdog
-  - language/ru/symfony_mailer.mailer_policy.symfony_mailer.test
   - language/sk/block.block.claro_content
   - language/sk/block.block.claro_help
   - language/sk/block.block.claro_page_title

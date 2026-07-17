@@ -82,7 +82,6 @@ module:
   layout_discovery: 0
   link: 0
   locale: 0
-  mailer_transport: 0
   media: 0
   media_library: 0
   memcache: 0
@@ -130,8 +129,6 @@ module:
   sophron: 0
   structure_sync: 0
   svg_image: 0
-  symfony_mailer: 0
-  symfony_mailer_office365: 0
   syslog: 0
   system: 0
   tamper: 0
