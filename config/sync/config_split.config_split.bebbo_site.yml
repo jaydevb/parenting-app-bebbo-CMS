@@ -123,8 +123,6 @@ complete_list:
   - language/ro/node.type.article
   - language/ro/node.type.page
   - language/ro/pathauto.pattern.group_content
-  - language/ro/search.page.node_search
-  - language/ro/search.page.user_search
   - language/ro/shortcut.set.default
   - language/ro/simple_oauth.oauth2_token.bundle.access_token
   - language/ro/system.action.node_delete_action
@@ -197,8 +195,6 @@ complete_list:
   - language/ru/metatag.metatag_defaults.taxonomy_term
   - language/ru/metatag.metatag_defaults.user
   - language/ru/pathauto.pattern.group_content
-  - language/ru/search.page.node_search
-  - language/ru/search.page.user_search
   - language/ru/shortcut.set.default
   - language/ru/simple_oauth.oauth2_token.bundle.access_token
   - language/ru/system.action.pathauto_update_alias_node
@@ -278,8 +274,6 @@ complete_list:
   - language/sk/node.type.article
   - language/sk/node.type.page
   - language/sk/pathauto.pattern.group_content
-  - language/sk/search.page.node_search
-  - language/sk/search.page.user_search
   - language/sk/shortcut.set.default
   - language/sk/system.action.node_delete_action
   - language/sk/system.action.node_make_sticky_action
@@ -340,8 +334,6 @@ complete_list:
   - language/sq/metatag.metatag_defaults.taxonomy_term
   - language/sq/metatag.metatag_defaults.user
   - language/sq/pathauto.pattern.group_content
-  - language/sq/search.page.node_search
-  - language/sq/search.page.user_search
   - language/sq/shortcut.set.default
   - language/sq/system.menu.admin
   - language/sq/user.settings
@@ -382,7 +374,6 @@ complete_list:
   - language/sr/metatag.metatag_defaults.node
   - language/sr/metatag.metatag_defaults.user
   - language/sr/pathauto.pattern.group_content
-  - language/sr/search.page.node_search
   - language/sr/shortcut.set.default
   - language/sr/user.settings
   - language/sr/views.view.archive
@@ -430,7 +421,6 @@ complete_list:
   - language/uk/metatag.metatag_defaults.taxonomy_term
   - language/uk/metatag.metatag_defaults.user
   - language/uk/pathauto.pattern.group_content
-  - language/uk/search.page.node_search
   - language/uk/shortcut.set.default
   - language/uk/simple_oauth.oauth2_token.bundle.access_token
   - language/uk/system.action.pathauto_update_alias_node
