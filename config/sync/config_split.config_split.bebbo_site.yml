@@ -13,6 +13,8 @@ folder: ../config/bebbo
 module: {  }
 theme: {  }
 complete_list:
+  - bebbo_custom_general.landing_pages
+  - bebbo_custom_general.language_redirects
   - block.block.gin_kosovologo
   - language.entity.al-sq
   - language.entity.bg-bg
@@ -149,6 +151,10 @@ complete_list:
   - language/ro/user.role.authenticated
   - language/ro/user.settings
   - language/ro/views.view.archive
+  - language/ro/views.view.bebbo_api_challenges
+  - language/ro/views.view.bebbo_api_devices
+  - language/ro/views.view.bebbo_api_refresh_tokens
+  - language/ro/views.view.bebbo_api_security_log
   - language/ro/views.view.block_content
   - language/ro/views.view.content
   - language/ro/views.view.content_recent
@@ -169,9 +175,9 @@ complete_list:
   - language/ro/views.view.tmgmt_local_task_overview
   - language/ro/views.view.tmgmt_translation_all_job_items
   - language/ro/views.view.user_admin_people
+  - language/ro/views.view.watchdog
   - language/ro/views.view.who_s_new
   - language/ro/views.view.who_s_online
-  - language/ro/views.view.watchdog
   - language/rs-en/language.entity.rs-en
   - language/rs-sr/language.entity.rs-sr
   - language/ru/core.entity_form_mode.media.media_library
@@ -184,6 +190,7 @@ complete_list:
   - language/ru/field.field.node.article.body
   - language/ru/field.field.node.page.body
   - language/ru/filter.format.basic_html
+  - language/ru/filter.format.email_html
   - language/ru/filter.format.plain_text
   - language/ru/language.entity.en
   - language/ru/language.entity.ro
@@ -197,11 +204,17 @@ complete_list:
   - language/ru/pathauto.pattern.group_content
   - language/ru/shortcut.set.default
   - language/ru/simple_oauth.oauth2_token.bundle.access_token
+  - language/ru/symfony_mailer.mailer_policy.symfony_mailer.test
+  - language/ru/symfony_mailer.mailer_transport.sendmail
   - language/ru/system.action.pathauto_update_alias_node
   - language/ru/system.action.pathauto_update_alias_user
   - language/ru/system.menu.admin
   - language/ru/user.settings
   - language/ru/views.view.archive
+  - language/ru/views.view.bebbo_api_challenges
+  - language/ru/views.view.bebbo_api_devices
+  - language/ru/views.view.bebbo_api_refresh_tokens
+  - language/ru/views.view.bebbo_api_security_log
   - language/ru/views.view.block_content
   - language/ru/views.view.content
   - language/ru/views.view.content_recent
@@ -222,9 +235,9 @@ complete_list:
   - language/ru/views.view.tmgmt_local_task_overview
   - language/ru/views.view.tmgmt_translation_all_job_items
   - language/ru/views.view.user_admin_people
+  - language/ru/views.view.watchdog
   - language/ru/views.view.who_s_new
   - language/ru/views.view.who_s_online
-  - language/ru/views.view.watchdog
   - language/sk/block.block.claro_content
   - language/sk/block.block.claro_help
   - language/sk/block.block.claro_page_title
@@ -299,6 +312,10 @@ complete_list:
   - language/sk/user.role.authenticated
   - language/sk/user.settings
   - language/sk/views.view.archive
+  - language/sk/views.view.bebbo_api_challenges
+  - language/sk/views.view.bebbo_api_devices
+  - language/sk/views.view.bebbo_api_refresh_tokens
+  - language/sk/views.view.bebbo_api_security_log
   - language/sk/views.view.block_content
   - language/sk/views.view.content
   - language/sk/views.view.content_recent
@@ -319,9 +336,9 @@ complete_list:
   - language/sk/views.view.tmgmt_local_task_overview
   - language/sk/views.view.tmgmt_translation_all_job_items
   - language/sk/views.view.user_admin_people
+  - language/sk/views.view.watchdog
   - language/sk/views.view.who_s_new
   - language/sk/views.view.who_s_online
-  - language/sk/views.view.watchdog
   - language/sq/core.entity_view_mode.paragraph.preview
   - language/sq/email_tfa.settings
   - language/sq/field.field.block_content.basic.body
@@ -338,6 +355,10 @@ complete_list:
   - language/sq/system.menu.admin
   - language/sq/user.settings
   - language/sq/views.view.archive
+  - language/sq/views.view.bebbo_api_challenges
+  - language/sq/views.view.bebbo_api_devices
+  - language/sq/views.view.bebbo_api_refresh_tokens
+  - language/sq/views.view.bebbo_api_security_log
   - language/sq/views.view.block_content
   - language/sq/views.view.content
   - language/sq/views.view.content_recent
@@ -358,9 +379,9 @@ complete_list:
   - language/sq/views.view.tmgmt_local_task_overview
   - language/sq/views.view.tmgmt_translation_all_job_items
   - language/sq/views.view.user_admin_people
+  - language/sq/views.view.watchdog
   - language/sq/views.view.who_s_new
   - language/sq/views.view.who_s_online
-  - language/sq/views.view.watchdog
   - language/sr/core.entity_view_mode.paragraph.preview
   - language/sr/email_tfa.settings
   - language/sr/field.field.block_content.basic.body
@@ -377,6 +398,10 @@ complete_list:
   - language/sr/shortcut.set.default
   - language/sr/user.settings
   - language/sr/views.view.archive
+  - language/sr/views.view.bebbo_api_challenges
+  - language/sr/views.view.bebbo_api_devices
+  - language/sr/views.view.bebbo_api_refresh_tokens
+  - language/sr/views.view.bebbo_api_security_log
   - language/sr/views.view.block_content
   - language/sr/views.view.content
   - language/sr/views.view.content_recent
@@ -397,9 +422,9 @@ complete_list:
   - language/sr/views.view.tmgmt_local_task_overview
   - language/sr/views.view.tmgmt_translation_all_job_items
   - language/sr/views.view.user_admin_people
+  - language/sr/views.view.watchdog
   - language/sr/views.view.who_s_new
   - language/sr/views.view.who_s_online
-  - language/sr/views.view.watchdog
   - language/tj-ru/language.entity.tj-ru
   - language/tj-tg/language.entity.tj-tg
   - language/uk/core.entity_form_mode.media.media_library
@@ -423,11 +448,16 @@ complete_list:
   - language/uk/pathauto.pattern.group_content
   - language/uk/shortcut.set.default
   - language/uk/simple_oauth.oauth2_token.bundle.access_token
+  - language/uk/symfony_mailer.mailer_transport.sendmail
   - language/uk/system.action.pathauto_update_alias_node
   - language/uk/system.action.pathauto_update_alias_user
   - language/uk/system.menu.admin
   - language/uk/user.settings
   - language/uk/views.view.archive
+  - language/uk/views.view.bebbo_api_challenges
+  - language/uk/views.view.bebbo_api_devices
+  - language/uk/views.view.bebbo_api_refresh_tokens
+  - language/uk/views.view.bebbo_api_security_log
   - language/uk/views.view.block_content
   - language/uk/views.view.content
   - language/uk/views.view.content_recent
@@ -448,9 +478,9 @@ complete_list:
   - language/uk/views.view.tmgmt_local_task_overview
   - language/uk/views.view.tmgmt_translation_all_job_items
   - language/uk/views.view.user_admin_people
+  - language/uk/views.view.watchdog
   - language/uk/views.view.who_s_new
   - language/uk/views.view.who_s_online
-  - language/uk/views.view.watchdog
   - language/uz-ru/language.entity.uz-ru
   - language/uz-uz/language.entity.uz-uz
   - language/xk-rs/language.entity.xk-rs
@@ -458,8 +488,6 @@ complete_list:
   - language/xk-sq/system.menu.main
   - mobile_app_links.android_packages
   - mobile_app_links.ios
-  - bebbo_custom_general.landing_pages
-  - bebbo_custom_general.language_redirects
   - system.site
 partial_list:
   - ai_translate.settings
