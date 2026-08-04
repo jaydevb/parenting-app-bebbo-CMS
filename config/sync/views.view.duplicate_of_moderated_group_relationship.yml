@@ -1052,7 +1052,7 @@ display:
           entity_type: node
           entity_field: nid
           plugin_id: standard
-          required: false
+          required: true
         uid:
           id: uid
           table: node_field_revision
