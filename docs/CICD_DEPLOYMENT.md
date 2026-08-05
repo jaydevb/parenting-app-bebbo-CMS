@@ -60,7 +60,7 @@ All quality gates (composer validate, PHPCS, drupal-check, PHPLint) must pass; b
 
 ### Job 3 — `deploy-stage`
 - **Condition:** `github.event_name == 'push' && github.ref == 'refs/heads/stage'`
-- PHP **8.3** (note: lower than `ci-checks`/`deploy-dev`, which use 8.4)
+- PHP **8.4** (same as `ci-checks` and `deploy-dev`)
 - No composer step (acli builds the artifact; `ci-checks` already validated/installed)
 - Same Acquia CLI install / SSH / auth steps as `deploy-dev`
 - Clean state: `git reset --hard` + `git clean -fd` (note: **no `-x`**, unlike dev — open, see §10)
@@ -156,7 +156,7 @@ Separate from the Acquia pipeline. Builds and pushes a Docker image to Amazon EC
 ## 8. Platform Facts
 
 - **Drupal core:** `drupal/core-recommended: ^11.2` (`composer.json`)
-- **PHP:** 8.4 for `ci-checks` and `deploy-dev`; **8.3** for `deploy-stage` (`pipelines.yml` line 111)
+- **PHP (GitHub runner):** 8.4 in all three jobs — `ci-checks`, `deploy-dev` and `deploy-stage` (`pipelines.yml`, `shivammathur/setup-php`). This is the PHP that builds and pushes the artifact; the PHP each Acquia environment runs is configured in Acquia Cloud and is not defined in this repository.
 - **Hosting:** Acquia Cloud, application `parentbuddy2`, realm `devcloud`
 - **Multisite:** 7 sites (`hooks/sites.sh`): default, bangladesh, ecuador, pakistan, somoa, turkey, zimbabwe
 - **Artifact deploy:** Acquia CLI `acli push:artifact` (builds a deploy artifact and pushes to the Acquia Git env)

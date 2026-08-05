@@ -198,7 +198,7 @@ Full pipeline walkthrough: [`CICD_DEPLOYMENT.md`](CICD_DEPLOYMENT.md). Operator 
 | To deploy to… | Do this | Result |
 |---------------|---------|--------|
 | **Dev** | push / merge to `develop` | CI runs, then `acli push:artifact @parentbuddy2.dev` (PHP 8.4) |
-| **Stage** | push / merge to `stage` | CI runs, then `acli push:artifact @parentbuddy2.test` (PHP 8.3) |
+| **Stage** | push / merge to `stage` | CI runs, then `acli push:artifact @parentbuddy2.test` (runner PHP 8.4) |
 | **Prod** | **manual only** | no `deploy-prod` job; cloud hook **skips** DB/config on prod |
 
 - `main` is **not** a deploy trigger.

@@ -161,13 +161,18 @@ The key is stored in the site's active configuration only; do not export it into
 
 ### Outbound Email (Microsoft 365)
 
-Outbound email (content-moderation notifications, two-factor codes) is sent through the Symfony Mailer **Office 365 OAuth** transport. The committed configuration contains placeholders — email will not send until you supply real credentials:
+Outbound email (content-moderation notifications, two-factor codes) is sent through the Symfony Mailer **Office 365 OAuth** transport. This is a **delegated** OAuth flow over SMTP — an administrator signs in once as the sending mailbox and the site stores the resulting refresh token. The committed configuration ships the literal placeholders `REPLACE_WITH_CLIENT_ID`, `REPLACE_WITH_CLIENT_SECRET` and `REPLACE_WITH_TENANT_ID`, so email will not send until you supply real values:
 
-1. **Register an application** in [Microsoft Entra ID (Azure AD)](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade): note the **Application (client) ID** and **Directory (tenant) ID**, create a **client secret**, and grant the application the `Mail.Send` Microsoft Graph permission (admin consent required).
-2. **Add the credentials to the CMS:** go to **Configuration → System → Mailer** (`/admin/config/system/mailer`), edit the **Office 365 OAuth** transport, and enter the client ID, client secret, tenant ID, and the sending mailbox address.
-3. **Verify:** send a test email via **Configuration → System → Mailer → Test**.
+1. **Register an application** in [Microsoft Entra ID](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade). Note the **Application (client) ID** and **Directory (tenant) ID**, then create a **client secret** and copy its *value* (not its ID — the value is shown only once).
+2. **Add the redirect URI** to that app registration, under **Authentication → Add a platform → Web**. The exact value is shown on the CMS form in step 4; it is your site's origin plus `/office365/oauth/callback`, for example `https://bebbo.app/office365/oauth/callback`. **Every environment needs its own entry** — Dev, Stage, Prod and each country domain sign in separately and each returns to its own host. Sign-in fails with `AADSTS50011` if the URI is missing or differs by so much as a trailing slash.
+3. **Grant the delegated permissions** under **API permissions → Microsoft Graph → Delegated**: `IMAP.AccessAsUser.All`, `SMTP.Send` and `offline_access`. These are the scopes the module requests. It does **not** use the `Mail.Send` application permission. Grant admin consent if your tenant requires it, and make sure SMTP AUTH is enabled for the sending mailbox — Exchange Online disables it per-mailbox by default.
+4. **Enter the credentials in the CMS:** go to **Configuration → System → Mailer → Office365 Configuration** (`/admin/config/system/mailer/office365`) and fill in Client ID, Client Secret, Tenant ID and the sending mailbox address. The page displays the Redirect URL to register in step 2.
+5. **Sign in:** still on that page, use **Login via Microsoft** and authenticate as the sending mailbox. Until this is done the page reads *"Not functional. Login is needed"* and no mail is sent. Saving the form again **clears the stored token and forces a re-login**, so change credentials only when you intend to re-authenticate.
+6. **Verify:** send a test email from **Configuration → System → Mailer** (`/admin/config/system/mailer`).
 
-These three values are ignored by configuration export (`config_ignore`), so they stay local to each environment. For local development you can skip this — DDEV captures outgoing mail in Mailpit (`ddev launch -m`).
+The stored refresh token is kept alive by the `symfony_mailer_office365_cron` job, so cron must be running on every environment or the token will eventually lapse and require a manual re-login.
+
+The client ID, client secret and tenant ID are key-level `config_ignore` entries, so they stay local to each environment and are never exported. For local development you can skip all of this — DDEV captures outgoing mail in Mailpit (`ddev launch -m`).
 
 ### API Authentication (JWT + Device Attestation)
 
@@ -178,9 +183,11 @@ The V2 REST APIs (`/v2/api/*`) support device-based authentication provided by t
    openssl genrsa -out bebbo-jwt.pem 2048
    base64 -i bebbo-jwt.pem   # value for BEBBO_JWT_PRIVATE_KEY
    ```
-   For DDEV, uncomment and set `BEBBO_JWT_PRIVATE_KEY` under `web_environment` in `.ddev/config.yaml` (see the commented example), then `ddev restart`. On hosted environments set it as a platform environment variable.
+   For DDEV, uncomment and set `BEBBO_JWT_PRIVATE_KEY` under `web_environment` in `.ddev/config.yaml` (see the commented example), then `ddev restart`.
 2. **(Optional) Android attestation:** create a Google Cloud service account with the **Play Integrity API** enabled, download its JSON key, and set it (base64-encoded) as the `BEBBO_GOOGLE_SA_KEY` environment variable.
-3. **(Optional) iOS attestation:** enter your Apple **Team ID**, **bundle ID**, and the [Apple App Attestation Root CA](https://www.apple.com/certificateauthority/) PEM in the module settings form (**Configuration → Web services → API Security**).
+
+   > **On Acquia, both variables are set in Acquia Cloud, not in this repository.** In the Cloud Platform UI open the application, then **Configure → Environment variables**, and add `BEBBO_JWT_PRIVATE_KEY` and `BEBBO_GOOGLE_SA_KEY` for **each** environment (Dev, Stage, Prod) that needs them — variables are per-environment and are not inherited. Both values must be **base64-encoded**; the Key module entities `bebbo_jwt_signing_key` and `bebbo_google_sa_key` read them through the `env` key provider with `base64_encoded: true`. Because they are environment variables, no key material is ever committed or exported with configuration. Restart or redeploy the environment after adding them so PHP picks up the new values.
+3. **(Optional) iOS attestation:** enter your Apple **Team ID**, **bundle ID**, and the [Apple App Attestation Root CA](https://www.apple.com/certificateauthority/) PEM in the module settings form at `/admin/config/parent-buddy/api-security`.
 4. **Enable enforcement** by switching the module's *Enforcement mode* from `disabled` to `grace_period` (monitor) or `enforced`.
 
 The full attestation flow, token lifetimes, and rollout guidance are documented in [API Security](docs/API_SECURITY.md).
@@ -193,6 +200,7 @@ The project documentation is organised under the `/docs` directory.
 |--------|-------------|
 | [Architecture](docs/ARCHITECTURE.md) | Overall CMS architecture and system design |
 | [Configuration](docs/CONFIGURATION.md) | Drupal configuration management |
+| [Post-Setup Configuration](docs/POST_SETUP_CONFIGURATION.md) | What to configure after install: AI, MFA, analytics, mail, Entity Share, API security |
 | [Environment Guide](docs/ENVIRONMENTS.md) | Development, Stage and Production environments |
 | [Modules](docs/MODULES.md) | Custom modules and their purpose |
 | [API Reference](docs/API_REFERENCE.md) | REST API endpoints |
@@ -215,7 +223,7 @@ The automated pipeline defined in [.github/workflows/pipelines.yml](.github/work
 
 - **Credentials isolation**: Acquia API keys, SSH keys, and host fingerprints are consumed exclusively via encrypted GitHub Secrets (`ACQUIA_API_KEY_ID`, `ACQUIA_API_KEY_SECRET`, `ACQUIA_SSH_PRIVATE_KEY`, `ACQUIA_SSH_KNOWN_HOSTS`). Secrets are injected only into the relevant deploy jobs.
 - **Hardening SSH connectivity**: The workflow provisions SSH access using `webfactory/ssh-agent` with the private key from secrets and explicitly pins the Acquia Git host fingerprint via `ssh-keyscan` before any remote interaction.
-- **Clean build environments**: Every job starts from a fresh `ubuntu-latest` runner and pins PHP via `shivammathur/setup-php` (PHP 8.4 for CI checks and the Dev deploy, PHP 8.3 for the Stage deploy), then performs `git reset --hard` / `git clean -fd` prior to artifact pushes to avoid leaking untracked files.
+- **Clean build environments**: Every job starts from a fresh `ubuntu-latest` runner and pins PHP via `shivammathur/setup-php` — **PHP 8.4 in all three jobs** (`ci-checks`, `deploy-dev`, `deploy-stage`) — then performs `git reset --hard` / `git clean -fd` prior to artifact pushes to avoid leaking untracked files. This is the PHP version of the GitHub runner that builds and pushes the artifact; the PHP version each Acquia environment *runs* is set in Acquia Cloud and is not defined in this repository.
 - **Dependency and code integrity checks**: `composer validate`, `composer install --no-interaction`, PHPCS, `drupal-check`, and `phplint` run on each push/PR to catch tampered dependencies or insecure code patterns before deployment.
 - **Scoped deployments**: Deploy jobs only run for specific branches — a push to `develop` deploys to Acquia Dev, a push to `stage` deploys to Acquia Stage — after CI checks pass (`needs: ci-checks`), ensuring only vetted code can reach Acquia environments. `main` is not a deploy trigger; Prod is deployed manually.
 - **Auditable automation account**: Git author identity for automated commits to Acquia Git is consistently set to `github-actions+bebbo@unicef.org`, making bot activity traceable in repository history.
@@ -223,8 +231,8 @@ The automated pipeline defined in [.github/workflows/pipelines.yml](.github/work
 ## Branching Strategy
 Follow these guidelines to keep work streams predictable and in sync with the Acquia environments. Deployments are driven by **branch pushes**, not by merges into `main`:
 
-- Push to **`develop`** → deploys to **Acquia Dev** (`@parentbuddy2.dev`, PHP 8.4).
-- Push to **`stage`** → deploys to **Acquia Stage** (`@parentbuddy2.test`, PHP 8.3).
+- Push to **`develop`** → deploys to **Acquia Dev** (`@parentbuddy2.dev`).
+- Push to **`stage`** → deploys to **Acquia Stage** (`@parentbuddy2.test`).
 - **`main` is not a deploy trigger.** Production is released manually (no automated job).
 
 CI checks (`composer validate`, PHPCS, `drupal-check`, `phplint`) run on every push to `develop`/`stage` and on every PR targeting `feature/**`, `bug/**`, `hotfix/**`, `develop`, and `stage`.

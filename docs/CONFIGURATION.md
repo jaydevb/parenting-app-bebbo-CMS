@@ -1152,6 +1152,8 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 - **`views.view.bebbo_v1_apis`:** per-site split patches override the "Pregnancy" `child_age` TID used by the V1 articles/taxonomies pregnancy filter, since the TID differs per site
 - **Entity Share:** no split carries channel or remote YAML — all Entity Share config is shared in `config/sync/` (see §13)
 
+> Operator-facing guidance for the values these ignores protect — AI keys, mailer credentials, the Entity Share key, analytics endpoint, API-security environment variables — is in [POST_SETUP_CONFIGURATION.md](POST_SETUP_CONFIGURATION.md).
+
 ### `config_ignore.settings.yml` — never imported/exported
 
 Whole-entity ignores: `admin_toolbar.settings`, `bebbo_api_security.settings`, `mobile_app_links.android_packages`, `mobile_app_links.ios`, `pb_content_analytics.settings`, `purge.logger_channels`, `tmgmt.translator.*` (plus explicit `deepl_free`, `deepl_pro`, `google`, `memsource`, `microsoft`), `tmgmt_memsource.settings`, `views.view.entity_share_client_entity_import_status`.
