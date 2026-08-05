@@ -104,7 +104,8 @@ Args (Acquia-supplied): `site target-env source-branch deployed-tag repo-url rep
   2. `drush updb -y` — database updates
   3. `drush cim -y` — config import (pass 1)
   4. `drush cr` + `drush cim -y` — cache rebuild + config import (pass 2)
-  5. `drush cr` — final cache rebuild
+  5. `drush bebbo:menu-sync` — apply the canonical editorial menu (menu links are content entities, so config import alone never applies them; runs after `cim` so it reads the freshly imported canon)
+  6. `drush cr` — final cache rebuild
 - **If `target_env == prod`:** prints `"Manually do the deployment activity."` — **no automated DB update or config import on prod.**
 
 > Note: both `post-code-deploy.sh` and `post-code-update.sh` carry a header comment reading "Cloud Hook: post-code-update" — a copy-paste artifact; both simply delegate to `code-deploy.sh`.

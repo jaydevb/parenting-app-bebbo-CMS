@@ -156,11 +156,11 @@ Also hosts two endpoints exposed under both V1 and V2 paths: the **Strings API**
 
 **Name:** Bebbo Custom General
 **Core:** `^10 || ^11`
-**Dependencies:** none declared in `.info.yml`
+**Dependencies:** `group`, `menu_per_role`
 
 ### Purpose
 
-Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag (P1 slices + `.module` hook slices 1–5b). Houses self-contained admin features and editorial-form helpers that have no dedicated module: Entity Share CSV export, TMGMT overview/cart UX, mobile-JS share landing pages, language/landing-page redirect management, app-store QR redirect, master-language settings, article category AJAX cascade, group-country form handling, node archive validation, and node-action batch helpers.
+Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag (P1 slices + `.module` hook slices 1–5b). Houses self-contained admin features and editorial-form helpers that have no dedicated module: Entity Share CSV export, TMGMT overview/cart UX, mobile-JS share landing pages, language/landing-page redirect management, app-store QR redirect, master-language settings, article category AJAX cascade, group-country form handling, node archive validation, node-action batch helpers, and the canonical editorial menu (export, per-site sync, and the country-users redirect).
 
 ### Services
 
@@ -168,6 +168,7 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 |-----------|-------|------|
 | `bebbo_custom_general.mailer_sender_override` | `MailerSenderOverride` | Event subscriber — overrides mail sender from config |
 | `bebbo_custom_general.internal_content_node_redirect` | `InternalContentNodeRedirect` | `KernelEvents::REQUEST` — redirects anonymous internal node URLs by language / site context |
+| `bebbo_custom_general.editorial_menu_manager` | `EditorialMenuManager` | Exports the editorial menu to config and applies that canon to a site |
 
 ### Routes
 
@@ -184,6 +185,7 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 | `/admin/content/entity_share/pull/export/csv` | `CsvExportController::download` | `entity_share_client_pull_content` |
 | `/admin/content/entity_share/pull/export/csv/batch` | `CsvExportController::downloadBatch` | `entity_share_client_pull_content` |
 | `/admin/content/entity_share/pull/export/csv/download` | `CsvExportController::downloadCompleted` | `entity_share_client_pull_content` |
+| `/country-users` | `CountryUsersController::redirectToCountry` | `_user_is_logged_in` |
 
 > The admin forms hang off the `pb_custom_form.admin_config_parent_buddy` menu container, and their permissions (`manage mobile javascript`, `manage redirect settings`) are still declared by `pb_custom_form`.
 
@@ -222,7 +224,16 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 
 ### Config
 
-`bebbo_custom_general.adminsettings`, `bebbo_custom_general.app_store_redirect`, and `bebbo_custom_general.mobile_app_share_link_form` live in shared `config/sync/` (the mobile-share form is additionally overridden in the Ecuador and Turkey splits). `bebbo_custom_general.landing_pages` and `bebbo_custom_general.language_redirects` are **per-site**: each of the 7 split folders carries its own copy; neither exists in `config/sync/`. Schema in `config/schema/bebbo_custom_general.schema.yml`. None of these are in `config_ignore`.
+`bebbo_custom_general.adminsettings`, `bebbo_custom_general.app_store_redirect`, and `bebbo_custom_general.mobile_app_share_link_form` live in shared `config/sync/` (the mobile-share form is additionally overridden in the Ecuador and Turkey splits). `bebbo_custom_general.landing_pages` and `bebbo_custom_general.language_redirects` are **per-site**: each of the 7 split folders carries its own copy; neither exists in `config/sync/`. `bebbo_custom_general.editorial_menu` is shared and holds the canonical editorial menu: every link keyed by UUID with its title, URI, parent, weight, enabled state and `menu_per_role` show/hide roles. Schema in `config/schema/bebbo_custom_general.schema.yml`. None of these are in `config_ignore`.
+
+### Drush commands
+
+| Command | Direction | Use |
+|---------|-----------|-----|
+| `bebbo:menu-export` (`bme`) | database → config | Run on bebbo after editing the editorial menu, then commit the exported config file. Keeps every value of multi-value fields, unlike `menu_export`. |
+| `bebbo:menu-sync` (`bms`) | config → database | Applies the canon to one site. Idempotent, `--dry-run` shows the diff. Runs per site on every deploy from `hooks/common/code-deploy.sh`. |
+
+Menu links are content entities, so config import alone never applies a menu change. `bebbo:menu-sync` upserts by UUID, sets the `menu_per_role` roles to exactly the canonical values, and deletes editorial-menu links absent from the canon — scoped to that menu only.
 
 ### Post-Update Hooks
 
