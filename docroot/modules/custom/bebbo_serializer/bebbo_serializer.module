@@ -311,6 +311,7 @@ function bebbo_serializer_form_alter(array &$form, FormStateInterface $form_stat
     $form['#attached']['library'][] = 'bebbo_serializer/course_module_count';
     $form['#attached']['library'][] = 'bebbo_serializer/course_expiry';
     $form['#validate'][] = '_bebbo_serializer_course_expiry_validate';
+    $form['#validate'][] = '_bebbo_serializer_course_link_validate';
   }
 
   // Pregnancy weekly overview: restrict.
@@ -477,6 +478,17 @@ function _bebbo_serializer_course_expiry_validate(array &$form, FormStateInterfa
     return;
   }
 
+  if (is_array($expiry)) {
+    if (empty($expiry['time'])) {
+      $form_state->setErrorByName(
+        'field_course_expiry',
+        t('Please enter both a date and time for the course expiry.')
+      );
+      return;
+    }
+    $expiry = $expiry['date'] . ' ' . $expiry['time'];
+  }
+
   $expiry_date = $expiry instanceof DrupalDateTime ? $expiry : new DrupalDateTime($expiry);
   $now = new DrupalDateTime('now');
 
@@ -484,6 +496,23 @@ function _bebbo_serializer_course_expiry_validate(array &$form, FormStateInterfa
     $form_state->setErrorByName(
       'field_course_expiry',
       t('Course expiry date must be in the future.')
+    );
+  }
+}
+
+/**
+ * Validates that the course link is a valid URL.
+ */
+function _bebbo_serializer_course_link_validate(array &$form, FormStateInterface $form_state): void {
+  $link = $form_state->getValue(['field_course_link', 0, 'value']);
+  if (empty($link)) {
+    return;
+  }
+
+  if (!filter_var($link, FILTER_VALIDATE_URL)) {
+    $form_state->setErrorByName(
+      'field_course_link',
+      t('Please enter a valid URL for the course link (e.g. https://example.com).')
     );
   }
 }
