@@ -317,7 +317,9 @@ function bebbo_serializer_form_alter(array &$form, FormStateInterface $form_stat
     // Default an omitted expiry time to end of day. This has to happen in the
     // value callback: by the time any validator runs, core has already failed
     // to build a date from "Y-m-d H:i:s" against a date-only string and left
-    // the raw array in place.
+    // the raw array in place. course_expiry.js goes further and rewrites the
+    // time whenever the date changes; this only covers the empty case, which
+    // is all a submission can tell us about.
     if (isset($form['field_course_expiry']['widget'][0]['value'])) {
       $form['field_course_expiry']['widget'][0]['value']['#value_callback'] = '_bebbo_serializer_course_expiry_value';
     }
