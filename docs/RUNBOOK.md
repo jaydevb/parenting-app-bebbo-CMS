@@ -464,15 +464,16 @@ Admin settings at `/admin/config/people/email-tfa` (permission: `administer emai
 
 ### 13.2 Email notification policy
 
-Only three types of user-facing emails are enabled:
+Only two types of user-facing emails are enabled:
 
 | Email | Source | When |
 |---|---|---|
 | MFA OTP code | `email_tfa` | Every login |
 | Password reset link | `user.settings` (`password_reset`) | User-initiated via `/user/password` |
-| Admin-created account link | `user.settings` (`register_admin_created`) | Admin creates new user |
 
-All content moderation notifications are **disabled** (`status: false`). All other user notifications (`cancel_confirm`, `status_activated`, `register_no_approval_required`, `register_pending_approval`) are **disabled**.
+All content moderation notifications are **disabled** (`status: false`). All other user notifications (`cancel_confirm`, `status_activated`, `status_blocked`, `status_canceled`, `register_admin_created`, `register_no_approval_required`, `register_pending_approval`) are **disabled**.
+
+Because `register_admin_created` is off, a newly created account receives no one-time-login mail. Set a password on the user-add form and hand it to the person out-of-band; they change it after first login.
 
 ### 13.3 Dependencies
 

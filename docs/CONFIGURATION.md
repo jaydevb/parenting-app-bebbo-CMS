@@ -185,12 +185,12 @@ After standard login, users are redirected to the OTP verification page. On succ
 | Password reset timeout | `86400` s (24 h) |
 | Password strength meter | `true` |
 
-**User email notifications** — restricted to security-related and onboarding emails only:
+**User email notifications** — restricted to security-related email only:
 
 | Notification | Enabled | Reason |
 |---|---|---|
 | `password_reset` | **true** | Security — user-initiated password recovery |
-| `register_admin_created` | **true** | Onboarding — one-time login link for new users (registration is `admin_only`) |
+| `register_admin_created` | false | Disabled — admins set the password on new accounts and deliver it out-of-band |
 | `cancel_confirm` | false | Non-essential |
 | `status_activated` | false | Non-essential |
 | `status_blocked` | false | Non-essential |
@@ -198,7 +198,9 @@ After standard login, users are redirected to the OTP verification page. On succ
 | `register_no_approval_required` | false | Not applicable (`admin_only` registration) |
 | `register_pending_approval` | false | Not applicable (`admin_only` registration) |
 
-Combined with Email TFA (§1 above) and disabled content moderation notifications (§7), the only emails users receive are: **MFA OTP codes**, **password reset links**, and **admin-created account links**.
+Combined with Email TFA (§1 above) and disabled content moderation notifications (§7), the only emails users receive are: **MFA OTP codes** and **password reset links**.
+
+Because registration is `admin_only` and no account-created mail is sent, creating a user is a two-part operation: create the account with a password set on the form, then pass the credentials to the user through a channel outside Drupal. The user changes the password after first login.
 
 ### Keys — `key.key.*`
 | Key ID | Label | Provider | Source |

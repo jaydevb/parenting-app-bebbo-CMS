@@ -1621,7 +1621,7 @@ The security endpoints (`/api/security/*`) return **real HTTP status codes** via
 | **403** | `status: "rejected"` | `{"status": "rejected", "reason": "device_integrity_failed", "message": "<detail>"}` | Play Integrity or App Attest verification fails | `/api/security/register` |
 | **403** | `status: "rejected"` | `{"status": "rejected", "reason": "verification_failed", "message": "<detail>"}` | Sideloaded challenge lookup fails (expired, used, not found) | `/api/security/device/verify` |
 | **403** | `status: "rejected"` | `{"status": "rejected", "reason": "signature_invalid", "message": "Challenge signature verification failed."}` | ECDSA signature verification fails | `/api/security/device/verify` |
-| **429** | `error: "rate_limited"` | `{"error": "rate_limited", "message": "Too many requests. Try again later."}` | Flood threshold exceeded | `/api/security/register`, `/device/register`, `/device/verify` |
+| **429** | `error: "rate_limited"` | `{"error": "rate_limited", "message": "Too many requests. Try again later."}` | Flood threshold exceeded | `/api/security/register`, `/device/register`, `/device/verify`, `/refresh` |
 
 > **Replay detection:** When a revoked refresh token is reused, the server revokes the **entire token family** (all tokens in the same rotation chain) and logs `"Refresh token replay detected"`. However, the client receives the same **401** `{status: "invalid"}` response — there is no distinct replay error code. The replay is only distinguishable server-side via the security log.
 
