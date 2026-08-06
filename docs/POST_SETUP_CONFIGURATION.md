@@ -71,11 +71,13 @@ Also shipped: `request_timeout: 60`, `prompt_logging: false`, the prompt type `a
 
 | Step | Where | Notes |
 |---|---|---|
-| 1. Add the OpenAI API key | **Configuration → System → Keys** → `/admin/config/system/keys`, edit **OpenAI API Key** | `ai_provider_openai.settings` stores only the key entity name (`openai_api_key`), never the secret. Read the export warning in §1. |
-| 2. Confirm the provider | `/admin/config/ai/providers/openai` | Moderation is on; `host` is empty, meaning the default OpenAI endpoint. Set a host only for a proxy or Azure-style gateway. |
-| 3. Review default models | **Configuration → AI** → `/admin/config/ai` (the settings form is `ai.settings_form`, routed as `/admin/config/ai/settings/{nojs}`) | Only if you want to deviate from the table above. Model IDs must exist for your account. |
-| 4. Review the translation prompt | `/admin/config/ai/prompts` → `ai_translate__ai_translate_default` | Prompt variables available: `sourceLang`, `sourceLangName`, `destLang`, `destLangName` (required), `inputText`, `countryName`. Prompt types are at `/admin/config/ai/prompts/prompt-types`. |
-| 5. Review AI Translate behaviour | `/admin/config/ai/ai-translate` | Per-language model/prompt overrides, draft-vs-publish behaviour, reference depth. |
+| 1. Generate an OpenAI API key | [platform.openai.com](https://platform.openai.com/api-keys) → **API keys** → *Create new secret key* | Produces an `sk-...` value, shown once. The account must have billing enabled or every request fails with a quota error. |
+| 2. Add the key to the CMS | **Configuration → System → Keys** → `/admin/config/system/keys`, edit **OpenAI API Key** | `ai_provider_openai.settings` stores only the key entity name (`openai_api_key`), never the secret. Read the export warning in §1. |
+| 3. Confirm the provider | `/admin/config/ai/providers/openai` | Moderation is on; `host` is empty, meaning the default OpenAI endpoint. Set a host only for a proxy or Azure-style gateway. |
+| 4. Review default models | **Configuration → AI** → `/admin/config/ai` (the settings form is `ai.settings_form`, routed as `/admin/config/ai/settings/{nojs}`) | Only if you want to deviate from the table above. Model IDs must exist for your account. |
+| 5. Review the translation prompt | `/admin/config/ai/prompts` → `ai_translate__ai_translate_default` | Prompt variables available: `sourceLang`, `sourceLangName`, `destLang`, `destLangName` (required), `inputText`, `countryName`. Prompt types are at `/admin/config/ai/prompts/prompt-types`. |
+| 6. Review AI Translate behaviour | `/admin/config/ai/ai-translate` | Per-language model/prompt overrides, draft-vs-publish behaviour, reference depth. |
+| 7. Verify | Open a node, use the **Translate** tab's AI translate action | A draft translation should be produced. |
 
 ### The TMGMT side
 
@@ -151,7 +153,7 @@ The module requests these **delegated** scopes: `https://outlook.office365.com/I
 
 | Step | Where | Notes |
 |---|---|---|
-| 1. Register the app | Microsoft Entra ID | Capture Application (client) ID, Directory (tenant) ID, and a client secret **value** |
+| 1. Register the app | [Microsoft Entra ID](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) | Capture Application (client) ID, Directory (tenant) ID, and a client secret **value** — the value, not its ID, and it is displayed only once |
 | 2. Register the redirect URI | Entra → **Authentication → Add a platform → Web** | `https://<your-host>/office365/oauth/callback`. **One entry per environment and per domain** — Dev, Stage, Prod and each country domain each sign in against their own host. A mismatch fails with `AADSTS50011`. |
 | 3. Grant delegated permissions | Entra → **API permissions** | The three scopes above, with admin consent if the tenant requires it. Confirm SMTP AUTH is enabled for the mailbox — Exchange Online disables it per-mailbox by default. |
 | 4. Enter credentials | `/admin/config/system/mailer/office365` | Client ID, Client Secret, Tenant ID, sending mailbox. The page prints the exact Redirect URL for step 2. |
@@ -257,8 +259,17 @@ Because the whole entity is ignored, these values are per environment and surviv
 | 1. JWT signing key | **Acquia Cloud → Configure → Environment variables**, variable `BEBBO_JWT_PRIVATE_KEY` | RSA private key, **base64-encoded**. Read by the Key entity `bebbo_jwt_signing_key` (`env` provider, `base64_encoded: true`). Locally: `web_environment` in `.ddev/config.yaml`, then `ddev restart`. |
 | 2. Android attestation key | Same place, variable `BEBBO_GOOGLE_SA_KEY` | Google service-account JSON with Play Integrity enabled, **base64-encoded**. Read by `bebbo_google_sa_key`. |
 | 3. Android identifiers | `/admin/config/parent-buddy/api-security` | Package name, project number, verdict freshness |
-| 4. iOS identifiers | Same form | Apple Team ID, bundle ID, App Attestation Root CA, production mode |
+| 4. iOS identifiers | Same form | Apple Team ID, bundle ID, the [Apple App Attestation Root CA](https://www.apple.com/certificateauthority/) PEM, production mode |
 | 5. Enforcement | Same form | `disabled` → `grace_period` (monitor only) → `enforced` |
+
+Generate the RSA signing key and encode it for step 1:
+
+```bash
+openssl genrsa -out bebbo-jwt.pem 2048
+base64 -i bebbo-jwt.pem   # value for BEBBO_JWT_PRIVATE_KEY
+```
+
+Keep `bebbo-jwt.pem` out of the repository. For DDEV, uncomment and set `BEBBO_JWT_PRIVATE_KEY` under `web_environment` in `.ddev/config.yaml` (a commented example is present), then `ddev restart`. The Google service-account JSON for step 2 is encoded the same way (`base64 -i service-account.json`).
 
 **Both environment variables are set in Acquia Cloud, per environment.** They are not inherited between Dev, Stage and Prod — add them wherever the secured flow runs, and redeploy or restart so PHP sees them. Nothing is committed and nothing is exported.
 

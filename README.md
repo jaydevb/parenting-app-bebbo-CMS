@@ -147,50 +147,22 @@ ddev drush cr
 
 ## Feature Setup
 
-Some features rely on external services and need credentials configured before they work. Credentials are never committed to git — they are entered per environment.
+Installing the codebase and importing configuration gets a site running, but several features ship inert: their structure is in Git while their credentials, endpoints and enrolment settings are supplied per environment. Configure these **after** setting up a new site — including each new country site — or the feature will silently do nothing.
 
-### AI Translate (OpenAI)
+Every step, form path, permission and verification check is documented in **[Post-Setup Configuration](docs/POST_SETUP_CONFIGURATION.md)**, which covers:
 
-The AI translation feature (and the other AI-powered features) uses the OpenAI provider, which reads its API key from the Key module entity **OpenAI API Key** (`openai_api_key`). The key ships empty, so AI Translate will not work until you add a key:
+| Feature | Needs |
+|---|---|
+| AI / AI Translate (OpenAI) | An OpenAI API key in the Key module, plus TMGMT providers — no `tmgmt.translator.*` entity arrives via `cim` |
+| Email TFA | Working outbound email first; it is globally enforced, uid 1 included |
+| Outbound email (Microsoft 365) | An Entra ID app registration, a per-environment redirect URI, and a one-time delegated sign-in |
+| Content Analytics | The BigQuery endpoint URL and its `X-API-Key`, plus cron |
+| Entity Share | The `entity_share_basic_auth` key and a reachable remote |
+| API security (JWT + device attestation) | `BEBBO_JWT_PRIVATE_KEY` (and optionally `BEBBO_GOOGLE_SA_KEY`) as environment variables; enforcement is `disabled` by default |
 
-1. **Generate the key:** sign in at [platform.openai.com](https://platform.openai.com/api-keys), open **API keys**, and create a new secret key (`sk-...`). The account must have billing enabled.
-2. **Add it to the CMS:** go to **Configuration → System → Keys** (`/admin/config/system/keys`), edit **OpenAI API Key**, paste the key value, and save.
-3. **Verify:** open a piece of content, use the **Translate** tab's AI translate action, and confirm a translation is produced. Provider settings live at **Configuration → AI** (`/admin/config/ai`).
+That document also carries the ordered [new-site checklist](docs/POST_SETUP_CONFIGURATION.md#8-new-site-checklist) — order matters, since email must work before TFA and keys must exist before the features that read them.
 
-The key is stored in the site's active configuration only; do not export it into `config/sync`.
-
-### Outbound Email (Microsoft 365)
-
-Outbound email (content-moderation notifications, two-factor codes) is sent through the Symfony Mailer **Office 365 OAuth** transport. This is a **delegated** OAuth flow over SMTP — an administrator signs in once as the sending mailbox and the site stores the resulting refresh token. The committed configuration ships the literal placeholders `REPLACE_WITH_CLIENT_ID`, `REPLACE_WITH_CLIENT_SECRET` and `REPLACE_WITH_TENANT_ID`, so email will not send until you supply real values:
-
-1. **Register an application** in [Microsoft Entra ID](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade). Note the **Application (client) ID** and **Directory (tenant) ID**, then create a **client secret** and copy its *value* (not its ID — the value is shown only once).
-2. **Add the redirect URI** to that app registration, under **Authentication → Add a platform → Web**. The exact value is shown on the CMS form in step 4; it is your site's origin plus `/office365/oauth/callback`, for example `https://bebbo.app/office365/oauth/callback`. **Every environment needs its own entry** — Dev, Stage, Prod and each country domain sign in separately and each returns to its own host. Sign-in fails with `AADSTS50011` if the URI is missing or differs by so much as a trailing slash.
-3. **Grant the delegated permissions** under **API permissions → Microsoft Graph → Delegated**: `IMAP.AccessAsUser.All`, `SMTP.Send` and `offline_access`. These are the scopes the module requests. It does **not** use the `Mail.Send` application permission. Grant admin consent if your tenant requires it, and make sure SMTP AUTH is enabled for the sending mailbox — Exchange Online disables it per-mailbox by default.
-4. **Enter the credentials in the CMS:** go to **Configuration → System → Mailer → Office365 Configuration** (`/admin/config/system/mailer/office365`) and fill in Client ID, Client Secret, Tenant ID and the sending mailbox address. The page displays the Redirect URL to register in step 2.
-5. **Sign in:** still on that page, use **Login via Microsoft** and authenticate as the sending mailbox. Until this is done the page reads *"Not functional. Login is needed"* and no mail is sent. Saving the form again **clears the stored token and forces a re-login**, so change credentials only when you intend to re-authenticate.
-6. **Verify:** send a test email from **Configuration → System → Mailer** (`/admin/config/system/mailer`).
-
-The stored refresh token is kept alive by the `symfony_mailer_office365_cron` job, so cron must be running on every environment or the token will eventually lapse and require a manual re-login.
-
-The client ID, client secret and tenant ID are key-level `config_ignore` entries, so they stay local to each environment and are never exported. For local development you can skip all of this — DDEV captures outgoing mail in Mailpit (`ddev launch -m`).
-
-### API Authentication (JWT + Device Attestation)
-
-The V2 REST APIs (`/v2/api/*`) support device-based authentication provided by the `bebbo_api_security` module. Enforcement is **disabled by default**, so a fresh install works without any of this — set it up only when you want to exercise the secured API flow:
-
-1. **Generate an RSA signing key** for JWTs and expose it as an environment variable:
-   ```bash
-   openssl genrsa -out bebbo-jwt.pem 2048
-   base64 -i bebbo-jwt.pem   # value for BEBBO_JWT_PRIVATE_KEY
-   ```
-   For DDEV, uncomment and set `BEBBO_JWT_PRIVATE_KEY` under `web_environment` in `.ddev/config.yaml` (see the commented example), then `ddev restart`.
-2. **(Optional) Android attestation:** create a Google Cloud service account with the **Play Integrity API** enabled, download its JSON key, and set it (base64-encoded) as the `BEBBO_GOOGLE_SA_KEY` environment variable.
-
-   > **On Acquia, both variables are set in Acquia Cloud, not in this repository.** In the Cloud Platform UI open the application, then **Configure → Environment variables**, and add `BEBBO_JWT_PRIVATE_KEY` and `BEBBO_GOOGLE_SA_KEY` for **each** environment (Dev, Stage, Prod) that needs them — variables are per-environment and are not inherited. Both values must be **base64-encoded**; the Key module entities `bebbo_jwt_signing_key` and `bebbo_google_sa_key` read them through the `env` key provider with `base64_encoded: true`. Because they are environment variables, no key material is ever committed or exported with configuration. Restart or redeploy the environment after adding them so PHP picks up the new values.
-3. **(Optional) iOS attestation:** enter your Apple **Team ID**, **bundle ID**, and the [Apple App Attestation Root CA](https://www.apple.com/certificateauthority/) PEM in the module settings form at `/admin/config/parent-buddy/api-security`.
-4. **Enable enforcement** by switching the module's *Enforcement mode* from `disabled` to `grace_period` (monitor) or `enforced`.
-
-The full attestation flow, token lifetimes, and rollout guidance are documented in [API Security](docs/API_SECURITY.md).
+**No credential is ever committed.** Values are entered in admin forms or set as environment variables. One trap to note: `key.key.openai_api_key` is *not* in `config_ignore`, so a blanket `drush cex` after entering the OpenAI key will write the secret into `config/sync`. Export only the files your change touched.
 
 ## Documentation
 
