@@ -13,6 +13,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Datetime\Element\Datetime;
 use Drupal\views\Plugin\views\query\Sql;
 
 /**
@@ -311,6 +312,17 @@ function bebbo_serializer_form_alter(array &$form, FormStateInterface $form_stat
     $form['#attached']['library'][] = 'bebbo_serializer/course_module_count';
     $form['#attached']['library'][] = 'bebbo_serializer/course_expiry';
     $form['#validate'][] = '_bebbo_serializer_course_expiry_validate';
+    $form['#validate'][] = '_bebbo_serializer_course_link_validate';
+
+    // Default an omitted expiry time to end of day. This has to happen in the
+    // value callback: by the time any validator runs, core has already failed
+    // to build a date from "Y-m-d H:i:s" against a date-only string and left
+    // the raw array in place. course_expiry.js goes further and rewrites the
+    // time whenever the date changes; this only covers the empty case, which
+    // is all a submission can tell us about.
+    if (isset($form['field_course_expiry']['widget'][0]['value'])) {
+      $form['field_course_expiry']['widget'][0]['value']['#value_callback'] = '_bebbo_serializer_course_expiry_value';
+    }
   }
 
   // Pregnancy weekly overview: restrict.
@@ -469,11 +481,43 @@ function _bebbo_serializer_quiz_question_count_validate(array &$form, FormStateI
 }
 
 /**
+ * Value callback for the course expiry element.
+ *
+ * Fills in an end-of-day time when the editor supplies a date on its own, so
+ * "expires on the 10th" means the whole of the 10th rather than midnight at
+ * its start. Runs ahead of validation, so the defaulted value is what gets
+ * validated and saved.
+ *
+ * @param array $element
+ *   The datetime form element.
+ * @param mixed $input
+ *   Submitted input, or FALSE when the form is being built.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ *
+ * @return array
+ *   The datetime element value, as built by the core value callback.
+ */
+function _bebbo_serializer_course_expiry_value(array &$element, $input, FormStateInterface $form_state): array {
+  if (is_array($input) && !empty($input['date']) && empty($input['time'])) {
+    $input['time'] = '23:59:59';
+  }
+
+  return Datetime::valueCallback($element, $input, $form_state);
+}
+
+/**
  * Validates that the course expiry date is in the future.
  */
 function _bebbo_serializer_course_expiry_validate(array &$form, FormStateInterface $form_state): void {
   $expiry = $form_state->getValue(['field_course_expiry', 0, 'value']);
   if (empty($expiry)) {
+    return;
+  }
+
+  // A date the editor never completed stays an array here; core has already
+  // flagged it, so there is nothing useful left to check.
+  if (is_array($expiry)) {
     return;
   }
 
@@ -484,6 +528,26 @@ function _bebbo_serializer_course_expiry_validate(array &$form, FormStateInterfa
     $form_state->setErrorByName(
       'field_course_expiry',
       t('Course expiry date must be in the future.')
+    );
+  }
+}
+
+/**
+ * Validates that the course link is a valid URL.
+ */
+function _bebbo_serializer_course_link_validate(array &$form, FormStateInterface $form_state): void {
+  $link = $form_state->getValue(['field_course_link', 0, 'value']);
+  if (empty($link)) {
+    return;
+  }
+
+  // FILTER_VALIDATE_URL alone accepts any scheme with an authority, ftp://
+  // included. App users can only follow a web link, so restrict it.
+  $scheme = strtolower((string) parse_url($link, PHP_URL_SCHEME));
+  if (!filter_var($link, FILTER_VALIDATE_URL) || !in_array($scheme, ['http', 'https'], TRUE)) {
+    $form_state->setErrorByName(
+      'field_course_link',
+      t('Please enter a valid URL for the course link, starting with http:// or https:// (e.g. https://example.com).')
     );
   }
 }

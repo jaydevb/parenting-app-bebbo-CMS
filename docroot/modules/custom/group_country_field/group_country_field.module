@@ -161,7 +161,7 @@ function group_country_field_form_views_exposed_form_alter(&$form, $form_state) 
   }
 
   // Moderated group content: populate "Updated by" with group members.
-  if (isset($form['#id']) && strpos($form['#id'], 'duplicate-of-moderated-group-content') !== FALSE) {
+  if (isset($form['#id']) && strpos($form['#id'], 'duplicate-of-moderated-group-relationship') !== FALSE) {
     $route_match = \Drupal::routeMatch();
     $group = $route_match->getParameter('group');
     if ($group) {

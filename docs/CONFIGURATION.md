@@ -185,12 +185,12 @@ After standard login, users are redirected to the OTP verification page. On succ
 | Password reset timeout | `86400` s (24 h) |
 | Password strength meter | `true` |
 
-**User email notifications** — restricted to security-related and onboarding emails only:
+**User email notifications** — restricted to security-related email only:
 
 | Notification | Enabled | Reason |
 |---|---|---|
 | `password_reset` | **true** | Security — user-initiated password recovery |
-| `register_admin_created` | **true** | Onboarding — one-time login link for new users (registration is `admin_only`) |
+| `register_admin_created` | false | Disabled — admins set the password on new accounts and deliver it out-of-band |
 | `cancel_confirm` | false | Non-essential |
 | `status_activated` | false | Non-essential |
 | `status_blocked` | false | Non-essential |
@@ -198,7 +198,9 @@ After standard login, users are redirected to the OTP verification page. On succ
 | `register_no_approval_required` | false | Not applicable (`admin_only` registration) |
 | `register_pending_approval` | false | Not applicable (`admin_only` registration) |
 
-Combined with Email TFA (§1 above) and disabled content moderation notifications (§7), the only emails users receive are: **MFA OTP codes**, **password reset links**, and **admin-created account links**.
+Combined with Email TFA (§1 above) and disabled content moderation notifications (§7), the only emails users receive are: **MFA OTP codes** and **password reset links**.
+
+Because registration is `admin_only` and no account-created mail is sent, creating a user is a two-part operation: create the account with a password set on the form, then pass the credentials to the user through a channel outside Drupal. The user changes the password after first login.
 
 ### Keys — `key.key.*`
 | Key ID | Label | Provider | Source |
@@ -1152,6 +1154,8 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 - **`views.view.bebbo_v1_apis`:** per-site split patches override the "Pregnancy" `child_age` TID used by the V1 articles/taxonomies pregnancy filter, since the TID differs per site
 - **Entity Share:** no split carries channel or remote YAML — all Entity Share config is shared in `config/sync/` (see §13)
 
+> Operator-facing guidance for the values these ignores protect — AI keys, mailer credentials, the Entity Share key, analytics endpoint, API-security environment variables — is in [POST_SETUP_CONFIGURATION.md](POST_SETUP_CONFIGURATION.md).
+
 ### `config_ignore.settings.yml` — never imported/exported
 
 Whole-entity ignores: `admin_toolbar.settings`, `bebbo_api_security.settings`, `mobile_app_links.android_packages`, `mobile_app_links.ios`, `pb_content_analytics.settings`, `purge.logger_channels`, `tmgmt.translator.*` (plus explicit `deepl_free`, `deepl_pro`, `google`, `memsource`, `microsoft`), `tmgmt_memsource.settings`, `views.view.entity_share_client_entity_import_status`.
@@ -1164,6 +1168,7 @@ Key-level ignores (only the named key is environment-managed; the rest of the en
 ### Custom-module configs in sync
 - `bebbo_custom_general.adminsettings` — Master language `en,sr,ru,sq`
 - `bebbo_custom_general.app_store_redirect` — App store / Google Play URLs both empty
+- `bebbo_custom_general.editorial_menu` — canonical editorial menu, 39 links keyed by UUID with title, URI, parent, weight, enabled state and `menu_per_role` show/hide roles. Shared by all 7 sites and applied to each site's menu links by `drush bebbo:menu-sync` (menu links are content entities, so `cim` alone does not apply them)
 
 ---
 
