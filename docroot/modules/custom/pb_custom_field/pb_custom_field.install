@@ -5,6 +5,10 @@
  * Install, update and uninstall functions for the pb_custom_field module.
  */
 
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\Sql\DefaultTableMapping;
+use Drupal\Core\Language\LanguageInterface;
+
 /**
  * Repair users whose langcode is not an installed language.
  *
@@ -22,7 +26,7 @@
 function pb_custom_field_update_10004() {
   $database = \Drupal::database();
   $language_manager = \Drupal::languageManager();
-  $valid = array_keys($language_manager->getLanguages(\Drupal\Core\Language\LanguageInterface::STATE_ALL));
+  $valid = array_keys($language_manager->getLanguages(LanguageInterface::STATE_ALL));
   $default_langcode = $language_manager->getDefaultLanguage()->getId();
 
   $uids = $database->select('users_field_data', 'u')
@@ -57,7 +61,7 @@ function pb_custom_field_update_10004() {
 
   $storage = \Drupal::entityTypeManager()->getStorage('user');
   $mapping = $storage->getTableMapping();
-  if (!$mapping instanceof \Drupal\Core\Entity\Sql\DefaultTableMapping) {
+  if (!$mapping instanceof DefaultTableMapping) {
     return 'Unexpected user table mapping; nothing was changed.';
   }
   $definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('user', 'user');
@@ -114,7 +118,7 @@ function pb_custom_field_update_10004() {
     ->execute();
 
   $storage->resetCache($uids);
-  \Drupal\Core\Cache\Cache::invalidateTags(array_map(function ($uid) {
+  Cache::invalidateTags(array_map(function ($uid) {
     return 'user:' . $uid;
   }, $uids));
 
