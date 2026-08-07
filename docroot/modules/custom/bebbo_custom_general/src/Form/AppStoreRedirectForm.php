@@ -4,6 +4,7 @@ namespace Drupal\bebbo_custom_general\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\bebbo_custom_general\StoreUrl;
 
 /**
@@ -30,6 +31,12 @@ class AppStoreRedirectForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('bebbo_custom_general.app_store_redirect');
+
+    $form['landing_page'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Landing page'),
+      '#markup' => $this->t('Visitors are redirected from <a href=":url" target="_blank">:url</a>, the page QR codes should point to.', [':url' => $this->landingPageUrl()]),
+    ];
 
     $form['app_store_url'] = [
       '#type' => 'url',
@@ -76,7 +83,19 @@ class AppStoreRedirectForm extends ConfigFormBase {
       ->set('google_play_url', $form_state->getValue('google_play_url'))
       ->save();
 
-    parent::submitForm($form, $form_state);
+    $this->messenger()->addStatus($this->t('The configuration options have been saved. The redirect page is live at <a href=":url" target="_blank">:url</a>.', [':url' => $this->landingPageUrl()]));
+  }
+
+  /**
+   * Builds the absolute URL of the public redirect page.
+   *
+   * @return string
+   *   The absolute /downloadapp.html URL for the current site.
+   */
+  protected function landingPageUrl() {
+    return Url::fromRoute('bebbo_custom_general.app_store_redirect_page')
+      ->setAbsolute()
+      ->toString();
   }
 
 }
