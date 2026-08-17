@@ -1014,7 +1014,7 @@ display:
             moderation_state: moderation_state
             changed: changed
             operations: operations
-          default: changed
+          default: title
           info:
             title:
               sortable: true

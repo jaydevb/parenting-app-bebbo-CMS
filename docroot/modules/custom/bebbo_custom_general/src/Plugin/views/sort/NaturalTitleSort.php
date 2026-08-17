@@ -50,11 +50,20 @@ class NaturalTitleSort extends SortPluginBase {
    */
   public static function orderBy(Sql $query, string $field, string $direction): void {
     $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
+
+    // Titles are routinely wrapped in quotes or opened with punctuation, which
+    // would otherwise bunch them all together ahead of the alphabet. Drop any
+    // leading non-word characters, whitespace included, before comparing.
+    // "\W" is Unicode aware here, so accented Latin and Cyrillic letters are
+    // kept; under NO_BACKSLASH_ESCAPES the pattern simply matches nothing and
+    // the ordering degrades to the untrimmed title rather than breaking.
+    $clean = "REGEXP_REPLACE($field, '^\\\\W+', '')";
+
     // Deliberately not a REGEXP: Drupal treats square brackets in a query
     // string as identifier quoting, so a '^[0-9]' pattern reaches the database
     // as '^"0-9"' and never matches.
-    $query->addOrderBy(NULL, "(LEFT(TRIM($field), 1) BETWEEN '0' AND '9')", $direction, 'bebbo_title_numeric');
-    $query->addOrderBy(NULL, 'TRIM(' . $field . ') COLLATE ' . static::COLLATION, $direction, 'bebbo_title_natural');
+    $query->addOrderBy(NULL, "(LEFT($clean, 1) BETWEEN '0' AND '9')", $direction, 'bebbo_title_numeric');
+    $query->addOrderBy(NULL, $clean . ' COLLATE ' . static::COLLATION, $direction, 'bebbo_title_natural');
   }
 
 }
