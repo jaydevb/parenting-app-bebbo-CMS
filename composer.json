@@ -256,6 +256,9 @@
             "drupal/lang_dropdown": {
                 "Fix InvalidArgumentException when no route object exists (404/403 pages)": "https://www.drupal.org/files/issues/2024-02-28/lang_dropdown_InvalidArgumentException.patch"
             },
+            "drupal/gin": {
+                "Contextual Edit toolbar tab always renders highlighted: unqualified selector in the Inline Edit toggle block": "patches/gin/contextual-edit-toolbar-tab-always-highlighted.patch"
+            },
             "webflo/drupal-finder": {
                 "Uncaught TypeError fix": "patches/drupal_finder/drupal-finder-fix-start-path.patch"
             },
