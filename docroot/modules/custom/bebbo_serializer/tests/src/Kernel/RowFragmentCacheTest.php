@@ -208,24 +208,4 @@ class RowFragmentCacheTest extends KernelTestBase {
     $this->assertSame([11], $calls, 'node 10 survived the aborted pass; only node 11 re-rendered');
   }
 
-  /**
-   * Warm markers report warmth and expire with the article list tags.
-   *
-   * @covers ::markWarm
-   * @covers ::isWarm
-   */
-  public function testWarmFlagLifecycle(): void {
-    /** @var \Drupal\bebbo_serializer\Cache\RowFragmentCache $svc */
-    $svc = $this->container->get('bebbo_serializer.row_fragment_cache');
-
-    $this->assertFalse($svc->isWarm('api/articles', 'en', 'https://h'));
-
-    $svc->markWarm('api/articles', 'en', 'https://h');
-    $this->assertTrue($svc->isWarm('api/articles', 'en', 'https://h'));
-
-    // A content change invalidates the list tag and re-cools the marker.
-    Cache::invalidateTags(['node_list']);
-    $this->assertFalse($svc->isWarm('api/articles', 'en', 'https://h'), 'node_list edit expires the warm marker');
-  }
-
 }

@@ -128,34 +128,4 @@ class RowFragmentCache {
     return array_values($out);
   }
 
-  /**
-   * Builds the cache id for a per-language warm marker.
-   */
-  public function warmFlagCid(string $key, string $langcode, string $host): string {
-    return 'bebbo_api:warm:' . $key . ':' . $langcode . ':' . $host;
-  }
-
-  /**
-   * Whether the given endpoint/language/host has already been warmed.
-   */
-  public function isWarm(string $key, string $langcode, string $host): bool {
-    return (bool) $this->cache->get($this->warmFlagCid($key, $langcode, $host));
-  }
-
-  /**
-   * Records that the given endpoint/language/host has been warmed.
-   *
-   * The marker carries the same list tags as the article response, so any
-   * node or media change (and any full cache flush) expires it and the cron
-   * warmer re-renders that endpoint on its next pass.
-   */
-  public function markWarm(string $key, string $langcode, string $host): void {
-    $this->cache->set(
-      $this->warmFlagCid($key, $langcode, $host),
-      TRUE,
-      Cache::PERMANENT,
-      ['node_list', 'media_list'],
-    );
-  }
-
 }
