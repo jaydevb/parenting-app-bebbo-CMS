@@ -296,6 +296,9 @@
             },
             "drupal/ultimate_cron": {
                 "D11: legacy #ajax 'replace' method breaks scheduler/logger switch on the job edit form (3535416, MR!71)": "patches/ultimate_cron/ajax-replacewith-3535416.patch"
+            },
+            "drupal/tmgmt_google": {
+                "Do not print a page-level error when the job form incidentally probes Google": "patches/tmgmt_google/no_global_error_on_incidental_probe.patch"
             }
         },
         "drupal-lenient": {
