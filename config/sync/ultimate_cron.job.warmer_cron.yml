@@ -10,10 +10,11 @@ weight: 0
 module: warmer
 callback: 'warmer#cron'
 scheduler:
-  id: simple
+  id: crontab
   configuration:
     rules:
-      - '0+@ 2-4 * * *'
+      - '0+@ */2 * * *'
+    catch_up: 0
 launcher:
   id: serial
 logger:
