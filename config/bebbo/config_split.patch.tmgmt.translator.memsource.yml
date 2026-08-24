@@ -7,9 +7,7 @@ adding:
     by-be: byn
     by-ru: byn
     bg-bg: bg_bg
-    gr-arb: ar
     gr-el: el_gr
-    gr-fa: fa
     xk-sq: ''
     xk-rs: ''
     kg-ky: ky_kg
@@ -28,5 +26,6 @@ adding:
     uk: uk_ua
     uz-ru: uz
     uz-uz: uz_latn_uz
-    ar: ar
+    sk: sk
+    uz-kaa: uz
 removing: {  }
