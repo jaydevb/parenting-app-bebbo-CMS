@@ -1125,6 +1125,8 @@ Country coverage (approx counts): Albania 45, Serbia 36, Greece 27 (3 languages:
 
 > The `tax` view (machine name `tax`) is labelled "Taxonomy, Vocabulary & Strings APIs"; it serves the V1 `api/taxonomies/%/%`, `api/strings/%`, `api/vocabularies/%` and V2 `v2/api/...` displays.
 
+> The user listings `user_admin_people` (display `page_2`, path `users`) and `users_list` (display `page_2`, path `users/country`) show group membership through the `pb_custom_field` Views plugins `pb_user_groups`, `pb_user_group_label` and `pb_user_group_id` rather than a `group_relationship` relationship, so each user occupies exactly one row regardless of how many groups — or group translations — they have. `users_reports` still uses the relationship and lists a user once per group.
+
 ---
 
 ## 16. Config Split Architecture
