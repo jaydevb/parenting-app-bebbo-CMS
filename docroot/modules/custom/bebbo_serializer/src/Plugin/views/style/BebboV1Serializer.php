@@ -12,6 +12,7 @@ use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\bebbo_serializer\Cache\RowFragmentCache;
 use Drupal\group\Entity\Group;
@@ -209,8 +210,18 @@ class BebboV1Serializer extends Serializer {
 
     // Collect rows via the parent row plugin, routing 1:1 node displays
     // through the fragment cache so only edited rows are re-rendered.
-    $renderRow = function (int $rowIndex, object $row): mixed {
+    // Hand the row entity over already switched to the requested language.
+    // Entities load with their original language active, and core's
+    // EntityRepository::getTranslationFromContext() runs the full
+    // language-fallback negotiation (content_translation walks every
+    // translation with access checks) whenever the active language differs
+    // from the requested one — even when that translation exists.
+    $renderLangcode = $this->view->args[0] ?? $this->languageManager->getCurrentLanguage()->getId();
+    $renderRow = function (int $rowIndex, object $row) use ($renderLangcode): mixed {
       $this->view->row_index = $rowIndex;
+      if (isset($row->_entity) && $row->_entity instanceof TranslatableInterface && $row->_entity->hasTranslation($renderLangcode)) {
+        $row->_entity = $row->_entity->getTranslation($renderLangcode);
+      }
       return $this->normalizeMarkup($this->view->rowPlugin->render($row));
     };
 
