@@ -1322,8 +1322,9 @@ class BebboSerializer extends Serializer {
   /**
    * Queries category vocabulary terms.
    *
-   * Resolves field_type_of_article entity reference label via a single JOIN
-   * instead of N+1 entity loads.
+   * Resolves the field_type_of_article entity reference via JOINs instead of
+   * N+1 entity loads, and returns it as a machine name derived from the
+   * English label.
    *
    * @param string $langcode
    *   The language code.
@@ -1335,15 +1336,15 @@ class BebboSerializer extends Serializer {
     $query = $this->buildTermBaseQuery('category', $langcode);
     $query->leftJoin('taxonomy_term__field_unique_name', 'un', "un.entity_id = td.tid AND un.langcode = 'en'");
     $query->leftJoin('taxonomy_term__field_type_of_article', 'toa', 'toa.entity_id = td.tid');
-    // Resolve the entity reference to a label via two JOINs: first try the
-    // requested language, then fall back to English. This matches V1's
-    // entity-loading behaviour where Drupal returns the default-language
-    // value when no translation exists (e.g. type_of_article terms are
-    // English-only on most sites).
+    // Resolve the entity reference via two JOINs. The English label is
+    // preferred because it is the source for the machine name, which must not
+    // vary by language; the requested language is only a fallback for terms
+    // with no English row at all. type_of_article carries no
+    // field_unique_name, so there is no stored machine name to read instead.
     $query->leftJoin('taxonomy_term_field_data', 'toa_td_lang', "toa_td_lang.tid = toa.field_type_of_article_target_id AND toa_td_lang.langcode = td.langcode");
     $query->leftJoin('taxonomy_term_field_data', 'toa_td_en', "toa_td_en.tid = toa.field_type_of_article_target_id AND toa_td_en.langcode = 'en'");
     $query->addField('un', 'field_unique_name_value', 'unique_name');
-    $query->addExpression("COALESCE(toa_td_lang.name, toa_td_en.name)", 'type_of_article');
+    $query->addExpression("COALESCE(toa_td_en.name, toa_td_lang.name)", 'type_of_article');
 
     $results = $query->execute()->fetchAll();
     $terms = [];
@@ -1353,7 +1354,7 @@ class BebboSerializer extends Serializer {
         'id' => (int) $row->tid,
         'name' => $row->name,
         'unique_name' => $row->unique_name ?? '',
-        'field_type_of_article' => $row->type_of_article ?? '',
+        'field_type_of_article' => $row->type_of_article ? $this->slugifyTermName($row->type_of_article) : '',
       ];
       if (empty($row->unique_name)) {
         $needsMachineName[$idx] = (int) $row->tid;
@@ -1508,10 +1509,7 @@ class BebboSerializer extends Serializer {
 
     foreach ($needsMachineName as $idx => $tid) {
       $source = $enNames[$tid] ?? $terms[$idx]['name'];
-      $machine = strtolower($source);
-      $machine = preg_replace('/[^a-z0-9]/', '_', $machine);
-      $machine = preg_replace('/_+/', '_', $machine);
-      $terms[$idx]['unique_name'] = trim($machine, '_');
+      $terms[$idx]['unique_name'] = $this->slugifyTermName($source);
     }
   }
 

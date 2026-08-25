@@ -1704,7 +1704,7 @@ class BebboV1Serializer extends Serializer {
     $query->leftJoin('taxonomy_term_field_data', 'toa_td_lang', "toa_td_lang.tid = toa.field_type_of_article_target_id AND toa_td_lang.langcode = td.langcode");
     $query->leftJoin('taxonomy_term_field_data', 'toa_td_en', "toa_td_en.tid = toa.field_type_of_article_target_id AND toa_td_en.langcode = 'en'");
     $query->addField('un', 'field_unique_name_value', 'unique_name');
-    $query->addExpression("COALESCE(toa_td_lang.name, toa_td_en.name)", 'type_of_article');
+    $query->addExpression("COALESCE(toa_td_en.name, toa_td_lang.name)", 'type_of_article');
 
     $results = $query->execute()->fetchAll();
     $terms = [];
@@ -1714,7 +1714,7 @@ class BebboV1Serializer extends Serializer {
         'id' => (int) $row->tid,
         'name' => $row->name,
         'unique_name' => $row->unique_name ?? '',
-        'field_type_of_article' => $row->type_of_article ?? '',
+        'field_type_of_article' => $row->type_of_article ? $this->slugifyTermName($row->type_of_article) : '',
       ];
       if (empty($row->unique_name)) {
         $needsMachineName[$idx] = (int) $row->tid;
@@ -1844,10 +1844,7 @@ class BebboV1Serializer extends Serializer {
 
     foreach ($needsMachineName as $idx => $tid) {
       $source = $enNames[$tid] ?? $terms[$idx]['name'];
-      $machine = strtolower($source);
-      $machine = preg_replace('/[^a-z0-9]/', '_', $machine);
-      $machine = preg_replace('/_+/', '_', $machine);
-      $terms[$idx]['unique_name'] = trim($machine, '_');
+      $terms[$idx]['unique_name'] = $this->slugifyTermName($source);
     }
   }
 
