@@ -12,9 +12,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
-use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\RenderContext;
 use Drupal\Core\TypedData\TranslatableInterface;
-use Drupal\bebbo_serializer\Cache\RowFragmentCache;
 use Drupal\group\Entity\Group;
 use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\language_visibility_control\LanguageVisibilityService;
@@ -56,9 +55,13 @@ class BebboSerializer extends Serializer {
   use BebboSerializerHelpers;
 
   /**
-   * Displays whose rows are 1:1 with a node and are safe to fragment-cache.
+   * Displays whose response cache tags are scoped to the listing.
+   *
+   * Rows on these displays render in an isolated context so their per-entity
+   * tags never reach the response; the listing tags emitted below (and by
+   * the bebbo_api_tag views cache plugin) cover invalidation instead.
    */
-  private const CACHEABLE_DISPLAYS = [
+  private const TAG_SCOPED_DISPLAYS = [
     'articles_rest_export',
   ];
 
@@ -105,13 +108,6 @@ class BebboSerializer extends Serializer {
   protected LanguageVisibilityService $languageVisibilityService;
 
   /**
-   * The row fragment cache.
-   *
-   * @var \Drupal\bebbo_serializer\Cache\RowFragmentCache
-   */
-  protected RowFragmentCache $rowFragmentCache;
-
-  /**
    * The file URL generator.
    *
    * @var \Drupal\Core\File\FileUrlGeneratorInterface
@@ -134,7 +130,6 @@ class BebboSerializer extends Serializer {
     EntityTypeManagerInterface $entity_type_manager,
     Connection $database,
     LanguageVisibilityService $language_visibility_service,
-    RowFragmentCache $row_fragment_cache,
     FileUrlGeneratorInterface $file_url_generator,
   ) {
     parent::__construct(
@@ -151,7 +146,6 @@ class BebboSerializer extends Serializer {
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
     $this->languageVisibilityService = $language_visibility_service;
-    $this->rowFragmentCache = $row_fragment_cache;
     $this->fileUrlGenerator = $file_url_generator;
   }
 
@@ -172,7 +166,6 @@ class BebboSerializer extends Serializer {
       $container->get('entity_type.manager'),
       $container->get('database'),
       $container->get('language_visibility_control.service'),
-      $container->get('bebbo_serializer.row_fragment_cache'),
       $container->get('file_url_generator'),
     );
   }
@@ -205,8 +198,7 @@ class BebboSerializer extends Serializer {
       return $etagResponse;
     }
 
-    // Collect rows via the parent row plugin, routing 1:1 node displays
-    // through the fragment cache so only edited rows are re-rendered.
+    // Collect rows via the parent row plugin.
     // Hand the row entity over already switched to the requested language.
     // Entities load with their original language active, and core's
     // EntityRepository::getTranslationFromContext() runs the full
@@ -222,23 +214,25 @@ class BebboSerializer extends Serializer {
       return $this->normalizeMarkup($this->view->rowPlugin->render($row));
     };
 
-    if (in_array($displayId, self::CACHEABLE_DISPLAYS, TRUE)) {
-      $request  = $this->requestStack->getCurrentRequest();
-      $host     = $request !== NULL ? $request->getSchemeAndHttpHost() : '';
+    if (in_array($displayId, self::TAG_SCOPED_DISPLAYS, TRUE)) {
       $langcode = $this->view->args[0] ?? $this->languageManager->getCurrentLanguage()->getId();
-      $bubble   = new BubbleableMetadata();
-      $rows     = $this->rowFragmentCache->render($displayId, $langcode, $host, $this->view->result, $renderRow, $bubble);
+      // Render in an isolated context and discard what bubbles. acquia_purge
+      // emits every response tag as a CDN Surrogate-Key, so hundreds of
+      // node:ID tags overflow the response header (Apache "premature end of
+      // script headers" → HTTP 500) and flood the purge queue.
+      $rows = $this->getRenderer()->executeInRenderContext(new RenderContext(), function () use ($renderRow): array {
+        $rows = [];
+        foreach ($this->view->result as $rowIndex => $row) {
+          $rows[] = $renderRow($rowIndex, $row);
+        }
+        return $rows;
+      });
       // Scope the response to this listing in this language. node_list would
       // expire it on any node save anywhere — an FAQ edit taking every
-      // article response with it — and the per-row entity tags are worse
-      // still: acquia_purge emits every response tag as a CDN Surrogate-Key,
-      // so hundreds of node:ID tags overflow the response header (Apache
-      // "premature end of script headers" → HTTP 500) and flood the purge
-      // queue. Per-row invalidation lives on the fragments instead, which is
-      // what re-renders only the edited row. The payload references node and
-      // media entities only — categories and keywords are emitted as IDs, so
-      // term edits never change output — so the listing tags plus media_list
-      // are complete.
+      // article response with it. The payload references node and media
+      // entities only — categories and keywords are emitted as IDs, so term
+      // edits never change output — so the listing tags plus media_list are
+      // complete.
       $bundles = $this->view->display_handler->getOption('filters')['type']['value'] ?? [];
       $this->view->element['#cache']['tags'] = Cache::mergeTags(
         $this->view->element['#cache']['tags'] ?? [],
