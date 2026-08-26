@@ -132,7 +132,6 @@ function bebbo_custom_general_update_10001(): string {
   return 'No defunct modules found in core.extension; schema entries cleaned.';
 }
 
-
 /**
  * Create the API cache warmer run log table.
  */
