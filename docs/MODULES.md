@@ -303,6 +303,7 @@ The largest editorial module. Controls field access, form alterations, editorial
 
 | Hook | Behavior |
 |------|----------|
+| `hook_entity_base_field_info_alter` | Makes the core user `roles` base field display-configurable (`entity_reference_label`, no link), so the user View tab can list roles; the component is enabled in `core.entity_view_display.user.user.default` |
 | `hook_user_update` | Clears user caches on update |
 | `hook_form_alter` | Language filters, field access control, validation on node/media forms |
 | `hook_link_alter` | Alters editorial menu links for country users |
