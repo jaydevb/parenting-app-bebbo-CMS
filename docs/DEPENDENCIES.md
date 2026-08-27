@@ -346,6 +346,7 @@ Applied by `cweagans/composer-patches`. `composer-exit-on-patch-failure: true` â
 | `drupal/tmgmt` | Entity author details | local |
 | `drupal/tmgmt` | JobType grouped-filter `escapeLike` array fix | local |
 | `drupal/tmgmt` | Contact only the selected provider when building the job form | local |
+| `drupal/tmgmt` | Config source reports a removed config mapper plugin as `TMGMTException` so job listings keep rendering | local |
 | `drupal/tmgmt_google` | No page-level error when the job form incidentally probes Google | local |
 | `drupal/tmgmt_memsource` | PHP 8.4: explicit nullable param in `createFileTranslation` | local |
 | `drupal/imagemagick` | Preserve URL-encoded filenames | local |
