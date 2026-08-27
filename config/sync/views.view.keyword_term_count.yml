@@ -451,7 +451,7 @@ display:
               empty_column: false
               responsive: ''
             nid_1:
-              sortable: false
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
