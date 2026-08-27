@@ -34,7 +34,6 @@ sites:
       - by-be
       - by-ru
       - en
-      - eu
       - gr-el
       - kg-ky
       - kg-ru
@@ -68,7 +67,6 @@ sites:
       test: ec-stage.bebbo.app
       prod: wawamor.ec
     languages:
-      - es
       - ec-es
   pakistan:
     hosts:
@@ -83,10 +81,8 @@ sites:
       test: ws-stage.bebbo.app
       prod: bebbopacific.app
     languages:
-      - fj-fj
-      - fj-en
-      - ws-sm
       - ws-en
+      - fj-en
   turkey:
     hosts:
       dev: tr-dev.bebbo.app
