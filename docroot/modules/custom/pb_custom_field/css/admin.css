@@ -99,3 +99,14 @@ table.tmgmt-ui-review input.unreviewed,
 .view-tmgmt-job-overview th.views-field-tjid {
   white-space: nowrap;
 }
+
+/* tmgmt collapses the icon-only State header to padding:0 with a zero-width
+   link, which pushes the Gin sort arrow past the cell edge. Give the cell
+   its normal padding and let the link size itself so the arrow stays inside. */
+.view-tmgmt-job-overview th.views-field-state {
+  padding: 0 var(--gin-spacing-m, 1rem);
+}
+
+.view-tmgmt-job-overview th.views-field-state a {
+  width: auto;
+}
