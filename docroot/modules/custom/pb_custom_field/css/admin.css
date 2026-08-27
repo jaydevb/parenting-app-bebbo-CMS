@@ -93,3 +93,9 @@ table.tmgmt-ui-review input.unreviewed,
 .view-group-members .dropbutton--multiple > .dropbutton__item:first-of-type {
   margin-inline-end: calc(var(--gin-spacing-xxl) + 1px) !important;
 }
+
+/* TMGMT jobs overview: keep the two-word "Job ID" header on one line so the
+   sort icon sits beside the label instead of under a wrapped second line. */
+.view-tmgmt-job-overview th.views-field-tjid {
+  white-space: nowrap;
+}
