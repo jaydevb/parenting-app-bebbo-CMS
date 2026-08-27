@@ -206,6 +206,7 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 | `hook_query_TAG_alter` (`tmgmt_entity_get_translatable_entities`) | Node ID filter/sort on the translatable-entities query |
 | `hook_menu_local_tasks_alter` | Adds TMGMT Job Items/Jobs/Sources/Cart/Providers/Settings local tasks |
 | `hook_menu_local_actions_alter` | Renames the "Add group" action on `/admin/group` to "Add Country" (all sites use the single `country` group type) |
+| `hook_toolbar_alter` | Attaches the `bebbo_custom_general/editorial_toolbar` library to the editorial menu tray. Its JS wraps the `<nolink>` parents (rendered as `<span>`, which core's `toolbar.menu.js` skips) in a `.toolbar-box` with core's collapse toggle so they open and close in the vertical toolbar; its CSS maps each top-level item's UUID class to a Gin sprite icon instead of the placeholder square |
 | `hook_preprocess_page` | TMGMT route cache context |
 | `hook_preprocess_node_add_list` | Removes hidden bundles (see helper below) from the `/node/add` content-type selection page |
 | `hook_menu_links_discovered_alter` | Removes `node.add` links for hidden bundles from every Add-content menu, including the `admin_toolbar_tools` shortcuts |
