@@ -136,6 +136,22 @@ After standard login, users are redirected to the OTP verification page. On succ
 - **Processors:** drush_purge_queue_work, drush_purge_invalidate, cron, lateruntime, purge_ui_block_processor
 - **Queuers:** drush_purge_queue_add, coretags, purge_ui_block_queuer
 - **Tag blacklist:** `4xx-response`, `config:core.extension`, `extensions`, `config:purge`, `theme_registry`, `config:field.storage`, `route_match`, `routes`
+- **Cron:** `ultimate_cron.job.purge_processor_cron_cron` ("Invalidate cache items") drains the queue on every Drupal cron run; the late-runtime processor also drains a slice at the end of web requests.
+- **API listing tags:** the article API responses are tagged `bebbo_api_list:{bundle}:{langcode}` (plus `media_list`) rather than `node_list`, so a node save queues only the listings of its bundle and affected languages — see [`API_REFERENCE.md`](API_REFERENCE.md) §12.
+- **No Cloudflare purger.** All six public zones are proxied through Cloudflare, but no `cloudflare` module or `cloudflarepurger` is enabled; edge correctness there rests on the Acquia purge chain above and on the API responses not varying by `Cookie`.
+
+### API cache warmer — `bebbo_custom_general.warmer.yml`
+Shared config (`config/sync/` only). Editable at `/admin/config/development/api-warmer` on any site; the settings apply to every site because the file is not split.
+
+| Key | Value |
+|---|---|
+| `concurrency` | `8` requests in flight (form allows 1–32) |
+| `request_timeout` | `300` s per request (form allows 30–900) |
+| `paths` | 21 V1 path templates with a `{lang}` placeholder: activities, archive, articles (+ `?pregnancy=true`), basic-pages, child-development-data, child-growth-data, country-groups, daily-homescreen-messages, faqs, health-checkup-data, milestones, sponsors, standard_deviation, strings, surveys, taxonomies/{lang}/all (+ `?pregnancy=true`), vaccinations, video-articles, vocabularies |
+| `sites.<dir>.hosts` | Public hostname per environment (`dev`, `test`, `prod`) for each of the 7 site directories — the `--uri` `bebbo:warm-all` gives each subprocess |
+| `sites.<dir>.languages` | Langcodes to warm on that site: default 25 (`al-sq` … `xk-sq`), bangladesh `bn`, ecuador `ec-es`, pakistan `ur`, somoa `ws-en` + `fj-en`, turkey `tr`, zimbabwe `zw-en` + `zw-sn` + `zw-nd`. Empty list = derive from the country groups' app-visible languages. |
+
+`/api/check-update/{gid}` is added at run time for every `country` group and is not in `paths`. The schedule that runs the warmer is an Acquia job, not Drupal cron — see [`ENVIRONMENTS.md`](ENVIRONMENTS.md) §8.3.
 
 ### Text formats — `filter.format.*`
 | ID | Name | Status |
