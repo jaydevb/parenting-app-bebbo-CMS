@@ -238,7 +238,7 @@ display:
         options:
           offset: 0
           pagination_heading_level: h4
-          items_per_page: 1000
+          items_per_page: 50
           total_pages: null
           id: 0
           tags:
@@ -405,7 +405,7 @@ display:
           default: '-1'
           info:
             tid:
-              sortable: false
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
