@@ -68,7 +68,7 @@ The timezone affects admin-UI date display only — stored values are Unix times
 |---|---|---|
 | `system.logging` | Error display | `hide` (no errors shown to users) |
 | `system.cron` | Warning / error thresholds | `172800` s (2 d) / `1209600` s (14 d); logging `true` |
-| `automated_cron.settings` | Interval | `86400` s (24 h) |
+| `automated_cron.settings` | Interval | `0` — cron never runs on a web request; every run comes from an Acquia scheduled job or `drush cron` (see [`POST_SETUP_CONFIGURATION.md`](POST_SETUP_CONFIGURATION.md) §8) |
 | `dblog.settings` | Row limit | `1000` |
 | `syslog.settings` | Identity / Facility | `bebbo` / `128` (LOG_LOCAL0) |
 | `syslog.settings` | Format | `!base_url\|!timestamp\|!type\|!ip\|!request_uri\|!referer\|!uid\|!link\|!message` |
