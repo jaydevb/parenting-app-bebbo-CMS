@@ -253,6 +253,7 @@ display:
           role:
             administrator: administrator
             editor: editor
+            global_admin: global_admin
             se: se
       cache:
         type: tag
@@ -3484,6 +3485,7 @@ display:
           role:
             administrator: administrator
             editor: editor
+            global_admin: global_admin
             se: se
       filters:
         status:
