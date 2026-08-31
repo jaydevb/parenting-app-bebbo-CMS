@@ -421,7 +421,6 @@ links:
     langcode: en
     show_role:
       - administrator
-      - authenticated
       - editor
       - global_admin
       - reviewer
@@ -440,7 +439,6 @@ links:
     langcode: en
     show_role:
       - administrator
-      - authenticated
       - editor
       - global_admin
       - se
@@ -458,7 +456,6 @@ links:
     langcode: en
     show_role:
       - administrator
-      - authenticated
       - editor
       - global_admin
       - se

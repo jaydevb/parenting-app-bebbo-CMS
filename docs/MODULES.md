@@ -308,7 +308,7 @@ The largest editorial module. Controls field access, form alterations, editorial
 | `hook_user_update` | Clears user caches on update |
 | `hook_form_alter` | Language filters, field access control, validation on node/media forms |
 | `hook_link_alter` | Alters editorial menu links for country users |
-| `hook_preprocess_menu` | Filters editorial menu by user roles |
+| `hook_preprocess_menu` | Empties the editorial menu for users who neither hold `view editorial_menu in toolbar` nor belong to a group |
 | `hook_preprocess_html` | Loads homepage styling, Kosovo-specific assets |
 | `hook_preprocess_page` | Attaches mylib and admin_rtl libraries |
 | `hook_block_access` | Restricts block visibility for non-admin users |
