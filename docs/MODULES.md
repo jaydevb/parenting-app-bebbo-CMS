@@ -184,7 +184,7 @@ Catch-all utilities module created by decomposing the `pb_custom_form` grab-bag 
 | `/foleja/share/{param1}/{param2}/{param3}` | `PbMobile::kosovorender` | `manage mobile javascript` |
 | `/admin/config/parent-buddy/redirect-management` | `RedirectManagementForm` | `manage redirect settings` |
 | `/admin/config/parent-buddy/admin-parent-buddy` | `SettingsForm` (master language) | `administer site configuration` |
-| `/admin/config/parent-buddy/app-store-redirect` | `AppStoreRedirectForm` | `administer site configuration` |
+| `/admin/config/parent-buddy/app-store-redirect` | `AppStoreRedirectForm` | `manage redirect settings` |
 | `/downloadapp.html` | `AppStoreRedirectController::render` | public (`_access: TRUE`) |
 | `/admin/config/parent-buddy/apply-trans-related-articles-video` | `ApplyTransRelatedArticlesVideo` | `administer site configuration` |
 | `/admin/content/entity_share/pull/export/csv` | `CsvExportController::download` | `entity_share_client_pull_content` |
