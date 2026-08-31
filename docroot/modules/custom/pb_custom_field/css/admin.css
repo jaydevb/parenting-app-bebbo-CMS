@@ -83,14 +83,15 @@ table.tmgmt-ui-review input.unreviewed,
   background: transparent;
 }
 
-/* Group members operations dropbutton: Gin 5.0.x reserves only the
-   "extrasmall" toggle size (~23px) as the primary action's inline-end margin,
-   but the toggle button renders at the full --gin-spacing-xxl width (~49px)
-   and is absolutely positioned. With a long label ("Manage member") the
-   toggle overflows ~26px onto the text, drawing its divider through the label
-   while the action's own divider sits 26px further right (two lines). Reserve
-   the real toggle width so both dividers line up into one. */
-.view-group-members .dropbutton--multiple > .dropbutton__item:first-of-type {
+/* Multi-action dropbuttons: Gin 5.0.x reserves only the "extrasmall" toggle
+   size (~23px) as the primary action's inline-end margin, but a full-size
+   toggle renders at --gin-spacing-xxl (~49px) and is absolutely positioned.
+   With a long label ("Manage member", "Save and import") the toggle overflows
+   ~26px onto the text, drawing its divider through the label while the
+   action's own divider sits 26px further right (two lines). Reserve the real
+   toggle width so both dividers line up into one. Gin gives the --small and
+   --extrasmall variants matching margins already, so leave those alone. */
+.dropbutton--multiple:not(.dropbutton--small):not(.dropbutton--extrasmall) > .dropbutton__item:first-of-type {
   margin-inline-end: calc(var(--gin-spacing-xxl) + 1px) !important;
 }
 
